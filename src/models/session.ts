@@ -86,6 +86,9 @@ export interface WorkoutSession {
   cooldown?: { enabled: boolean; exercises: SessionExerciseEntry[] }
   notes?: string
   review?: PostWorkoutReview
+  /** ISO timestamp the current rest timer ends at, if one is running. Storing the
+   *  target timestamp (not a countdown) keeps it correct across backgrounding/restarts. */
+  restTimerEndsAt?: string
   createdAt: string
   updatedAt: string
 }
