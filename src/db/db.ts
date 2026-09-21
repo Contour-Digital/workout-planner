@@ -54,6 +54,11 @@ export class WorkoutDB extends Dexie {
       heightEntries: 'id, recordedAt',
       settings: 'id',
     })
+    // v2: syncOutbox needs `enqueuedAt` indexed — push.ts orders the outbox by it
+    // (oldest-first flush), which Dexie's SchemaError rejects on an unindexed field.
+    this.version(2).stores({
+      syncOutbox: 'key, table, recordId, enqueuedAt',
+    })
   }
 }
 
