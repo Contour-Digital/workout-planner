@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactElement } from 'react'
+import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '../../components/ui/Card'
@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { ProgressBar, ProgressRing } from '../../components/ui/ProgressBar'
 import { EmptyState } from '../../components/ui/EmptyState'
-import { IconDumbbell, IconFlame, IconLeaf, IconMoon, IconPlay, IconPlus } from '../../components/ui/icons'
+import { IconCalendar, IconDumbbell, IconFlame, IconMoon, IconPlay, IconPlus } from '../../components/ui/icons'
 import { db } from '../../db/db'
 import { getOccurrencesInRange } from '../../db/scheduleRepo'
 import { getActiveRecoverySession, getActiveWorkoutSession, getCompletedWorkoutDayKeys, getHistorySessions } from '../../db/sessionsRepo'
@@ -14,16 +14,10 @@ import { nextOccurrenceAfter, toDateKey } from '../../lib/recurrence'
 import { computeStreak } from '../../lib/streak'
 import { useSettingsStore } from '../../store/settingsStore'
 import { workoutSetsCompleted } from '../../models/session'
-import type { DayAssignment, ResolvedOccurrence } from '../../models/schedule'
+import type { ResolvedOccurrence } from '../../models/schedule'
+import { assignmentStyle, makeRoutineNameResolver, startOccurrence } from '../schedule/occurrenceDisplay'
 import { OccurrenceActionsSheet } from '../schedule/OccurrenceActionsSheet'
 import { ImpromptuStartSheet } from '../session/ImpromptuStartSheet'
-
-function assignmentStyle(assignment: DayAssignment): { tone: 'secondary' | 'recovery' | 'rest' | 'neutral'; label: string; icon: ReactElement } {
-  if (assignment.kind === 'workout') return { tone: 'secondary', label: 'Workout', icon: <IconDumbbell width={16} height={16} /> }
-  if (assignment.kind === 'recovery') return { tone: 'recovery', label: 'Recovery', icon: <IconLeaf width={16} height={16} /> }
-  if (assignment.kind === 'rest') return { tone: 'rest', label: 'Rest day', icon: <IconMoon width={16} height={16} /> }
-  return { tone: 'neutral', label: 'Off', icon: <IconMoon width={16} height={16} /> }
-}
 
 export function DashboardPage() {
   const navigate = useNavigate()
@@ -51,33 +45,20 @@ export function DashboardPage() {
     return nextOccurrenceAfter(allSchedulesAndOverrides.schedules, allSchedulesAndOverrides.overrides, today)
   }, [allSchedulesAndOverrides, todayOccurrences, today])
 
-  function routineName(assignment: DayAssignment): string {
-    if (assignment.kind === 'workout') return routines.find((r) => r.id === assignment.routineTemplateId)?.name ?? 'Workout'
-    if (assignment.kind === 'recovery') return recoveryRoutines.find((r) => r.id === assignment.routineTemplateId)?.name ?? 'Recovery'
-    if (assignment.kind === 'rest') return 'Full Rest Day'
-    return 'No plan'
-  }
-
-  function startOccurrence(occurrence: ResolvedOccurrence) {
-    const { assignment } = occurrence
-    if (assignment.kind === 'workout') {
-      navigate(
-        `/session/start?routineId=${assignment.routineTemplateId}&scheduleId=${occurrence.scheduleId}&occurrenceDate=${occurrence.originalDate}&date=${occurrence.date}`,
-      )
-    } else if (assignment.kind === 'recovery') {
-      navigate(
-        `/recovery-session/start?routineId=${assignment.routineTemplateId}&scheduleId=${occurrence.scheduleId}&occurrenceDate=${occurrence.originalDate}&date=${occurrence.date}`,
-      )
-    }
-  }
+  const routineName = useMemo(() => makeRoutineNameResolver(routines, recoveryRoutines), [routines, recoveryRoutines])
 
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
 
   return (
     <div className="p-4 sm:p-6">
-      <div className="mb-5">
-        <p className="text-sm font-medium text-primary-muted">{dateLabel}</p>
-        <h1 className="text-2xl font-bold text-primary-strong">Today</h1>
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-primary-muted">{dateLabel}</p>
+          <h1 className="text-2xl font-bold text-primary-strong">Today</h1>
+        </div>
+        <Button variant="secondary" size="sm" icon={<IconCalendar width={18} height={18} />} onClick={() => navigate('/calendar')}>
+          Calendar
+        </Button>
       </div>
 
       {(activeWorkout || activeRecovery) && (
@@ -127,7 +108,7 @@ export function DashboardPage() {
                 <h3 className="mb-1 text-lg font-bold text-primary-strong">{routineName(occ.assignment)}</h3>
                 <div className="flex gap-2">
                   {occ.assignment.kind !== 'rest' && occ.assignment.kind !== 'off' && occ.status === 'planned' && (
-                    <Button icon={<IconPlay width={18} height={18} />} onClick={() => startOccurrence(occ)}>
+                    <Button icon={<IconPlay width={18} height={18} />} onClick={() => startOccurrence(navigate, occ)}>
                       {alreadyStarted ? 'Continue' : 'Start'}
                     </Button>
                   )}

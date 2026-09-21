@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import {
   IconArchive,
+  IconCalendar,
   IconClock,
   IconCopy,
   IconDumbbell,
@@ -68,15 +69,22 @@ export function RoutinesListPage() {
       <PageHeader
         title="Workouts & Recovery"
         action={
-          <Button
-            size="sm"
-            icon={<IconPlus width={18} height={18} />}
-            onClick={() =>
-              navigate(tab === 'workout' ? '/routines/new' : tab === 'recovery' ? '/recovery-routines/new' : '/schedules/new')
-            }
-          >
-            New
-          </Button>
+          <div className="flex gap-2">
+            {tab === 'schedules' && (
+              <Button size="sm" variant="secondary" icon={<IconCalendar width={18} height={18} />} onClick={() => navigate('/calendar')}>
+                Calendar
+              </Button>
+            )}
+            <Button
+              size="sm"
+              icon={<IconPlus width={18} height={18} />}
+              onClick={() =>
+                navigate(tab === 'workout' ? '/routines/new' : tab === 'recovery' ? '/recovery-routines/new' : '/schedules/new')
+              }
+            >
+              New
+            </Button>
+          </div>
         }
       />
 

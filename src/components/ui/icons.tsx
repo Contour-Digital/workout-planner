@@ -143,3 +143,9 @@ export const IconGrip = (p: SVGProps<SVGSVGElement>) => (
     <circle cx="15" cy="18" r="1.2" fill="currentColor" />
   </Svg>
 )
+export const IconCalendar = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M3 10h18M8 3v4M16 3v4" />
+  </Svg>
+)

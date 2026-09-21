@@ -29,7 +29,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   soundEnabled: true,
   vibrationEnabled: true,
   showExerciseMedia: true,
-  theme: 'system',
+  theme: 'dark',
   notificationsEnabled: false,
   updatedAt: new Date().toISOString(),
 }
