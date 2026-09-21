@@ -1,6 +1,6 @@
 import { Sheet } from '../../components/ui/Sheet'
 import { Badge } from '../../components/ui/Badge'
-import { ExerciseMediaThumb } from '../../components/ui/ExerciseMedia'
+import { MuscleDiagram } from '../../components/ui/MuscleDiagram'
 import { Button } from '../../components/ui/Button'
 import { IconEdit, IconTrash } from '../../components/ui/icons'
 import {
@@ -24,17 +24,12 @@ export function ExerciseDetailSheet({ exercise, onClose, onEdit, onDelete }: Exe
     <Sheet open={!!exercise} onClose={onClose} title={exercise?.name ?? ''}>
       {exercise && (
         <div className="flex flex-col gap-5">
-          <div className="flex items-center gap-4">
-            <ExerciseMediaThumb media={exercise.media} size={72} />
-            <div className="flex flex-wrap gap-1.5">
-              <Badge tone="secondary">{EXERCISE_CATEGORY_LABELS[exercise.category]}</Badge>
-              {exercise.source === 'custom' && <Badge tone="neutral">Custom</Badge>}
-            </div>
+          <div className="flex flex-wrap gap-1.5">
+            <Badge tone="secondary">{EXERCISE_CATEGORY_LABELS[exercise.category]}</Badge>
+            {exercise.source === 'custom' && <Badge tone="neutral">Custom</Badge>}
           </div>
 
-          {exercise.media.muscleMapUrl && (
-            <img src={exercise.media.muscleMapUrl} alt="Targeted muscles" className="mx-auto max-h-48" />
-          )}
+          <MuscleDiagram primaryMuscles={exercise.primaryMuscles} secondaryMuscles={exercise.secondaryMuscles} />
 
           <section>
             <h3 className="mb-1 text-sm font-semibold text-primary-strong">Muscles worked</h3>

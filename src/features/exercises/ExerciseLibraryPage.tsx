@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button'
 import { IconPlus, IconSearch } from '../../components/ui/icons'
 import { EXERCISE_CATEGORY_LABELS, type Exercise, type ExerciseCategory, type CustomExercise } from '../../models/exercise'
 import { deleteCustomExercise, getAllExercises } from '../../db/exercisesRepo'
+import { groupExercisesByPrimaryMuscle } from '../../lib/exerciseGrouping'
 import { ExerciseDetailSheet } from './ExerciseDetailSheet'
 import { CustomExerciseForm } from './CustomExerciseForm'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
@@ -30,6 +31,8 @@ export function ExerciseLibraryPage() {
       return true
     })
   }, [exercises, category, query])
+
+  const sections = useMemo(() => groupExercisesByPrimaryMuscle(filtered), [filtered])
 
   return (
     <div className="p-4 sm:p-6">
@@ -67,28 +70,35 @@ export function ExerciseLibraryPage() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {sections.length === 0 ? (
         <EmptyState title="No exercises found" description="Try a different search or category, or create a custom exercise." />
       ) : (
-        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {filtered.map((exercise) => (
-            <li key={exercise.id}>
-              <button
-                onClick={() => setSelected(exercise)}
-                className="flex w-full items-center gap-3 rounded-[var(--radius-card)] border border-primary-border bg-surface p-3 text-left hover:bg-primary-tint"
-              >
-                <ExerciseMediaThumb media={exercise.media} size={44} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-primary-strong">{exercise.name}</p>
-                  <p className="text-xs text-primary-muted">
-                    {EXERCISE_CATEGORY_LABELS[exercise.category]}
-                    {exercise.source === 'custom' ? ' · Custom' : ''}
-                  </p>
-                </div>
-              </button>
-            </li>
+        <div className="flex flex-col gap-5">
+          {sections.map((section) => (
+            <div key={section.muscle}>
+              <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-primary-muted">{section.label}</h2>
+              <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {section.exercises.map((exercise) => (
+                  <li key={exercise.id}>
+                    <button
+                      onClick={() => setSelected(exercise)}
+                      className="flex w-full items-center gap-3 rounded-[var(--radius-card)] border border-primary-border bg-surface p-3 text-left hover:bg-primary-tint"
+                    >
+                      <ExerciseMediaThumb media={exercise.media} size={44} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-primary-strong">{exercise.name}</p>
+                        <p className="text-xs text-primary-muted">
+                          {EXERCISE_CATEGORY_LABELS[exercise.category]}
+                          {exercise.source === 'custom' ? ' · Custom' : ''}
+                        </p>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
 
       <ExerciseDetailSheet

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '../../components/ui/PageHeader'
@@ -7,7 +7,17 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
-import { IconArchive, IconCopy, IconDumbbell, IconEdit, IconLeaf, IconPlay, IconPlus, IconTrash } from '../../components/ui/icons'
+import {
+  IconArchive,
+  IconClock,
+  IconCopy,
+  IconDumbbell,
+  IconEdit,
+  IconLeaf,
+  IconPlay,
+  IconPlus,
+  IconTrash,
+} from '../../components/ui/icons'
 import { db } from '../../db/db'
 import {
   archiveRecoveryRoutine,
@@ -17,26 +27,40 @@ import {
   duplicateRecoveryRoutine,
   duplicateRoutine,
 } from '../../db/routinesRepo'
+import { deleteSchedule, getAllSchedules } from '../../db/scheduleRepo'
+import { describeSchedule } from '../../lib/scheduleDescribe'
 import type { RoutineTemplate } from '../../models/routine'
 import type { RecoveryRoutineTemplate } from '../../models/recovery'
+import type { RecurringSchedule } from '../../models/schedule'
 
-type Tab = 'workout' | 'recovery'
+type Tab = 'workout' | 'recovery' | 'schedules'
 
 export function RoutinesListPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab: Tab = searchParams.get('tab') === 'recovery' ? 'recovery' : 'workout'
+  const tabParam = searchParams.get('tab')
+  const tab: Tab = tabParam === 'recovery' ? 'recovery' : tabParam === 'schedules' ? 'schedules' : 'workout'
   const [showArchived, setShowArchived] = useState(false)
-  const [deletingRoutine, setDeletingRoutine] = useState<{ id: string; name: string; kind: Tab } | null>(null)
+  const [deletingRoutine, setDeletingRoutine] = useState<{ id: string; name: string; kind: 'workout' | 'recovery' } | null>(null)
+  const [deletingSchedule, setDeletingSchedule] = useState<RecurringSchedule | null>(null)
 
   const routines = useLiveQuery(() => db.routines.toArray(), [], []) ?? []
   const recoveryRoutines = useLiveQuery(() => db.recoveryRoutines.toArray(), [], []) ?? []
+  const schedules = useLiveQuery(getAllSchedules, [], []) ?? []
 
   const visibleWorkouts = routines.filter((r) => r.archived === showArchived).sort((a, b) => a.name.localeCompare(b.name))
   const visibleRecovery = recoveryRoutines.filter((r) => r.archived === showArchived).sort((a, b) => a.name.localeCompare(b.name))
+  const visibleSchedules = [...schedules].sort((a, b) => a.startDate.localeCompare(b.startDate))
+
+  const routineName = useMemo(() => {
+    const byId = new Map<string, string>()
+    for (const r of routines) byId.set(r.id, r.name)
+    for (const r of recoveryRoutines) byId.set(r.id, r.name)
+    return (id: string) => byId.get(id) ?? 'Deleted routine'
+  }, [routines, recoveryRoutines])
 
   function setTab(t: Tab) {
-    setSearchParams(t === 'recovery' ? { tab: 'recovery' } : {})
+    setSearchParams(t === 'workout' ? {} : { tab: t })
   }
 
   return (
@@ -47,35 +71,45 @@ export function RoutinesListPage() {
           <Button
             size="sm"
             icon={<IconPlus width={18} height={18} />}
-            onClick={() => navigate(tab === 'workout' ? '/routines/new' : '/recovery-routines/new')}
+            onClick={() =>
+              navigate(tab === 'workout' ? '/routines/new' : tab === 'recovery' ? '/recovery-routines/new' : '/schedules/new')
+            }
           >
             New
           </Button>
         }
       />
 
-      <div className="mb-4 flex gap-2 rounded-full bg-primary-tint p-1">
+      <div className="mb-4 flex gap-1 rounded-full bg-primary-tint p-1">
         <button
           onClick={() => setTab('workout')}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium ${tab === 'workout' ? 'bg-surface text-secondary shadow-sm' : 'text-primary-muted'}`}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-xs font-medium sm:text-sm ${tab === 'workout' ? 'bg-surface text-secondary shadow-sm' : 'text-primary-muted'}`}
         >
-          <IconDumbbell width={16} height={16} /> Workout routines
+          <IconDumbbell width={16} height={16} /> Workouts
         </button>
         <button
           onClick={() => setTab('recovery')}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium ${tab === 'recovery' ? 'bg-surface text-secondary shadow-sm' : 'text-primary-muted'}`}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-xs font-medium sm:text-sm ${tab === 'recovery' ? 'bg-surface text-secondary shadow-sm' : 'text-primary-muted'}`}
         >
-          <IconLeaf width={16} height={16} /> Recovery routines
+          <IconLeaf width={16} height={16} /> Recovery
+        </button>
+        <button
+          onClick={() => setTab('schedules')}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-xs font-medium sm:text-sm ${tab === 'schedules' ? 'bg-surface text-secondary shadow-sm' : 'text-primary-muted'}`}
+        >
+          <IconClock width={16} height={16} /> Schedules
         </button>
       </div>
 
-      <label className="mb-3 flex items-center gap-2 text-sm text-primary-muted">
-        <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
-        Show archived
-      </label>
+      {tab !== 'schedules' && (
+        <label className="mb-3 flex items-center gap-2 text-sm text-primary-muted">
+          <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
+          Show archived
+        </label>
+      )}
 
-      {tab === 'workout' ? (
-        visibleWorkouts.length === 0 ? (
+      {tab === 'workout' &&
+        (visibleWorkouts.length === 0 ? (
           <EmptyState
             icon={<IconDumbbell />}
             title={showArchived ? 'No archived routines' : 'No workout routines yet'}
@@ -96,41 +130,80 @@ export function RoutinesListPage() {
                 routine={r}
                 onEdit={() => navigate(`/routines/${r.id}`)}
                 onStart={() => navigate(`/session/start?routineId=${r.id}`)}
+                onSchedule={() => navigate(`/schedules/new?routineId=${r.id}&kind=workout`)}
                 onDuplicate={() => duplicateRoutine(r.id)}
                 onArchiveToggle={() => archiveRoutine(r.id, !r.archived)}
                 onDelete={() => setDeletingRoutine({ id: r.id, name: r.name, kind: 'workout' })}
               />
             ))}
           </div>
-        )
-      ) : visibleRecovery.length === 0 ? (
-        <EmptyState
-          icon={<IconLeaf />}
-          title={showArchived ? 'No archived recovery routines' : 'No recovery routines yet'}
-          description={showArchived ? undefined : 'Build reusable recovery days: stretching, walking, hydration, sleep goals.'}
-          action={
-            !showArchived && (
-              <Button onClick={() => navigate('/recovery-routines/new')} icon={<IconPlus width={18} height={18} />}>
-                Create recovery routine
+        ))}
+
+      {tab === 'recovery' &&
+        (visibleRecovery.length === 0 ? (
+          <EmptyState
+            icon={<IconLeaf />}
+            title={showArchived ? 'No archived recovery routines' : 'No recovery routines yet'}
+            description={showArchived ? undefined : 'Build reusable recovery days: stretching, walking, hydration, sleep goals.'}
+            action={
+              !showArchived && (
+                <Button onClick={() => navigate('/recovery-routines/new')} icon={<IconPlus width={18} height={18} />}>
+                  Create recovery routine
+                </Button>
+              )
+            }
+          />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {visibleRecovery.map((r) => (
+              <RecoveryRoutineCard
+                key={r.id}
+                routine={r}
+                onEdit={() => navigate(`/recovery-routines/${r.id}`)}
+                onStart={() => navigate(`/recovery-session/start?routineId=${r.id}`)}
+                onSchedule={() => navigate(`/schedules/new?recoveryRoutineId=${r.id}&kind=recovery`)}
+                onDuplicate={() => duplicateRecoveryRoutine(r.id)}
+                onArchiveToggle={() => archiveRecoveryRoutine(r.id, !r.archived)}
+                onDelete={() => setDeletingRoutine({ id: r.id, name: r.name, kind: 'recovery' })}
+              />
+            ))}
+          </div>
+        ))}
+
+      {tab === 'schedules' &&
+        (visibleSchedules.length === 0 ? (
+          <EmptyState
+            icon={<IconClock />}
+            title="No schedules yet"
+            description="Schedule a routine to repeat on a custom interval, on selected weekdays, or as a one-off."
+            action={
+              <Button onClick={() => navigate('/schedules/new')} icon={<IconPlus width={18} height={18} />}>
+                New schedule
               </Button>
-            )
-          }
-        />
-      ) : (
-        <div className="flex flex-col gap-3">
-          {visibleRecovery.map((r) => (
-            <RecoveryRoutineCard
-              key={r.id}
-              routine={r}
-              onEdit={() => navigate(`/recovery-routines/${r.id}`)}
-              onStart={() => navigate(`/recovery-session/start?routineId=${r.id}`)}
-              onDuplicate={() => duplicateRecoveryRoutine(r.id)}
-              onArchiveToggle={() => archiveRecoveryRoutine(r.id, !r.archived)}
-              onDelete={() => setDeletingRoutine({ id: r.id, name: r.name, kind: 'recovery' })}
-            />
-          ))}
-        </div>
-      )}
+            }
+          />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {visibleSchedules.map((s) => (
+              <Card key={s.id}>
+                <div className="mb-1 flex items-start justify-between gap-2">
+                  <h3 className="font-semibold text-primary-strong">{s.name}</h3>
+                  {s.endDate && <Badge tone="neutral">Ends {s.endDate}</Badge>}
+                </div>
+                <p className="mb-3 text-sm text-primary-muted">{describeSchedule(s, routineName)}</p>
+                <p className="mb-3 text-xs text-primary-muted">Starts {s.startDate}</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="secondary" icon={<IconEdit width={16} height={16} />} onClick={() => navigate(`/schedules/${s.id}`)}>
+                    Edit
+                  </Button>
+                  <Button size="sm" variant="ghost" icon={<IconTrash width={16} height={16} />} onClick={() => setDeletingSchedule(s)}>
+                    Delete
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ))}
 
       <ConfirmDialog
         open={!!deletingRoutine}
@@ -145,6 +218,19 @@ export function RoutinesListPage() {
           setDeletingRoutine(null)
         }}
       />
+
+      <ConfirmDialog
+        open={!!deletingSchedule}
+        title="Delete this schedule?"
+        description="Future occurrences will no longer appear on the dashboard. Past history is kept."
+        confirmLabel="Delete"
+        danger
+        onCancel={() => setDeletingSchedule(null)}
+        onConfirm={async () => {
+          if (deletingSchedule) await deleteSchedule(deletingSchedule.id)
+          setDeletingSchedule(null)
+        }}
+      />
     </div>
   )
 }
@@ -152,6 +238,7 @@ export function RoutinesListPage() {
 function RoutineActions({
   onEdit,
   onStart,
+  onSchedule,
   onDuplicate,
   onArchiveToggle,
   onDelete,
@@ -159,6 +246,7 @@ function RoutineActions({
 }: {
   onEdit: () => void
   onStart: () => void
+  onSchedule: () => void
   onDuplicate: () => void
   onArchiveToggle: () => void
   onDelete: () => void
@@ -167,9 +255,14 @@ function RoutineActions({
   return (
     <div className="flex flex-wrap gap-2">
       {!archived && (
-        <Button size="sm" icon={<IconPlay width={16} height={16} />} onClick={onStart}>
-          Start
-        </Button>
+        <>
+          <Button size="sm" icon={<IconPlay width={16} height={16} />} onClick={onStart}>
+            Start
+          </Button>
+          <Button size="sm" variant="secondary" icon={<IconClock width={16} height={16} />} onClick={onSchedule}>
+            Schedule
+          </Button>
+        </>
       )}
       <Button size="sm" variant="secondary" icon={<IconEdit width={16} height={16} />} onClick={onEdit}>
         Edit
@@ -191,6 +284,7 @@ function WorkoutRoutineCard({
   routine,
   onEdit,
   onStart,
+  onSchedule,
   onDuplicate,
   onArchiveToggle,
   onDelete,
@@ -198,6 +292,7 @@ function WorkoutRoutineCard({
   routine: RoutineTemplate
   onEdit: () => void
   onStart: () => void
+  onSchedule: () => void
   onDuplicate: () => void
   onArchiveToggle: () => void
   onDelete: () => void
@@ -219,6 +314,7 @@ function WorkoutRoutineCard({
       <RoutineActions
         onEdit={onEdit}
         onStart={onStart}
+        onSchedule={onSchedule}
         onDuplicate={onDuplicate}
         onArchiveToggle={onArchiveToggle}
         onDelete={onDelete}
@@ -232,6 +328,7 @@ function RecoveryRoutineCard({
   routine,
   onEdit,
   onStart,
+  onSchedule,
   onDuplicate,
   onArchiveToggle,
   onDelete,
@@ -239,6 +336,7 @@ function RecoveryRoutineCard({
   routine: RecoveryRoutineTemplate
   onEdit: () => void
   onStart: () => void
+  onSchedule: () => void
   onDuplicate: () => void
   onArchiveToggle: () => void
   onDelete: () => void
@@ -259,6 +357,7 @@ function RecoveryRoutineCard({
       <RoutineActions
         onEdit={onEdit}
         onStart={onStart}
+        onSchedule={onSchedule}
         onDuplicate={onDuplicate}
         onArchiveToggle={onArchiveToggle}
         onDelete={onDelete}

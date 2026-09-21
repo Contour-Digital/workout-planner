@@ -6,6 +6,7 @@ import { ExerciseMediaThumb } from '../../components/ui/ExerciseMedia'
 import { IconPlus, IconSearch } from '../../components/ui/icons'
 import { EXERCISE_CATEGORY_LABELS, type Exercise, type ExerciseCategory } from '../../models/exercise'
 import { getAllExercises } from '../../db/exercisesRepo'
+import { groupExercisesByPrimaryMuscle } from '../../lib/exerciseGrouping'
 import { CustomExerciseForm } from './CustomExerciseForm'
 import { ExerciseDetailSheet } from './ExerciseDetailSheet'
 
@@ -33,6 +34,8 @@ export function ExercisePicker({ open, onClose, onSelect, title = 'Add exercise'
       return true
     })
   }, [exercises, category, query])
+
+  const sections = useMemo(() => groupExercisesByPrimaryMuscle(filtered), [filtered])
 
   return (
     <Sheet open={open} onClose={onClose} title={title} className="sm:max-w-xl">
@@ -66,26 +69,30 @@ export function ExercisePicker({ open, onClose, onSelect, title = 'Add exercise'
           Create custom exercise
         </Button>
 
-        <ul className="flex flex-col divide-y divide-primary-border">
-          {filtered.map((exercise) => (
-            <li key={exercise.id} className="flex items-center gap-3 py-2.5">
-              <button
-                className="flex flex-1 items-center gap-3 text-left"
-                onClick={() => setPreviewing(exercise)}
-              >
-                <ExerciseMediaThumb media={exercise.media} size={40} />
-                <div>
-                  <p className="text-sm font-medium text-primary-strong">{exercise.name}</p>
-                  <p className="text-xs text-primary-muted">{EXERCISE_CATEGORY_LABELS[exercise.category]}</p>
-                </div>
-              </button>
-              <Button size="sm" onClick={() => onSelect(exercise)}>
-                Add
-              </Button>
-            </li>
+        <div className="flex flex-col gap-4">
+          {sections.map((section) => (
+            <div key={section.muscle}>
+              <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-primary-muted">{section.label}</h3>
+              <ul className="flex flex-col divide-y divide-primary-border">
+                {section.exercises.map((exercise) => (
+                  <li key={exercise.id} className="flex items-center gap-3 py-2.5">
+                    <button className="flex flex-1 items-center gap-3 text-left" onClick={() => setPreviewing(exercise)}>
+                      <ExerciseMediaThumb media={exercise.media} size={40} />
+                      <div>
+                        <p className="text-sm font-medium text-primary-strong">{exercise.name}</p>
+                        <p className="text-xs text-primary-muted">{EXERCISE_CATEGORY_LABELS[exercise.category]}</p>
+                      </div>
+                    </button>
+                    <Button size="sm" onClick={() => onSelect(exercise)}>
+                      Add
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-          {filtered.length === 0 && <p className="py-6 text-center text-sm text-primary-muted">No exercises match.</p>}
-        </ul>
+          {sections.length === 0 && <p className="py-6 text-center text-sm text-primary-muted">No exercises match.</p>}
+        </div>
       </div>
 
       <CustomExerciseForm
