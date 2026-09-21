@@ -1,4 +1,5 @@
 import { db } from './db'
+import { enqueueSync } from './sync/outbox'
 import type { RoutineTemplate } from '../models/routine'
 import type { RecoveryRoutineTemplate } from '../models/recovery'
 
@@ -16,6 +17,7 @@ export async function getRoutine(id: string): Promise<RoutineTemplate | undefine
 
 export async function saveRoutine(routine: RoutineTemplate): Promise<void> {
   await db.routines.put({ ...routine, updatedAt: new Date().toISOString() })
+  await enqueueSync('routines', routine.id, 'upsert')
 }
 
 export async function duplicateRoutine(id: string): Promise<RoutineTemplate | undefined> {
@@ -31,15 +33,18 @@ export async function duplicateRoutine(id: string): Promise<RoutineTemplate | un
     updatedAt: now,
   }
   await db.routines.add(copy)
+  await enqueueSync('routines', copy.id, 'upsert')
   return copy
 }
 
 export async function archiveRoutine(id: string, archived = true): Promise<void> {
   await db.routines.update(id, { archived, updatedAt: new Date().toISOString() })
+  await enqueueSync('routines', id, 'upsert')
 }
 
 export async function deleteRoutine(id: string): Promise<void> {
   await db.routines.delete(id)
+  await enqueueSync('routines', id, 'delete')
 }
 
 // --- Recovery routines ---
@@ -54,6 +59,7 @@ export async function getRecoveryRoutine(id: string): Promise<RecoveryRoutineTem
 
 export async function saveRecoveryRoutine(routine: RecoveryRoutineTemplate): Promise<void> {
   await db.recoveryRoutines.put({ ...routine, updatedAt: new Date().toISOString() })
+  await enqueueSync('recoveryRoutines', routine.id, 'upsert')
 }
 
 export async function duplicateRecoveryRoutine(id: string): Promise<RecoveryRoutineTemplate | undefined> {
@@ -69,13 +75,16 @@ export async function duplicateRecoveryRoutine(id: string): Promise<RecoveryRout
     updatedAt: now,
   }
   await db.recoveryRoutines.add(copy)
+  await enqueueSync('recoveryRoutines', copy.id, 'upsert')
   return copy
 }
 
 export async function archiveRecoveryRoutine(id: string, archived = true): Promise<void> {
   await db.recoveryRoutines.update(id, { archived, updatedAt: new Date().toISOString() })
+  await enqueueSync('recoveryRoutines', id, 'upsert')
 }
 
 export async function deleteRecoveryRoutine(id: string): Promise<void> {
   await db.recoveryRoutines.delete(id)
+  await enqueueSync('recoveryRoutines', id, 'delete')
 }

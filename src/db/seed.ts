@@ -1,5 +1,5 @@
 import { db } from './db'
-import { SEED_LIBRARY_EXERCISES } from './seedExercises'
+import { enqueueSync } from './sync/outbox'
 import type { ExerciseConfig, RoutineSection, RoutineTemplate, SetTarget } from '../models/routine'
 import type { RecoveryActivityConfig, RecoveryRoutineTemplate } from '../models/recovery'
 import type { RecurringSchedule } from '../models/schedule'
@@ -72,14 +72,13 @@ function generalCooldown(): RoutineSection {
 }
 
 function routine(
-  id: string,
   name: string,
   description: string,
   main: ExerciseConfig[],
   now: string,
 ): RoutineTemplate {
   return {
-    id,
+    id: crypto.randomUUID(),
     type: 'workout',
     name,
     description,
@@ -99,19 +98,22 @@ function activity(overrides: Partial<RecoveryActivityConfig>): RecoveryActivityC
 
 let seedPromise: Promise<void> | null = null
 
-/** Guards against concurrent double-invocation (e.g. React StrictMode's double
- *  effect in dev) so seeding never races itself into a duplicate-key error. */
-export function seedIfEmpty(): Promise<void> {
+/**
+ * Seeds example routines/recovery routines/schedule for a brand-new account only.
+ * Call this *after* the initial pull from Supabase has completed, so "empty" means
+ * "this user genuinely has no data anywhere" rather than "this is a new device" —
+ * otherwise a returning user signing in on a second device would get a duplicate
+ * set of demo content alongside their real, just-synced data.
+ *
+ * Guards against concurrent double-invocation (e.g. React StrictMode's double
+ * effect in dev) so seeding never races itself into a duplicate-key error.
+ */
+export function seedDemoDataIfNewAccount(): Promise<void> {
   if (!seedPromise) seedPromise = runSeed()
   return seedPromise
 }
 
 async function runSeed(): Promise<void> {
-  const exerciseCount = await db.libraryExercises.count()
-  if (exerciseCount === 0) {
-    await db.libraryExercises.bulkAdd(SEED_LIBRARY_EXERCISES)
-  }
-
   const routineCount = await db.routines.count()
   const recoveryCount = await db.recoveryRoutines.count()
   const scheduleCount = await db.schedules.count()
@@ -120,7 +122,6 @@ async function runSeed(): Promise<void> {
   const now = new Date().toISOString()
 
   const pushDay = routine(
-    'routine-push',
     'Push Day',
     'Chest, shoulders, and triceps.',
     [
@@ -132,7 +133,6 @@ async function runSeed(): Promise<void> {
   )
 
   const pullDay = routine(
-    'routine-pull',
     'Pull Day',
     'Back and biceps.',
     [
@@ -144,7 +144,6 @@ async function runSeed(): Promise<void> {
   )
 
   const lowerDay = routine(
-    'routine-lower',
     'Lower Body',
     'Squat-focused leg day.',
     [
@@ -156,7 +155,6 @@ async function runSeed(): Promise<void> {
   )
 
   const upperDay = routine(
-    'routine-upper',
     'Upper Body',
     'Balanced upper-body strength.',
     [
@@ -168,7 +166,6 @@ async function runSeed(): Promise<void> {
   )
 
   const conditioningDay = routine(
-    'routine-conditioning',
     'Conditioning',
     'High-intensity full-body conditioning.',
     [
@@ -181,10 +178,12 @@ async function runSeed(): Promise<void> {
     now,
   )
 
-  await db.routines.bulkAdd([pushDay, pullDay, lowerDay, upperDay, conditioningDay])
+  const seededRoutines = [pushDay, pullDay, lowerDay, upperDay, conditioningDay]
+  await db.routines.bulkAdd(seededRoutines)
+  await Promise.all(seededRoutines.map((r) => enqueueSync('routines', r.id, 'upsert')))
 
   const activeRecovery: RecoveryRoutineTemplate = {
-    id: 'recovery-active',
+    id: crypto.randomUUID(),
     type: 'recovery',
     name: 'Active Recovery Day',
     description: 'Light movement and mobility to aid recovery.',
@@ -202,7 +201,7 @@ async function runSeed(): Promise<void> {
   }
 
   const fullRest: RecoveryRoutineTemplate = {
-    id: 'recovery-full-rest',
+    id: crypto.randomUUID(),
     type: 'recovery',
     name: 'Full Rest Day',
     description: 'No structured training — focus on hydration and sleep.',
@@ -219,9 +218,11 @@ async function runSeed(): Promise<void> {
   }
 
   await db.recoveryRoutines.bulkAdd([activeRecovery, fullRest])
+  await enqueueSync('recoveryRoutines', activeRecovery.id, 'upsert')
+  await enqueueSync('recoveryRoutines', fullRest.id, 'upsert')
 
   const schedule: RecurringSchedule = {
-    id: 'schedule-main-cycle',
+    id: crypto.randomUUID(),
     name: '8-Day Training Cycle',
     startDate: toDateKey(new Date()),
     pattern: {
@@ -241,4 +242,5 @@ async function runSeed(): Promise<void> {
     updatedAt: now,
   }
   await db.schedules.add(schedule)
+  await enqueueSync('schedules', schedule.id, 'upsert')
 }

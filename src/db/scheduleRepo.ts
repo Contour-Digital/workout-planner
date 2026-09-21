@@ -1,4 +1,5 @@
 import { db } from './db'
+import { enqueueSync } from './sync/outbox'
 import type { DayAssignment, OccurrenceOverride, RecurringSchedule } from '../models/schedule'
 import { resolveOccurrences, splitScheduleAtDate } from '../lib/recurrence'
 
@@ -8,12 +9,15 @@ export async function getAllSchedules(): Promise<RecurringSchedule[]> {
 
 export async function saveSchedule(schedule: RecurringSchedule): Promise<void> {
   await db.schedules.put({ ...schedule, updatedAt: new Date().toISOString() })
+  await enqueueSync('schedules', schedule.id, 'upsert')
 }
 
 export async function deleteSchedule(id: string): Promise<void> {
   await db.schedules.delete(id)
+  await enqueueSync('schedules', id, 'delete')
   const overrides = await db.occurrenceOverrides.where('scheduleId').equals(id).toArray()
   await db.occurrenceOverrides.bulkDelete(overrides.map((o) => o.id))
+  await Promise.all(overrides.map((o) => enqueueSync('occurrenceOverrides', o.id, 'delete')))
 }
 
 export async function getOccurrencesInRange(fromDate: string, toDate: string) {
@@ -34,6 +38,7 @@ async function upsertOverride(
   if (existing) {
     const updated = { ...existing, ...patch, updatedAt: now }
     await db.occurrenceOverrides.put(updated)
+    await enqueueSync('occurrenceOverrides', updated.id, 'upsert')
     return updated
   }
   const created: OccurrenceOverride = {
@@ -45,6 +50,7 @@ async function upsertOverride(
     ...patch,
   }
   await db.occurrenceOverrides.add(created)
+  await enqueueSync('occurrenceOverrides', created.id, 'upsert')
   return created
 }
 
@@ -102,6 +108,8 @@ export async function editThisAndFuture(
     await db.schedules.put(truncatedOriginal)
     await db.schedules.put({ ...continuation, pattern })
   })
+  await enqueueSync('schedules', truncatedOriginal.id, 'upsert')
+  await enqueueSync('schedules', continuation.id, 'upsert')
 }
 
 /** Deletes the entire repeating series from a given date forward (keeps history before it). */
@@ -114,4 +122,5 @@ export async function deleteSeriesFrom(scheduleId: string, fromDate: string): Pr
   }
   const { truncatedOriginal } = splitScheduleAtDate(schedule, fromDate)
   await db.schedules.put(truncatedOriginal)
+  await enqueueSync('schedules', truncatedOriginal.id, 'upsert')
 }

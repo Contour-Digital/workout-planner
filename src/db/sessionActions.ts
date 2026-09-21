@@ -1,4 +1,5 @@
 import { db } from './db'
+import { enqueueSync } from './sync/outbox'
 import { saveRoutine } from './routinesRepo'
 import { linkOccurrenceSession } from './scheduleRepo'
 import { createEmptySection, type RoutineTemplate, type SetTarget } from '../models/routine'
@@ -23,6 +24,13 @@ function toSessionEntry(exerciseConfig: { id: string; exerciseId: string; orderI
     restSeconds: exerciseConfig.restSeconds,
     notes: exerciseConfig.notes,
   }
+}
+
+function syncWorkout(sessionId: string): Promise<void> {
+  return enqueueSync('workoutSessions', sessionId, 'upsert')
+}
+function syncRecovery(sessionId: string): Promise<void> {
+  return enqueueSync('recoverySessions', sessionId, 'upsert')
 }
 
 async function exerciseName(exerciseId: string): Promise<string> {
@@ -82,6 +90,7 @@ export async function startWorkoutSession(opts: {
     updatedAt: now,
   }
   await db.workoutSessions.add(session)
+  await syncWorkout(session.id)
   if (opts.scheduleId && opts.occurrenceDate) {
     await linkOccurrenceSession(opts.scheduleId, opts.occurrenceDate, session.id)
   }
@@ -104,6 +113,7 @@ export async function startBlankWorkoutSession(name = 'Workout'): Promise<Workou
     updatedAt: now,
   }
   await db.workoutSessions.add(session)
+  await syncWorkout(session.id)
   return session
 }
 
@@ -116,6 +126,7 @@ export async function addAdHocExercise(sessionId: string, exerciseId: string, ta
   )
   entry.addedAdHoc = true
   await db.workoutSessions.update(sessionId, { main: [...session.main, entry], updatedAt: new Date().toISOString() })
+  await syncWorkout(sessionId)
 }
 
 export async function removeSessionExercise(sessionId: string, entryId: string, section: 'warmup' | 'main' | 'cooldown' = 'main'): Promise<void> {
@@ -128,6 +139,7 @@ export async function removeSessionExercise(sessionId: string, entryId: string, 
   } else if (section === 'cooldown' && session.cooldown) {
     await db.workoutSessions.update(sessionId, { cooldown: { ...session.cooldown, exercises: session.cooldown.exercises.filter((e) => e.id !== entryId) } })
   }
+  await syncWorkout(sessionId)
 }
 
 async function mapEntryAcrossSections(
@@ -156,6 +168,7 @@ export async function addSetToEntry(sessionId: string, entryId: string): Promise
     }
   })
   await db.workoutSessions.update(sessionId, patch)
+  await syncWorkout(sessionId)
 }
 
 export async function removeSetFromEntry(sessionId: string, entryId: string, setId: string): Promise<void> {
@@ -171,6 +184,7 @@ export async function removeSetFromEntry(sessionId: string, entryId: string, set
     }
   })
   await db.workoutSessions.update(sessionId, patch)
+  await syncWorkout(sessionId)
 }
 
 export async function updateEntryNotes(sessionId: string, entryId: string, notes: string): Promise<void> {
@@ -178,14 +192,17 @@ export async function updateEntryNotes(sessionId: string, entryId: string, notes
   if (!session) return
   const patch = await mapEntryAcrossSections(session, entryId, (entry) => ({ ...entry, notes }))
   await db.workoutSessions.update(sessionId, patch)
+  await syncWorkout(sessionId)
 }
 
 export async function updateSessionNotes(sessionId: string, notes: string): Promise<void> {
   await db.workoutSessions.update(sessionId, { notes })
+  await syncWorkout(sessionId)
 }
 
 export async function saveWorkoutReview(sessionId: string, review: WorkoutSession['review']): Promise<void> {
   await db.workoutSessions.update(sessionId, { review })
+  await syncWorkout(sessionId)
 }
 
 export async function updateSetResult(sessionId: string, entryId: string, setId: string, patch: Partial<SetResult>): Promise<void> {
@@ -206,6 +223,7 @@ export async function updateSetResult(sessionId: string, entryId: string, setId:
     cooldown: session.cooldown ? { ...session.cooldown, exercises: patchEntries(session.cooldown.exercises) } : session.cooldown,
     updatedAt: new Date().toISOString(),
   })
+  await syncWorkout(sessionId)
 }
 
 export async function pauseWorkoutSession(sessionId: string): Promise<void> {
@@ -214,6 +232,7 @@ export async function pauseWorkoutSession(sessionId: string): Promise<void> {
   await db.workoutSessions.update(sessionId, {
     pauseIntervals: [...session.pauseIntervals, { start: new Date().toISOString() }],
   })
+  await syncWorkout(sessionId)
 }
 
 export async function resumeWorkoutSession(sessionId: string): Promise<void> {
@@ -225,15 +244,18 @@ export async function resumeWorkoutSession(sessionId: string): Promise<void> {
   await db.workoutSessions.update(sessionId, {
     pauseIntervals: session.pauseIntervals.map((p) => (p === open ? { ...p, end: now } : p)),
   })
+  await syncWorkout(sessionId)
 }
 
 export async function startRestTimer(sessionId: string, seconds: number): Promise<void> {
   const endsAt = new Date(Date.now() + seconds * 1000).toISOString()
   await db.workoutSessions.update(sessionId, { restTimerEndsAt: endsAt })
+  await syncWorkout(sessionId)
 }
 
 export async function clearRestTimer(sessionId: string): Promise<void> {
   await db.workoutSessions.update(sessionId, { restTimerEndsAt: undefined })
+  await syncWorkout(sessionId)
 }
 
 export async function finishWorkoutSession(sessionId: string): Promise<void> {
@@ -250,6 +272,7 @@ export async function finishWorkoutSession(sessionId: string): Promise<void> {
     finishedAt: now,
     pauseIntervals: openPause ? session.pauseIntervals.map((p) => (p === openPause ? { ...p, end: now } : p)) : session.pauseIntervals,
   })
+  await syncWorkout(sessionId)
 }
 
 /** Saves an impromptu (or any) session's current exercises as a new reusable routine.
@@ -311,6 +334,7 @@ export async function repeatWorkoutSession(sourceSessionId: string): Promise<Wor
     updatedAt: now,
   }
   await db.workoutSessions.add(session)
+  await syncWorkout(session.id)
   return session
 }
 
@@ -358,6 +382,7 @@ export async function startRecoverySession(opts: {
     updatedAt: now,
   }
   await db.recoverySessions.add(session)
+  await syncRecovery(session.id)
   if (opts.scheduleId && opts.occurrenceDate) {
     await linkOccurrenceSession(opts.scheduleId, opts.occurrenceDate, session.id)
   }
@@ -371,6 +396,12 @@ export async function updateRecoveryActivity(sessionId: string, activityId: stri
     activities: session.activities.map((a) => (a.id === activityId ? { ...a, ...patch } : a)),
     status: 'in_progress',
   })
+  await syncRecovery(sessionId)
+}
+
+export async function updateRecoverySessionNotes(sessionId: string, notes: string): Promise<void> {
+  await db.recoverySessions.update(sessionId, { notes })
+  await syncRecovery(sessionId)
 }
 
 export async function closeRecoverySession(sessionId: string): Promise<void> {
@@ -382,4 +413,5 @@ export async function closeRecoverySession(sessionId: string): Promise<void> {
     status: completed === total ? 'completed' : completed > 0 ? 'partial' : 'skipped',
     finishedAt: new Date().toISOString(),
   })
+  await syncRecovery(sessionId)
 }

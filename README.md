@@ -4,20 +4,26 @@ A mobile-first workout planning and tracking app: build reusable routines (with
 optional warm-up/cool-down sections), schedule them on flexible recurring
 cycles alongside recovery and rest days, run active workout sessions with
 persistent progress, review effort/feelings after each session, and track a
-configurable workout streak.
+configurable workout streak. Backed by Supabase for accounts and cross-device
+sync, with an offline-first local cache so it keeps working without a
+connection.
 
 ## Stack
 
 - **React 19 + TypeScript + Vite**, mobile-first responsive layout (works up
   to desktop), packaged as an installable PWA (`vite-plugin-pwa`).
-- **Dexie.js (IndexedDB)** as the local-first data layer — offline by
-  default. The repository layer in `src/db/` is the only place that touches
-  Dexie directly, so a backend/sync layer can be added later without
-  reworking feature code.
-- **Zustand** for small global UI state (settings/theme); everything else
-  reads live from IndexedDB via `dexie-react-hooks`' `useLiveQuery`, so the
-  database is the single source of truth — there's no separate in-memory
-  copy of session state to fall out of sync or duplicate on restore.
+- **Supabase** for auth (email/password) and Postgres storage. Every
+  user-owned table has row-level security scoped to `auth.uid()`, so one
+  user can never read or write another's data even though they share the
+  same database.
+- **Dexie.js (IndexedDB)** as the local-first cache — the UI always reads
+  and writes here first, so the app stays fast and fully usable offline; a
+  sync engine reconciles it with Supabase in the background.
+- **Zustand** for small global UI state (auth/settings/sync status);
+  everything else reads live from IndexedDB via `dexie-react-hooks`'
+  `useLiveQuery`, so local storage is the single source of truth for the UI
+  — there's no separate in-memory copy of session state to fall out of sync
+  or duplicate on restore.
 - **React Router** for navigation, **Tailwind CSS v4** for styling with the
   brand palette expressed as design tokens (`src/index.css`), **date-fns** /
   **date-fns-tz** for calendar-safe recurrence math, **Vitest** for tests.
@@ -27,12 +33,14 @@ configurable workout streak.
 ```
 src/
   models/       Domain types (exercise, routine, recovery, schedule, session, profile, settings, units)
-  db/           Dexie schema + repository functions + business-logic actions (sessionActions.ts, scheduleRepo.ts) + seed data
-  lib/          Pure, tested logic: recurrence.ts (scheduling engine), streak.ts (streak engine), useNow.ts
-  store/        Zustand stores (settings/theme)
+  db/           Dexie schema + repository functions + business-logic actions + seed data
+  db/sync/      Outbox-based push, pull + realtime, and sync engine orchestration (Dexie <-> Supabase)
+  lib/          Pure, tested logic: recurrence.ts (scheduling engine), streak.ts (streak engine), useNow.ts, supabaseClient.ts
+  store/        Zustand stores (auth, settings/theme, sync status)
   components/ui Reusable design-system primitives (Button, Card, Sheet, ProgressBar, Badge, icons, …)
-  features/     Screens, grouped by domain (dashboard, routines, exercises, session, recovery, history, profile, schedule)
+  features/     Screens, grouped by domain (auth, dashboard, routines, exercises, session, recovery, history, profile, schedule)
   routes/       App shell (nav) + route table
+supabase/       (schema lives in the Supabase project itself — see "Database schema" below)
 ```
 
 ### Data model
@@ -71,25 +79,117 @@ session already exists for a given schedule occurrence, `startWorkoutSession`
 returns it instead of creating a duplicate, which is what makes app-restore
 safe.
 
+### Sync architecture
+
+The app requires signing in (email/password via Supabase Auth), but every
+read and write still goes through Dexie first — the UI never waits on a
+network round-trip. Two independent mechanisms keep IndexedDB and Supabase
+in agreement, both in `src/db/sync/`:
+
+- **Push (outbox):** every write in the repository layer (`src/db/*Repo.ts`,
+  `sessionActions.ts`) finishes by calling `enqueueSync(table, id, op)`
+  (`src/db/sync/outbox.ts`), which upserts a tiny pending-change marker into
+  a local `syncOutbox` table, keyed by `` `${table}:${id}` `` — repeated
+  edits to the same record coalesce into one pending entry instead of
+  piling up. `flushOutbox()` drains it to Supabase, re-reading each
+  record's *current* local state at send time (so only the latest edit is
+  ever pushed), retrying failed entries on the next pass rather than
+  blocking on them.
+- **Pull:** `pullAll()` does a full fetch of the signed-in user's rows
+  across every table right after sign-in; after that, a Supabase Realtime
+  subscription per table (`subscribeRealtime()`) applies live inserts/
+  updates/deletes from other devices/tabs as they happen. Both paths merge
+  through the same `mergeRemoteRow()` using last-write-wins on `updatedAt` —
+  a remote change only overwrites a local row if it's newer (or the local
+  row doesn't exist yet). Applying a pulled row writes straight to the
+  Dexie table, bypassing the repo layer, so it never re-enters the outbox —
+  there's no push/pull feedback loop.
+- **Library exercises** are shared reference data, not user-owned: they're
+  seeded once into Supabase (read-only for clients via RLS) and pulled into
+  a local cache on every app start, falling back to a bundled copy if the
+  network is unreachable.
+- **New accounts** get seeded with example routines/recovery routines and an
+  8-day training cycle — but only after the initial pull comes back empty,
+  so a returning user signing in on a second device doesn't get a duplicate
+  set of demo content next to their real data.
+
+`src/features/profile/ProfilePage.tsx` shows live sync status (idle/
+syncing/offline/error) and pending-change count, and a **Sign out** button.
+
+## Environment variables
+
+The app needs a Supabase project's URL and anon/publishable key. Copy
+`.env.example` to `.env.local` for local development:
+
+```bash
+cp .env.example .env.local
+# then fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+# (Supabase dashboard -> Settings -> API)
+```
+
+| Variable | Where to find it | Notes |
+|---|---|---|
+| `VITE_SUPABASE_URL` | Supabase project Settings -> API -> Project URL | e.g. `https://xxxxx.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | Supabase project Settings -> API -> anon/publishable key | Safe to expose client-side — access is enforced by Postgres RLS, not by keeping this secret |
+
+### Deploying on Vercel
+
+Set the same two variables under **Project Settings -> Environment
+Variables** (for Production, Preview, and Development as you prefer), then
+deploy — no other configuration is needed:
+
+- **Framework preset:** Vite (auto-detected)
+- **Build command:** `npm run build`
+- **Output directory:** `dist`
+- **Install command:** `npm install`
+
+Nothing else in the app reads `process.env`/`import.meta.env`, so these two
+variables are the entire environment-variable surface.
+
+## Database schema
+
+The Postgres schema (tables, indexes, row-level security policies, and the
+realtime publication) was applied directly to the Supabase project via
+migrations — there's no separate schema file checked into this repo. To
+recreate it elsewhere (or inspect it), pull the schema from the project:
+
+```bash
+npx supabase login
+npx supabase link --project-ref <your-project-ref>
+npx supabase db pull        # writes supabase/migrations/*.sql
+```
+
+At a glance: `library_exercises` (shared, read-only to clients) plus 11
+user-owned tables — `profiles`, `settings`, `custom_exercises`, `routines`,
+`recovery_routines`, `schedules`, `occurrence_overrides`, `workout_sessions`,
+`recovery_sessions`, `rest_day_sessions`, `weight_entries`, `height_entries`
+— each with a `user_id` (or, for the two singleton tables `profiles`/
+`settings`, an `id`) referencing `auth.users(id)`, RLS restricting all
+access to `auth.uid()`, and complex nested data (sets, exercise entries,
+recovery activities, schedule patterns, reviews) stored as `jsonb` rather
+than further normalized, mirroring the shape Dexie already uses locally.
+
 ## Running it
 
 ```bash
 npm install
-npm run dev       # start the dev server
-npm run build      # typecheck + production build
-npm run preview    # preview the production build
-npm test           # run the Vitest suite once
-npx vitest         # watch mode
+cp .env.example .env.local   # fill in your Supabase project's URL + anon key
+npm run dev                  # start the dev server
+npm run build                # typecheck + production build
+npm run preview              # preview the production build
+npm test                     # run the Vitest suite once
+npx vitest                   # watch mode
 ```
 
-The app seeds itself on first run with a sample exercise library, five
-workout routines, two recovery routines, and an 8-day training cycle
-(push/pull/lower/recovery/upper/conditioning/active-recovery/full-rest)
-starting today, so there's always something on the Dashboard to try.
+On first sign-up, the app seeds itself with a sample exercise library
+(pulled from Supabase), five workout routines, two recovery routines, and
+an 8-day training cycle (push/pull/lower/recovery/upper/conditioning/
+active-recovery/full-rest) starting today, so there's always something on
+the Dashboard to try.
 
 ## Tests
 
-`npm test` covers:
+`npm test` covers pure logic that doesn't require a live Supabase connection:
 
 - `src/lib/__tests__/recurrence.test.ts` — every-N-days cycles, weekday
   patterns, one-off dates, a DST spring-forward boundary, reschedule/skip/
@@ -103,8 +203,7 @@ starting today, so there's always something on the Dashboard to try.
 
 `npm run build` produces a static `dist/` folder (including a service
 worker/manifest from `vite-plugin-pwa`) that can be hosted on any static
-host (Netlify, Vercel, GitHub Pages, S3+CloudFront, etc.) — there's no
-server component. Because all data lives in the browser's IndexedDB, each
-browser/device currently has its own independent data; the repository layer
-in `src/db/` is the intended integration point for adding a backend and
-sync later without touching feature code.
+host (Vercel, Netlify, GitHub Pages, S3+CloudFront, etc.) — the app itself
+has no server component; Supabase is the only backend dependency, reached
+directly from the browser. See **Environment variables** above for what the
+host needs configured.

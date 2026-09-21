@@ -7,6 +7,19 @@ import type { WorkoutSession, RecoverySession, RestDaySession } from '../models/
 import type { Profile, WeightEntry, HeightEntry } from '../models/profile'
 import type { AppSettings } from '../models/settings'
 
+/** Lightweight pending-push record. Keyed by `${dexieTableName}:${recordId}`, so
+ *  repeated writes to the same record before the outbox drains just overwrite the
+ *  pending entry (natural de-dup/coalescing) rather than piling up. The payload
+ *  itself is *not* stored here — the push worker re-reads the record's current
+ *  state from its local table at flush time, so only the latest state is ever sent. */
+export interface SyncOutboxEntry {
+  key: string
+  table: string
+  recordId: string
+  op: 'upsert' | 'delete'
+  enqueuedAt: string
+}
+
 export class WorkoutDB extends Dexie {
   libraryExercises!: Table<LibraryExercise, string>
   customExercises!: Table<CustomExercise, string>
@@ -21,10 +34,12 @@ export class WorkoutDB extends Dexie {
   weightEntries!: Table<WeightEntry, string>
   heightEntries!: Table<HeightEntry, string>
   settings!: Table<AppSettings, string>
+  syncOutbox!: Table<SyncOutboxEntry, string>
 
   constructor() {
     super('workout-planner')
     this.version(1).stores({
+      syncOutbox: 'key, table, recordId',
       libraryExercises: 'id, category, name',
       customExercises: 'id, category, name',
       routines: 'id, archived, name, updatedAt',

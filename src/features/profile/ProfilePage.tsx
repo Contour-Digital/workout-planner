@@ -7,8 +7,11 @@ import { addHeightEntry, addWeightEntry, getHeightHistory, getProfile, getWeight
 import { calculateAge } from '../../models/profile'
 import { displayHeightFor, displayWeightFor, parseHeightInput, parseWeightInput } from './unitHelpers'
 import { useSettingsStore } from '../../store/settingsStore'
+import { useAuthStore } from '../../store/authStore'
 import { db } from '../../db/db'
 import { StreakSettingsCard } from './StreakSettingsCard'
+import { supabase } from '../../lib/supabaseClient'
+import { useSyncStore } from '../../store/syncStore'
 
 export function ProfilePage() {
   const profile = useLiveQuery(getProfile)
@@ -197,13 +200,40 @@ export function ProfilePage() {
         </div>
       </Card>
 
-      <Card className="flex flex-col gap-3">
+      <Card className="mb-4 flex flex-col gap-3">
         <h2 className="text-sm font-bold uppercase tracking-wide text-primary-muted">Data</h2>
         <Button variant="secondary" onClick={exportData}>
           Export all data (JSON)
         </Button>
       </Card>
+
+      <AccountCard />
     </div>
+  )
+}
+
+function AccountCard() {
+  const email = useAuthStore((s) => s.session?.user.email)
+  const syncState = useSyncStore((s) => s.state)
+  const lastError = useSyncStore((s) => s.lastError)
+  const pendingCount = useSyncStore((s) => s.pendingCount)
+
+  return (
+    <Card className="flex flex-col gap-3">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-primary-muted">Account</h2>
+      <p className="text-sm text-primary-muted">Signed in as {email}</p>
+      <p className="text-sm text-primary-muted">
+        Sync:{' '}
+        <span className={syncState === 'error' ? 'font-medium text-danger' : 'font-medium text-primary'}>
+          {syncState === 'syncing' ? 'Syncing…' : syncState === 'offline' ? 'Offline — will sync when reconnected' : syncState === 'error' ? 'Sync error' : 'Up to date'}
+        </span>
+        {pendingCount > 0 && ` (${pendingCount} pending)`}
+      </p>
+      {lastError && <p className="text-xs text-danger">{lastError}</p>}
+      <Button variant="ghost" onClick={() => supabase.auth.signOut()}>
+        Sign out
+      </Button>
+    </Card>
   )
 }
 

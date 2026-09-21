@@ -1,4 +1,5 @@
 import { db } from './db'
+import { enqueueSync } from './sync/outbox'
 import type { RecoverySession, RestDaySession, WorkoutSession } from '../models/session'
 
 export async function getActiveWorkoutSession(): Promise<WorkoutSession | undefined> {
@@ -16,10 +17,12 @@ export async function getWorkoutSession(id: string): Promise<WorkoutSession | un
 
 export async function saveWorkoutSession(session: WorkoutSession): Promise<void> {
   await db.workoutSessions.put({ ...session, updatedAt: new Date().toISOString() })
+  await enqueueSync('workoutSessions', session.id, 'upsert')
 }
 
 export async function deleteWorkoutSession(id: string): Promise<void> {
   await db.workoutSessions.delete(id)
+  await enqueueSync('workoutSessions', id, 'delete')
 }
 
 export async function getRecoverySession(id: string): Promise<RecoverySession | undefined> {
@@ -28,10 +31,12 @@ export async function getRecoverySession(id: string): Promise<RecoverySession | 
 
 export async function saveRecoverySession(session: RecoverySession): Promise<void> {
   await db.recoverySessions.put({ ...session, updatedAt: new Date().toISOString() })
+  await enqueueSync('recoverySessions', session.id, 'upsert')
 }
 
 export async function saveRestDaySession(session: RestDaySession): Promise<void> {
   await db.restDaySessions.put({ ...session, updatedAt: new Date().toISOString() })
+  await enqueueSync('restDaySessions', session.id, 'upsert')
 }
 
 export async function getHistorySessions(): Promise<(WorkoutSession | RecoverySession | RestDaySession)[]> {

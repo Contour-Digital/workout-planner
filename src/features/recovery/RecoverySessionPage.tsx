@@ -4,8 +4,7 @@ import { Button } from '../../components/ui/Button'
 import { ProgressBar } from '../../components/ui/ProgressBar'
 import { RecoveryActivityCard } from './RecoveryActivityCard'
 import { getRecoverySession } from '../../db/sessionsRepo'
-import { closeRecoverySession, updateRecoveryActivity } from '../../db/sessionActions'
-import { db } from '../../db/db'
+import { closeRecoverySession, updateRecoveryActivity, updateRecoverySessionNotes } from '../../db/sessionActions'
 
 export function RecoverySessionPage() {
   const { id } = useParams()
@@ -48,7 +47,7 @@ export function RecoverySessionPage() {
         <textarea
           className="min-h-16 rounded-[var(--radius-control)] border border-primary-border px-3 py-2 text-sm"
           defaultValue={session.notes ?? ''}
-          onBlur={(e) => db.recoverySessions.update(session.id, { notes: e.target.value })}
+          onBlur={(e) => updateRecoverySessionNotes(session.id, e.target.value)}
         />
       </label>
 

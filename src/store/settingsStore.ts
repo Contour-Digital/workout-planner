@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { getSettings, saveSettings } from '../db/settingsRepo'
+import { ensureSettings, getSettings, saveSettings } from '../db/settingsRepo'
 import { DEFAULT_SETTINGS, type AppSettings } from '../models/settings'
 
 interface SettingsState {
@@ -19,6 +19,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   settings: DEFAULT_SETTINGS,
   loaded: false,
   load: async () => {
+    await ensureSettings()
     const settings = await getSettings()
     applyTheme(settings.theme)
     set({ settings, loaded: true })
