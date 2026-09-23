@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/ui/PageHeader'
+import { Badge } from '../../components/ui/Badge'
+import { IconSparkle } from '../../components/ui/icons'
 import { RoutineSectionEditor } from './RoutineSectionEditor'
 import { getRoutine, saveRoutine } from '../../db/routinesRepo'
 import { createEmptySection, type ExerciseConfig, type RoutineSection, type RoutineTemplate } from '../../models/routine'
+import type { GeneratedRoutineResult } from '../../lib/aiRoutineGenerator'
 
 export function RoutineEditorPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const isNew = !id || id === 'new'
+  const aiDraft = isNew ? (location.state as { draft?: RoutineTemplate; aiSummary?: GeneratedRoutineResult } | null) : null
 
   const [routine, setRoutine] = useState<RoutineTemplate | null>(null)
   const [loading, setLoading] = useState(!isNew)
@@ -17,6 +22,10 @@ export function RoutineEditorPage() {
 
   useEffect(() => {
     if (isNew) {
+      if (aiDraft?.draft) {
+        setRoutine(aiDraft.draft)
+        return
+      }
       const now = new Date().toISOString()
       setRoutine({
         id: crypto.randomUUID(),
@@ -68,6 +77,29 @@ export function RoutineEditorPage() {
   return (
     <div className="p-4 pb-28 sm:p-6">
       <PageHeader title={isNew ? 'New Routine' : 'Edit Routine'} />
+
+      {aiDraft?.aiSummary && (
+        <div className="mb-4 rounded-[var(--radius-card)] border border-secondary/40 bg-secondary-tint p-3">
+          <div className="mb-1 flex items-center gap-1.5 text-sm font-medium text-secondary">
+            <IconSparkle width={16} height={16} />
+            Generated from your notes
+          </div>
+          <p className="text-xs text-primary-muted">
+            Matched {aiDraft.aiSummary.matchedCount} exercise{aiDraft.aiSummary.matchedCount === 1 ? '' : 's'} to your library.
+            {aiDraft.aiSummary.createdExerciseNames.length > 0 && (
+              <>
+                {' '}
+                Created {aiDraft.aiSummary.createdExerciseNames.length} new custom exercise
+                {aiDraft.aiSummary.createdExerciseNames.length === 1 ? '' : 's'}:{' '}
+                {aiDraft.aiSummary.createdExerciseNames.join(', ')}.
+              </>
+            )}
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            <Badge tone="secondary">Review everything below, then save</Badge>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-4">
         <label className="flex flex-col gap-1">

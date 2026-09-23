@@ -149,3 +149,9 @@ export const IconCalendar = (p: SVGProps<SVGSVGElement>) => (
     <path d="M3 10h18M8 3v4M16 3v4" />
   </Svg>
 )
+export const IconSparkle = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <path d="M12 3c0 3.5 1.5 5 5 5-3.5 0-5 1.5-5 5 0-3.5-1.5-5-5-5 3.5 0 5-1.5 5-5Z" />
+    <path d="M19 15c0 1.5.7 2.2 2.2 2.2C19.7 17.2 19 17.9 19 19.4c0-1.5-.7-2.2-2.2-2.2 1.5 0 2.2-.7 2.2-2.2Z" />
+  </Svg>
+)

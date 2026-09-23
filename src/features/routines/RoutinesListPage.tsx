@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { GenerateRoutineSheet } from './GenerateRoutineSheet'
 import {
   IconArchive,
   IconCalendar,
@@ -17,6 +18,7 @@ import {
   IconLeaf,
   IconPlay,
   IconPlus,
+  IconSparkle,
   IconTrash,
 } from '../../components/ui/icons'
 import { db } from '../../db/db'
@@ -44,6 +46,7 @@ export function RoutinesListPage() {
   const [showArchived, setShowArchived] = useState(false)
   const [deletingRoutine, setDeletingRoutine] = useState<{ id: string; name: string; kind: 'workout' | 'recovery' } | null>(null)
   const [deletingSchedule, setDeletingSchedule] = useState<RecurringSchedule | null>(null)
+  const [generateOpen, setGenerateOpen] = useState(false)
 
   const routines = useLiveQuery(() => db.routines.toArray(), [], []) ?? []
   const recoveryRoutines = useLiveQuery(() => db.recoveryRoutines.toArray(), [], []) ?? []
@@ -73,6 +76,11 @@ export function RoutinesListPage() {
             {tab === 'schedules' && (
               <Button size="sm" variant="secondary" icon={<IconCalendar width={18} height={18} />} onClick={() => navigate('/calendar')}>
                 Calendar
+              </Button>
+            )}
+            {tab === 'workout' && (
+              <Button size="sm" variant="secondary" icon={<IconSparkle width={18} height={18} />} onClick={() => setGenerateOpen(true)}>
+                From notes
               </Button>
             )}
             <Button
@@ -124,9 +132,14 @@ export function RoutinesListPage() {
             description={showArchived ? undefined : 'Create a reusable routine to schedule and track your training.'}
             action={
               !showArchived && (
-                <Button onClick={() => navigate('/routines/new')} icon={<IconPlus width={18} height={18} />}>
-                  Create routine
-                </Button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button onClick={() => navigate('/routines/new')} icon={<IconPlus width={18} height={18} />}>
+                    Create routine
+                  </Button>
+                  <Button variant="secondary" onClick={() => setGenerateOpen(true)} icon={<IconSparkle width={18} height={18} />}>
+                    Generate from notes
+                  </Button>
+                </div>
               )
             }
           />
@@ -239,6 +252,8 @@ export function RoutinesListPage() {
           setDeletingSchedule(null)
         }}
       />
+
+      <GenerateRoutineSheet open={generateOpen} onClose={() => setGenerateOpen(false)} />
     </div>
   )
 }

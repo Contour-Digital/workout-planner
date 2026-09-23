@@ -146,6 +146,32 @@ deploy — no other configuration is needed:
 Nothing else in the app reads `process.env`/`import.meta.env`, so these two
 variables are the entire environment-variable surface.
 
+## AI routine generator
+
+The "From notes" button on the Workouts tab lets you paste a workout you
+wrote elsewhere (notes app, text, spreadsheet) and generates a structured
+routine from it, which lands in the routine editor pre-filled for you to
+review and edit — nothing is saved until you hit **Save routine**.
+
+This is powered by a Supabase Edge Function (`supabase/functions/parse-workout`)
+that calls the Anthropic API. It requires an Anthropic API key set as an Edge
+Function secret — this can't be done from the client, so it's a one-time
+manual step:
+
+```bash
+npx supabase login
+npx supabase link --project-ref <your-project-ref>
+npx supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+```
+
+(or Supabase dashboard -> Edge Functions -> `parse-workout` -> Secrets). Get
+a key from [console.anthropic.com](https://console.anthropic.com). Without
+this secret set, the "From notes" flow returns an error but the rest of the
+app is unaffected.
+
+Exercise names from the parsed notes are fuzzy-matched against your existing
+library; anything unmatched becomes a new custom exercise automatically.
+
 ## Database schema
 
 The Postgres schema (tables, indexes, row-level security policies, and the
