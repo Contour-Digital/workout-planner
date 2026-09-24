@@ -36,6 +36,7 @@ export function SessionExerciseCard({
   const [exercise, setExercise] = useState<Exercise | null>(null)
   const [previous, setPrevious] = useState<string | null>(null)
   const vibrationEnabled = useSettingsStore((s) => s.settings.vibrationEnabled)
+  const isCardio = exercise?.category === 'cardio'
 
   useEffect(() => {
     getExercise(entry.exerciseId).then((e) => e && setExercise(e))
@@ -108,25 +109,57 @@ export function SessionExerciseCard({
                 <div key={set.id} className="flex items-center gap-2">
                   <span className="w-6 shrink-0 text-xs font-semibold text-primary-muted">{i + 1}</span>
                   <span className="w-24 shrink-0 text-xs text-primary-muted">
-                    Target: {target?.targetReps ?? '–'}
-                    {target?.targetWeightKg ? ` × ${target.targetWeightKg}kg` : ''}
+                    {isCardio ? (
+                      <>
+                        Target: {target?.targetDurationSeconds ? `${target.targetDurationSeconds}s` : '–'}
+                        {target?.targetDistanceMeters ? ` × ${target.targetDistanceMeters}m` : ''}
+                      </>
+                    ) : (
+                      <>
+                        Target: {target?.targetReps ?? '–'}
+                        {target?.targetWeightKg ? ` × ${target.targetWeightKg}kg` : ''}
+                      </>
+                    )}
                   </span>
-                  <input
-                    type="number"
-                    aria-label={`Set ${i + 1} actual reps`}
-                    placeholder="reps"
-                    className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
-                    value={set.actualReps ?? ''}
-                    onChange={(e) => onToggleSet(set.id, { actualReps: e.target.value === '' ? undefined : Number(e.target.value) })}
-                  />
-                  <input
-                    type="number"
-                    aria-label={`Set ${i + 1} actual weight`}
-                    placeholder="kg"
-                    className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
-                    value={set.actualWeightKg ?? ''}
-                    onChange={(e) => onToggleSet(set.id, { actualWeightKg: e.target.value === '' ? undefined : Number(e.target.value) })}
-                  />
+                  {isCardio ? (
+                    <>
+                      <input
+                        type="number"
+                        aria-label={`Set ${i + 1} actual duration in seconds`}
+                        placeholder="secs"
+                        className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
+                        value={set.actualDurationSeconds ?? ''}
+                        onChange={(e) => onToggleSet(set.id, { actualDurationSeconds: e.target.value === '' ? undefined : Number(e.target.value) })}
+                      />
+                      <input
+                        type="number"
+                        aria-label={`Set ${i + 1} actual distance in meters`}
+                        placeholder="m"
+                        className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
+                        value={set.actualDistanceMeters ?? ''}
+                        onChange={(e) => onToggleSet(set.id, { actualDistanceMeters: e.target.value === '' ? undefined : Number(e.target.value) })}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="number"
+                        aria-label={`Set ${i + 1} actual reps`}
+                        placeholder="reps"
+                        className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
+                        value={set.actualReps ?? ''}
+                        onChange={(e) => onToggleSet(set.id, { actualReps: e.target.value === '' ? undefined : Number(e.target.value) })}
+                      />
+                      <input
+                        type="number"
+                        aria-label={`Set ${i + 1} actual weight`}
+                        placeholder="kg"
+                        className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
+                        value={set.actualWeightKg ?? ''}
+                        onChange={(e) => onToggleSet(set.id, { actualWeightKg: e.target.value === '' ? undefined : Number(e.target.value) })}
+                      />
+                    </>
+                  )}
                   <button
                     onClick={() => handleQuickComplete(set, i)}
                     aria-pressed={set.completed}

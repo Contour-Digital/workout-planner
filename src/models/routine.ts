@@ -1,3 +1,5 @@
+import type { ExerciseCategory } from './exercise'
+
 /** A single planned set within an exercise config. Values are optional because
  * not every exercise uses every metric (e.g. a plank has duration but no weight). */
 export interface SetTarget {
@@ -46,17 +48,20 @@ export function createEmptySection(): RoutineSection {
   return { enabled: false, exercises: [] }
 }
 
-export function createEmptySetTarget(setNumber: number): SetTarget {
+/** Cardio is tracked by time/distance rather than reps — leave that default off
+ *  entirely rather than presetting a meaningless "10 reps" for a run or a row. */
+export function createEmptySetTarget(setNumber: number, category?: ExerciseCategory): SetTarget {
+  if (category === 'cardio') return { id: crypto.randomUUID(), setNumber }
   return { id: crypto.randomUUID(), setNumber, targetReps: 10 }
 }
 
-export function createExerciseConfig(exerciseId: string, orderIndex: number): ExerciseConfig {
+export function createExerciseConfig(exerciseId: string, orderIndex: number, category?: ExerciseCategory): ExerciseConfig {
   return {
     id: crypto.randomUUID(),
     exerciseId,
     orderIndex,
     uniformSets: true,
-    sets: [createEmptySetTarget(1), createEmptySetTarget(2), createEmptySetTarget(3)],
+    sets: [createEmptySetTarget(1, category), createEmptySetTarget(2, category), createEmptySetTarget(3, category)],
     restSeconds: 60,
   }
 }

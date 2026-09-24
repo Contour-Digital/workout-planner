@@ -16,15 +16,22 @@ interface ExerciseConfigRowProps {
   onViewDetail: () => void
 }
 
-function summarize(config: ExerciseConfig): string {
+function summarize(config: ExerciseConfig, isCardio: boolean): string {
   if (config.sets.length === 0) return 'No sets configured'
   const first = config.sets[0]
   const parts: string[] = []
   if (config.uniformSets) {
-    if (first.targetReps) parts.push(`${config.sets.length} × ${first.targetReps} reps`)
-    else parts.push(`${config.sets.length} sets`)
-    if (first.targetWeightKg) parts.push(`${first.targetWeightKg} kg`)
-    if (first.targetDurationSeconds) parts.push(`${first.targetDurationSeconds}s`)
+    if (isCardio) {
+      if (first.targetDurationSeconds) parts.push(`${config.sets.length} × ${first.targetDurationSeconds}s`)
+      else parts.push(`${config.sets.length} sets`)
+      if (first.targetDistanceMeters) parts.push(`${first.targetDistanceMeters} m`)
+    } else {
+      if (first.targetReps) parts.push(`${config.sets.length} × ${first.targetReps} reps`)
+      else parts.push(`${config.sets.length} sets`)
+      if (first.targetWeightKg) parts.push(`${first.targetWeightKg} kg`)
+    }
+  } else if (isCardio) {
+    parts.push(config.sets.map((s) => (s.targetDurationSeconds ? `${s.targetDurationSeconds}s` : '–')).join('/'))
     if (first.targetDistanceMeters) parts.push(`${first.targetDistanceMeters} m`)
   } else {
     parts.push(config.sets.map((s) => s.targetReps ?? '–').join('/') + ' reps')
@@ -35,6 +42,7 @@ function summarize(config: ExerciseConfig): string {
 export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMoveUp, onMoveDown, onViewDetail }: ExerciseConfigRowProps) {
   const [expanded, setExpanded] = useState(false)
   const [previous, setPrevious] = useState<string | null>(null)
+  const isCardio = exercise?.category === 'cardio'
 
   useEffect(() => {
     setPrevious(null)
@@ -103,7 +111,7 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
             {exercise && exercise.primaryMuscles.length > 0 && (
               <p className="truncate text-xs text-secondary">{exercise.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ')}</p>
             )}
-            <p className="truncate text-xs text-primary-muted">{summarize(config)}</p>
+            <p className="truncate text-xs text-primary-muted">{summarize(config, isCardio)}</p>
             {previous && <p className="truncate text-xs text-primary-subtle">Previous: {previous}</p>}
           </div>
         </button>
@@ -143,20 +151,38 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
 
           {config.uniformSets ? (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <NumberField label="Reps" value={config.sets[0]?.targetReps} onChange={(v) => setUniformField({ targetReps: v })} />
-              <NumberField label="Weight (kg)" value={config.sets[0]?.targetWeightKg} onChange={(v) => setUniformField({ targetWeightKg: v })} step={0.5} />
-              <NumberField label="Duration (s)" value={config.sets[0]?.targetDurationSeconds} onChange={(v) => setUniformField({ targetDurationSeconds: v })} />
-              <NumberField label="Distance (m)" value={config.sets[0]?.targetDistanceMeters} onChange={(v) => setUniformField({ targetDistanceMeters: v })} />
+              {isCardio ? (
+                <>
+                  <NumberField label="Duration (s)" value={config.sets[0]?.targetDurationSeconds} onChange={(v) => setUniformField({ targetDurationSeconds: v })} />
+                  <NumberField label="Distance (m)" value={config.sets[0]?.targetDistanceMeters} onChange={(v) => setUniformField({ targetDistanceMeters: v })} />
+                </>
+              ) : (
+                <>
+                  <NumberField label="Reps" value={config.sets[0]?.targetReps} onChange={(v) => setUniformField({ targetReps: v })} />
+                  <NumberField label="Weight (kg)" value={config.sets[0]?.targetWeightKg} onChange={(v) => setUniformField({ targetWeightKg: v })} step={0.5} />
+                  <NumberField label="Duration (s)" value={config.sets[0]?.targetDurationSeconds} onChange={(v) => setUniformField({ targetDurationSeconds: v })} />
+                  <NumberField label="Distance (m)" value={config.sets[0]?.targetDistanceMeters} onChange={(v) => setUniformField({ targetDistanceMeters: v })} />
+                </>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-2">
               {config.sets.map((set, i) => (
-                <div key={set.id} className="grid grid-cols-5 items-center gap-2">
+                <div key={set.id} className={isCardio ? 'grid grid-cols-3 items-center gap-2' : 'grid grid-cols-5 items-center gap-2'}>
                   <span className="text-xs font-medium text-primary-muted">Set {i + 1}</span>
-                  <NumberField compact label="Reps" value={set.targetReps} onChange={(v) => updateSet(i, { targetReps: v })} />
-                  <NumberField compact label="Weight" value={set.targetWeightKg} onChange={(v) => updateSet(i, { targetWeightKg: v })} step={0.5} />
-                  <NumberField compact label="Dur (s)" value={set.targetDurationSeconds} onChange={(v) => updateSet(i, { targetDurationSeconds: v })} />
-                  <NumberField compact label="Dist (m)" value={set.targetDistanceMeters} onChange={(v) => updateSet(i, { targetDistanceMeters: v })} />
+                  {isCardio ? (
+                    <>
+                      <NumberField compact label="Dur (s)" value={set.targetDurationSeconds} onChange={(v) => updateSet(i, { targetDurationSeconds: v })} />
+                      <NumberField compact label="Dist (m)" value={set.targetDistanceMeters} onChange={(v) => updateSet(i, { targetDistanceMeters: v })} />
+                    </>
+                  ) : (
+                    <>
+                      <NumberField compact label="Reps" value={set.targetReps} onChange={(v) => updateSet(i, { targetReps: v })} />
+                      <NumberField compact label="Weight" value={set.targetWeightKg} onChange={(v) => updateSet(i, { targetWeightKg: v })} step={0.5} />
+                      <NumberField compact label="Dur (s)" value={set.targetDurationSeconds} onChange={(v) => updateSet(i, { targetDurationSeconds: v })} />
+                      <NumberField compact label="Dist (m)" value={set.targetDistanceMeters} onChange={(v) => updateSet(i, { targetDistanceMeters: v })} />
+                    </>
+                  )}
                 </div>
               ))}
             </div>

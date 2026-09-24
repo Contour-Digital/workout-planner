@@ -1,5 +1,6 @@
 import { db } from './db'
 import { enqueueSync } from './sync/outbox'
+import { getExercise } from './exercisesRepo'
 import { createExerciseConfig, type ExerciseConfig, type SetTarget } from '../models/routine'
 import type { RecoverySession, RestDaySession, WorkoutSession } from '../models/session'
 
@@ -80,7 +81,8 @@ export async function getPreviousExercisePerformance(
  *  from where you left off rather than from scratch. Falls back to createExerciseConfig's
  *  plain defaults when there's no completed history for it yet. */
 export async function createExerciseConfigWithHistory(exerciseId: string, orderIndex: number): Promise<ExerciseConfig> {
-  const base = createExerciseConfig(exerciseId, orderIndex)
+  const exercise = await getExercise(exerciseId)
+  const base = createExerciseConfig(exerciseId, orderIndex, exercise?.category)
   const previous = await getPreviousExercisePerformance(exerciseId)
   if (!previous) return base
 

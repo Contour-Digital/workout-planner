@@ -88,7 +88,7 @@ export async function generateRoutineFromNotes(notes: string): Promise<Generated
       orderIndex:
         parsedExercise.section === 'warmup' ? warmupOrder++ : parsedExercise.section === 'cooldown' ? cooldownOrder++ : mainOrder++,
       uniformSets: areSetsUniform(parsedExercise.sets),
-      sets: buildSetTargets(parsedExercise.sets),
+      sets: buildSetTargets(parsedExercise.sets, parsedExercise.category),
       restSeconds: parsedExercise.restSeconds ?? undefined,
       notes: parsedExercise.notes ?? undefined,
     }
@@ -148,9 +148,9 @@ async function callParseWorkout(notes: string): Promise<ParsedRoutine> {
   return data.routine
 }
 
-function buildSetTargets(sets: ParsedSet[]): SetTarget[] {
+function buildSetTargets(sets: ParsedSet[], category: ExerciseCategory): SetTarget[] {
   if (sets.length === 0) {
-    return [createEmptySetTarget(1), createEmptySetTarget(2), createEmptySetTarget(3)]
+    return [createEmptySetTarget(1, category), createEmptySetTarget(2, category), createEmptySetTarget(3, category)]
   }
   return sets.map((s, i) => ({
     id: crypto.randomUUID(),
