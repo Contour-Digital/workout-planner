@@ -128,15 +128,16 @@ async function callParseWorkout(notes: string): Promise<ParsedRoutine> {
   })
 
   if (error) {
+    let message: string | undefined
     if (error instanceof FunctionsHttpError) {
       try {
         const body = await error.context.json()
-        if (body?.error) throw new Error(body.error)
+        if (typeof body?.error === 'string') message = body.error
       } catch {
-        // fall through to generic message below
+        // response body wasn't JSON; fall through to the generic message below
       }
     }
-    throw new Error('Could not reach the AI assistant. Check your connection and try again.')
+    throw new Error(message ?? 'Could not reach the AI assistant. Check your connection and try again.')
   }
 
   if (!data?.routine) {
