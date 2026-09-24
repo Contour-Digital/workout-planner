@@ -31,12 +31,15 @@ import {
 import { createExerciseConfig } from '../../models/routine'
 import { elapsedSeconds, workoutSetsCompleted, type SessionExerciseEntry } from '../../models/session'
 import { useNow } from '../../lib/useNow'
+import { getAllExercises } from '../../db/exercisesRepo'
+import { groupByPrimaryMuscle } from '../../lib/exerciseGrouping'
 import type { Exercise } from '../../models/exercise'
 
 export function ActiveWorkoutPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const session = useLiveQuery(() => (id ? getWorkoutSession(id) : undefined), [id])
+  const exercises = useLiveQuery(getAllExercises, [], [])
   const now = useNow(1000)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [detailExercise, setDetailExercise] = useState<Exercise | null>(null)
@@ -47,6 +50,7 @@ export function ActiveWorkoutPage() {
 
   if (!session) return <div className="p-6 text-sm text-primary-muted">Loading…</div>
 
+  const exerciseById = new Map(exercises.map((e) => [e.id, e]))
   const isPaused = session.pauseIntervals.some((p) => !p.end)
   const elapsed = elapsedSeconds(session.startedAt, session.finishedAt, session.pauseIntervals)
   void now // force re-render each tick while active
@@ -71,27 +75,50 @@ export function ActiveWorkoutPage() {
     setReviewOpen(true)
   }
 
-  function renderSection(title: string, exercises: SessionExerciseEntry[], section: 'warmup' | 'main' | 'cooldown') {
-    if (exercises.length === 0) return null
+  function renderEntry(entry: SessionExerciseEntry, section: 'warmup' | 'main' | 'cooldown') {
+    return (
+      <SessionExerciseCard
+        key={entry.id}
+        entry={entry}
+        sessionId={session!.id}
+        onToggleSet={(setId, patch) => updateSetResult(session!.id, entry.id, setId, patch)}
+        onAddSet={() => addSetToEntry(session!.id, entry.id)}
+        onRemoveSet={(setId) => removeSetFromEntry(session!.id, entry.id, setId)}
+        onNotesChange={(notes) => updateEntryNotes(session!.id, entry.id, notes)}
+        onRemoveExercise={() => removeSessionExercise(session!.id, entry.id, section)}
+        onSetCompleted={(restSeconds) => {
+          if (restSeconds && restSeconds > 0) startRestTimer(session!.id, restSeconds)
+        }}
+        onViewDetail={setDetailExercise}
+      />
+    )
+  }
+
+  function renderSection(title: string, sectionExercises: SessionExerciseEntry[], section: 'warmup' | 'main' | 'cooldown') {
+    if (sectionExercises.length === 0) return null
+
+    // Group only the main workout section by muscle — carried over from how the
+    // routine was set up, so training stays organized (chest, back, core, ...)
+    // the same way while you're actually doing it.
+    if (section === 'main') {
+      const groups = groupByPrimaryMuscle(sectionExercises, exerciseById)
+      return (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xs font-bold uppercase tracking-wide text-primary-muted">{title}</h2>
+          {groups.map((group) => (
+            <div key={group.muscle} className="flex flex-col gap-2">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-primary-muted/70">{group.label}</h3>
+              {group.items.map((entry) => renderEntry(entry, section))}
+            </div>
+          ))}
+        </section>
+      )
+    }
+
     return (
       <section className="flex flex-col gap-2">
         <h2 className="text-xs font-bold uppercase tracking-wide text-primary-muted">{title}</h2>
-        {exercises.map((entry) => (
-          <SessionExerciseCard
-            key={entry.id}
-            entry={entry}
-            sessionId={session!.id}
-            onToggleSet={(setId, patch) => updateSetResult(session!.id, entry.id, setId, patch)}
-            onAddSet={() => addSetToEntry(session!.id, entry.id)}
-            onRemoveSet={(setId) => removeSetFromEntry(session!.id, entry.id, setId)}
-            onNotesChange={(notes) => updateEntryNotes(session!.id, entry.id, notes)}
-            onRemoveExercise={() => removeSessionExercise(session!.id, entry.id, section)}
-            onSetCompleted={(restSeconds) => {
-              if (restSeconds && restSeconds > 0) startRestTimer(session!.id, restSeconds)
-            }}
-            onViewDetail={setDetailExercise}
-          />
-        ))}
+        {sectionExercises.map((entry) => renderEntry(entry, section))}
       </section>
     )
   }

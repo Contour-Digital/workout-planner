@@ -33,30 +33,34 @@ export function groupExercisesByPrimaryMuscle(exercises: Exercise[]): MuscleGrou
   })
 }
 
-export interface MuscleGroupConfigSection {
+export interface MuscleGroupItemSection<T> {
   muscle: MuscleGroup | 'other'
   label: string
-  configs: ExerciseConfig[]
+  items: T[]
 }
 
-/** Same grouping as groupExercisesByPrimaryMuscle, but for the exercise configs already
- *  in a routine section — keeps each config's place within its muscle group as it already
- *  appears in the list, rather than re-sorting by name. Used so a routine reads sectioned
- *  by muscle group (chest, back, core, ...) the way it might in a written workout program. */
-export function groupExerciseConfigsByMuscle(configs: ExerciseConfig[], byId: Map<string, Exercise>): MuscleGroupConfigSection[] {
-  const buckets = new Map<MuscleGroup | 'other', ExerciseConfig[]>()
+/** Groups anything keyed by exerciseId (a routine's ExerciseConfig, a session's
+ *  SessionExerciseEntry, ...) under its exercise's first primary muscle — keeping
+ *  each item's place within its group as it already appears in the list, rather
+ *  than re-sorting. Used so a routine or an in-progress workout reads sectioned
+ *  by muscle group (chest, back, core, ...) the way a written program often is. */
+export function groupByPrimaryMuscle<T extends { exerciseId: string }>(
+  items: T[],
+  byId: Map<string, Exercise>,
+): MuscleGroupItemSection<T>[] {
+  const buckets = new Map<MuscleGroup | 'other', T[]>()
 
-  for (const config of configs) {
-    const key = byId.get(config.exerciseId)?.primaryMuscles[0] ?? 'other'
+  for (const item of items) {
+    const key = byId.get(item.exerciseId)?.primaryMuscles[0] ?? 'other'
     const bucket = buckets.get(key)
-    if (bucket) bucket.push(config)
-    else buckets.set(key, [config])
+    if (bucket) bucket.push(item)
+    else buckets.set(key, [item])
   }
 
-  const sections: MuscleGroupConfigSection[] = Array.from(buckets.entries()).map(([muscle, configList]) => ({
+  const sections: MuscleGroupItemSection<T>[] = Array.from(buckets.entries()).map(([muscle, list]) => ({
     muscle,
     label: muscle === 'other' ? 'Other' : MUSCLE_GROUP_LABELS[muscle],
-    configs: configList,
+    items: list,
   }))
 
   return sections.sort((a, b) => {
@@ -64,6 +68,18 @@ export function groupExerciseConfigsByMuscle(configs: ExerciseConfig[], byId: Ma
     if (b.muscle === 'other') return -1
     return a.label.localeCompare(b.label)
   })
+}
+
+export interface MuscleGroupConfigSection {
+  muscle: MuscleGroup | 'other'
+  label: string
+  configs: ExerciseConfig[]
+}
+
+/** ExerciseConfig-specific view over groupByPrimaryMuscle, for callers (the routine
+ *  editor) that also need to flatten back into a reordered, reindexed config list. */
+export function groupExerciseConfigsByMuscle(configs: ExerciseConfig[], byId: Map<string, Exercise>): MuscleGroupConfigSection[] {
+  return groupByPrimaryMuscle(configs, byId).map((s) => ({ muscle: s.muscle, label: s.label, configs: s.items }))
 }
 
 /** Flattens grouped sections back into a single ordered list with orderIndex reassigned
