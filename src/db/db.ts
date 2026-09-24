@@ -3,6 +3,7 @@ import type { CustomExercise, LibraryExercise } from '../models/exercise'
 import type { RoutineTemplate } from '../models/routine'
 import type { RecoveryRoutineTemplate } from '../models/recovery'
 import type { RecurringSchedule, OccurrenceOverride } from '../models/schedule'
+import type { PersonalEvent } from '../models/calendarEvent'
 import type { WorkoutSession, RecoverySession, RestDaySession } from '../models/session'
 import type { Profile, WeightEntry, HeightEntry } from '../models/profile'
 import type { AppSettings } from '../models/settings'
@@ -27,6 +28,7 @@ export class WorkoutDB extends Dexie {
   recoveryRoutines!: Table<RecoveryRoutineTemplate, string>
   schedules!: Table<RecurringSchedule, string>
   occurrenceOverrides!: Table<OccurrenceOverride, string>
+  personalEvents!: Table<PersonalEvent, string>
   workoutSessions!: Table<WorkoutSession, string>
   recoverySessions!: Table<RecoverySession, string>
   restDaySessions!: Table<RestDaySession, string>
@@ -58,6 +60,11 @@ export class WorkoutDB extends Dexie {
     // (oldest-first flush), which Dexie's SchemaError rejects on an unindexed field.
     this.version(2).stores({
       syncOutbox: 'key, table, recordId, enqueuedAt',
+    })
+    // v3: personal calendar events (shifts, appointments, etc.), independent of
+    // the training schedule/occurrence system.
+    this.version(3).stores({
+      personalEvents: 'id, startDate, endDate',
     })
   }
 }

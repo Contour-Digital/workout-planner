@@ -185,11 +185,11 @@ npx supabase link --project-ref <your-project-ref>
 npx supabase db pull        # writes supabase/migrations/*.sql
 ```
 
-At a glance: `library_exercises` (shared, read-only to clients) plus 11
+At a glance: `library_exercises` (shared, read-only to clients) plus 12
 user-owned tables — `profiles`, `settings`, `custom_exercises`, `routines`,
-`recovery_routines`, `schedules`, `occurrence_overrides`, `workout_sessions`,
-`recovery_sessions`, `rest_day_sessions`, `weight_entries`, `height_entries`
-— each with a `user_id` (or, for the two singleton tables `profiles`/
+`recovery_routines`, `schedules`, `occurrence_overrides`, `personal_events`,
+`workout_sessions`, `recovery_sessions`, `rest_day_sessions`, `weight_entries`,
+`height_entries` — each with a `user_id` (or, for the two singleton tables `profiles`/
 `settings`, an `id`) referencing `auth.users(id)`, RLS restricting all
 access to `auth.uid()`, and complex nested data (sets, exercise entries,
 recovery activities, schedule patterns, reviews) stored as `jsonb` rather

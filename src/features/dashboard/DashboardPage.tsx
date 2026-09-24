@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
+import { CategoryBadge } from '../../components/ui/CategoryBadge'
 import { ProgressBar, ProgressRing } from '../../components/ui/ProgressBar'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { IconCalendar, IconDumbbell, IconFlame, IconMoon, IconPlay, IconPlus } from '../../components/ui/icons'
@@ -15,7 +16,7 @@ import { computeStreak } from '../../lib/streak'
 import { useSettingsStore } from '../../store/settingsStore'
 import { workoutSetsCompleted } from '../../models/session'
 import type { ResolvedOccurrence } from '../../models/schedule'
-import { assignmentStyle, makeRoutineNameResolver, startOccurrence } from '../schedule/occurrenceDisplay'
+import { assignmentColor, assignmentStyle, makeRoutineNameResolver, startOccurrence } from '../schedule/occurrenceDisplay'
 import { OccurrenceActionsSheet } from '../schedule/OccurrenceActionsSheet'
 import { ImpromptuStartSheet } from '../session/ImpromptuStartSheet'
 
@@ -99,10 +100,9 @@ export function DashboardPage() {
             return (
               <Card key={`${occ.scheduleId}-${occ.originalDate}-${i}`}>
                 <div className="mb-2 flex items-center justify-between">
-                  <Badge tone={style.tone === 'neutral' ? 'neutral' : style.tone}>
-                    {style.icon}
+                  <CategoryBadge color={assignmentColor(occ.assignment, settings.calendarColors)} icon={style.icon}>
                     {style.label}
-                  </Badge>
+                  </CategoryBadge>
                   {occ.status !== 'planned' && <Badge tone="warning">{occ.status}</Badge>}
                 </div>
                 <h3 className="mb-1 text-lg font-bold text-primary-strong">{routineName(occ.assignment)}</h3>
