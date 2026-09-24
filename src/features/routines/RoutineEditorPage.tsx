@@ -147,6 +147,7 @@ export function RoutineEditorPage() {
           exercises={routine.main}
           onChange={setMain}
           emptyHint="Add exercises to build your workout."
+          groupByMuscle
         />
 
         <div className="rounded-[var(--radius-card)] border border-primary-border p-3">

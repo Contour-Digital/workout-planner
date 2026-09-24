@@ -7,6 +7,7 @@ import { ExercisePicker } from '../exercises/ExercisePicker'
 import { ExerciseDetailSheet } from '../exercises/ExerciseDetailSheet'
 import { getAllExercises } from '../../db/exercisesRepo'
 import { createExerciseConfig, type ExerciseConfig } from '../../models/routine'
+import { flattenMuscleGroupConfigSections, groupExerciseConfigsByMuscle } from '../../lib/exerciseGrouping'
 import type { Exercise } from '../../models/exercise'
 
 interface RoutineSectionEditorProps {
@@ -14,33 +15,85 @@ interface RoutineSectionEditorProps {
   exercises: ExerciseConfig[]
   onChange: (exercises: ExerciseConfig[]) => void
   emptyHint: string
+  /** When true, exercises are displayed (and stored) grouped under muscle-group
+   *  headers instead of as one flat list, so the routine reads sectioned the way
+   *  a written workout program often is (e.g. Chest, Back, Core). */
+  groupByMuscle?: boolean
 }
 
-export function RoutineSectionEditor({ title, exercises, onChange, emptyHint }: RoutineSectionEditorProps) {
+export function RoutineSectionEditor({ title, exercises, onChange, emptyHint, groupByMuscle }: RoutineSectionEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [detailExercise, setDetailExercise] = useState<Exercise | null>(null)
   const library = useLiveQuery(getAllExercises, [], []) ?? []
   const byId = new Map(library.map((e) => [e.id, e]))
 
+  function reindex(list: ExerciseConfig[]): ExerciseConfig[] {
+    if (!groupByMuscle) return list.map((c, i) => ({ ...c, orderIndex: i }))
+    return flattenMuscleGroupConfigSections(groupExerciseConfigsByMuscle(list, byId))
+  }
+
   function addExercise(exercise: Exercise) {
-    onChange([...exercises, createExerciseConfig(exercise.id, exercises.length)])
+    // The picker can hand back a just-created custom exercise the live-query
+    // snapshot in `byId` hasn't caught up to yet, so merge it in for grouping.
+    const withNewExercise = new Map(byId).set(exercise.id, exercise)
+    const appended = [...exercises, createExerciseConfig(exercise.id, exercises.length)]
+    onChange(
+      groupByMuscle
+        ? flattenMuscleGroupConfigSections(groupExerciseConfigsByMuscle(appended, withNewExercise))
+        : appended.map((c, i) => ({ ...c, orderIndex: i })),
+    )
     setPickerOpen(false)
   }
 
-  function update(index: number, config: ExerciseConfig) {
-    onChange(exercises.map((c, i) => (i === index ? config : c)))
+  function update(id: string, config: ExerciseConfig) {
+    onChange(exercises.map((c) => (c.id === id ? config : c)))
   }
 
-  function remove(index: number) {
-    onChange(exercises.filter((_, i) => i !== index).map((c, i) => ({ ...c, orderIndex: i })))
+  function remove(id: string) {
+    onChange(reindex(exercises.filter((c) => c.id !== id)))
   }
 
-  function move(index: number, dir: -1 | 1) {
-    const target = index + dir
-    if (target < 0 || target >= exercises.length) return
-    const copy = [...exercises]
-    ;[copy[index], copy[target]] = [copy[target], copy[index]]
-    onChange(copy.map((c, i) => ({ ...c, orderIndex: i })))
+  function move(id: string, dir: -1 | 1) {
+    if (!groupByMuscle) {
+      const index = exercises.findIndex((c) => c.id === id)
+      const target = index + dir
+      if (index < 0 || target < 0 || target >= exercises.length) return
+      const copy = [...exercises]
+      ;[copy[index], copy[target]] = [copy[target], copy[index]]
+      onChange(reindex(copy))
+      return
+    }
+
+    const sections = groupExerciseConfigsByMuscle(exercises, byId)
+    for (const section of sections) {
+      const index = section.configs.findIndex((c) => c.id === id)
+      if (index === -1) continue
+      const target = index + dir
+      if (target < 0 || target >= section.configs.length) return
+      ;[section.configs[index], section.configs[target]] = [section.configs[target], section.configs[index]]
+      onChange(flattenMuscleGroupConfigSections(sections))
+      return
+    }
+  }
+
+  const sections = groupByMuscle ? groupExerciseConfigsByMuscle(exercises, byId) : null
+
+  function renderRow(config: ExerciseConfig, canMoveUp: boolean, canMoveDown: boolean) {
+    return (
+      <ExerciseConfigRow
+        key={config.id}
+        config={config}
+        exercise={byId.get(config.exerciseId)}
+        onChange={(c) => update(config.id, c)}
+        onRemove={() => remove(config.id)}
+        onMoveUp={canMoveUp ? () => move(config.id, -1) : undefined}
+        onMoveDown={canMoveDown ? () => move(config.id, 1) : undefined}
+        onViewDetail={() => {
+          const ex = byId.get(config.exerciseId)
+          if (ex) setDetailExercise(ex)
+        }}
+      />
+    )
   }
 
   return (
@@ -56,23 +109,20 @@ export function RoutineSectionEditor({ title, exercises, onChange, emptyHint }: 
         <p className="rounded-[var(--radius-control)] border border-dashed border-primary-border p-4 text-center text-sm text-primary-muted">
           {emptyHint}
         </p>
+      ) : sections ? (
+        <div className="flex flex-col gap-4">
+          {sections.map((section) => (
+            <div key={section.muscle}>
+              <h4 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-primary-muted">{section.label}</h4>
+              <div className="flex flex-col gap-2">
+                {section.configs.map((config, i) => renderRow(config, i > 0, i < section.configs.length - 1))}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {exercises.map((config, i) => (
-            <ExerciseConfigRow
-              key={config.id}
-              config={config}
-              exercise={byId.get(config.exerciseId)}
-              onChange={(c) => update(i, c)}
-              onRemove={() => remove(i)}
-              onMoveUp={i > 0 ? () => move(i, -1) : undefined}
-              onMoveDown={i < exercises.length - 1 ? () => move(i, 1) : undefined}
-              onViewDetail={() => {
-                const ex = byId.get(config.exerciseId)
-                if (ex) setDetailExercise(ex)
-              }}
-            />
-          ))}
+          {exercises.map((config, i) => renderRow(config, i > 0, i < exercises.length - 1))}
         </div>
       )}
 
