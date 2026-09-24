@@ -75,7 +75,7 @@ export function RoutineEditorPage() {
   }
 
   return (
-    <div className="p-4 pb-28 sm:p-6">
+    <div className="p-4 pb-32 sm:p-6">
       <PageHeader title={isNew ? 'New Routine' : 'Edit Routine'} />
 
       {aiDraft?.aiSummary && (
@@ -183,7 +183,7 @@ export function RoutineEditorPage() {
         {error && <p className="text-sm text-danger">{error}</p>}
       </div>
 
-      <div className="fixed inset-x-0 bottom-16 z-20 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
+      <div className="fixed inset-x-0 bottom-20 z-20 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
         <div className="mx-auto flex max-w-3xl gap-3">
           <Button variant="ghost" fullWidth onClick={() => navigate('/routines')}>
             Cancel

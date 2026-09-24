@@ -35,14 +35,14 @@ export function AppLayout() {
         ))}
       </nav>
 
-      <main className="flex-1 pb-24 sm:pb-8">
+      <main className="flex-1 pb-28 sm:pb-8">
         <Outlet />
       </main>
 
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-primary-border bg-surface/95 backdrop-blur sm:hidden"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-primary-border bg-surface/95 px-2 backdrop-blur sm:hidden"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.625rem)' }}
       >
         {NAV_ITEMS.map((item) => (
           <NavLink
@@ -51,7 +51,7 @@ export function AppLayout() {
             end={item.end}
             className={({ isActive }) =>
               clsx(
-                'flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-medium',
+                'flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium',
                 isActive ? 'text-secondary' : 'text-primary-muted',
               )
             }
