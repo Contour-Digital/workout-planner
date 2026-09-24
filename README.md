@@ -180,11 +180,26 @@ app is unaffected.
 Exercise names from the parsed notes are fuzzy-matched against your existing
 library; anything unmatched becomes a new custom exercise automatically.
 
-## AI assistant (chat)
+## Renaming library exercises
 
-An "AI Assistant" button in the fixed bottom bar of the routine editor and
-the active workout session opens a chat window for exercise ideas, warm-up/
-cool-down stretch suggestions, and general training questions. When it
+Custom exercises are already fully editable. Built-in library exercises
+aren't — they're shared reference data pulled from the `library_exercises`
+Supabase table, the same for every user — but Profile -> Library -> "Rename
+exercises" lets you change just a built-in exercise's title, for yourself.
+That's stored as a separate per-user row in `library_exercise_overrides`
+(`src/db/exercisesRepo.ts`'s `setLibraryExerciseName`/`resetLibraryExerciseName`),
+applied on top of the shared name wherever exercises are read
+(`getAllExercises`/`getExercise`) — the shared library row itself is never
+touched, so a rename can't affect other users or survive a "Reset".
+
+## AI assistant ("Spot")
+
+A "Spot" button opens a chat window for exercise ideas, warm-up/cool-down
+stretch suggestions, and general training questions — inline in the routine
+editor's bottom bar, and inline in the active workout session (between
+"Save as reusable routine" and "Session notes", not floating). Each instance
+opens with a short greeting bubble tailored to where it was opened from, so
+it's clear what it can actually do there before you type anything. When it
 suggests a specific exercise, an "Add" button on that suggestion adds it
 straight to the routine (or, mid-workout, to the session) using the same
 fuzzy-match/auto-create-custom-exercise logic as "From notes".

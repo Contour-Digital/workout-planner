@@ -62,6 +62,25 @@ export const SYNC_TABLE_CONFIGS: SyncTableConfig[] = [
     }),
   },
   {
+    dexieTable: 'libraryExerciseNameOverrides',
+    remoteTable: 'library_exercise_overrides',
+    singleton: false,
+    localTable: () => db.libraryExerciseNameOverrides as unknown as Table<Record<string, unknown>, string>,
+    toRemote: (r, userId) => ({
+      id: r.id,
+      user_id: userId,
+      exercise_id: r.exerciseId,
+      name: r.name,
+      updated_at: r.updatedAt,
+    }),
+    fromRemote: (r) => ({
+      id: r.id,
+      exerciseId: r.exercise_id,
+      name: r.name,
+      updatedAt: r.updated_at,
+    }),
+  },
+  {
     dexieTable: 'routines',
     remoteTable: 'routines',
     singleton: false,

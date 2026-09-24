@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Card } from '../../components/ui/Card'
@@ -14,6 +15,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { useSyncStore } from '../../store/syncStore'
 
 export function ProfilePage() {
+  const navigate = useNavigate()
   const profile = useLiveQuery(getProfile)
   const weightHistory = useLiveQuery(getWeightHistory, [], []) ?? []
   const heightHistory = useLiveQuery(getHeightHistory, [], []) ?? []
@@ -203,6 +205,13 @@ export function ProfilePage() {
             </button>
           ))}
         </div>
+      </Card>
+
+      <Card className="mb-4 flex flex-col gap-3">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-primary-muted">Library</h2>
+        <Button variant="secondary" onClick={() => navigate('/settings/exercise-names')}>
+          Rename exercises
+        </Button>
       </Card>
 
       <Card className="mb-4 flex flex-col gap-3">

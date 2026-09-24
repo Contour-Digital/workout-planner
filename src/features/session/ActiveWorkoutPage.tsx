@@ -219,6 +219,7 @@ export function ActiveWorkoutPage() {
         buildContext={buildAssistantContext}
         onAddSuggestion={handleAddSuggestion}
         className="mt-4 w-full"
+        greeting="Hi, I'm Spot! Need a swap, an extra exercise, or a tip mid-workout? Ask away — I can add suggestions straight into today's session."
       />
 
       <label className="mt-5 flex flex-col gap-1">

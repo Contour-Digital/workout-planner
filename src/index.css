@@ -29,6 +29,11 @@
   --color-secondary-subtle: #2e3566;
   --color-secondary-tint: #14161f;
 
+  /* Purple accent — used for filled secondary-style buttons (previously a
+     white fill), kept distinct from the blue brand color above. */
+  --color-accent: #8b5cf6;
+  --color-accent-strong: #7c3aed;
+
   --color-bg: #0b0b0d;
   --color-surface: #1c1c21;
   --color-surface-muted: #242429;
@@ -67,6 +72,9 @@
     --color-secondary-subtle: #d6dcfe;
     --color-secondary-tint: #eef1ff;
 
+    --color-accent: #7c3aed;
+    --color-accent-strong: #6d28d9;
+
     --color-bg: #ffffff;
     --color-surface: #ffffff;
     --color-surface-muted: #f7f6f6;
@@ -96,6 +104,9 @@
   --color-secondary-strong: #0f28c4;
   --color-secondary-subtle: #d6dcfe;
   --color-secondary-tint: #eef1ff;
+
+  --color-accent: #7c3aed;
+  --color-accent-strong: #6d28d9;
 
   --color-bg: #ffffff;
   --color-surface: #ffffff;

@@ -21,6 +21,10 @@ interface AssistantChatProps {
   onAddSuggestion?: (suggestion: AssistantSuggestion) => Promise<void>
   /** Applied to the trigger button — the caller places it in its own bottom bar layout. */
   className?: string
+  /** Shown as a chat bubble before the first message — tailored to wherever this
+   *  instance was opened from (building a routine vs. mid-workout), so it's clear
+   *  what Spot can actually help with here. */
+  greeting: string
 }
 
 function historyKey(key: string): string {
@@ -45,7 +49,7 @@ function saveHistory(key: string, messages: StoredMessage[]) {
   }
 }
 
-export function AssistantChat({ storageKey, buildContext, onAddSuggestion, className }: AssistantChatProps) {
+export function AssistantChat({ storageKey, buildContext, onAddSuggestion, className, greeting }: AssistantChatProps) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<StoredMessage[]>(() => loadHistory(storageKey))
   const [input, setInput] = useState('')
@@ -102,7 +106,7 @@ export function AssistantChat({ storageKey, buildContext, onAddSuggestion, class
   return (
     <>
       <Button variant="secondary" icon={<IconSparkle width={18} height={18} />} onClick={() => setOpen(true)} className={className}>
-        AI Assistant
+        Spot
       </Button>
 
       {open &&
@@ -112,13 +116,16 @@ export function AssistantChat({ storageKey, buildContext, onAddSuggestion, class
             <div
               role="dialog"
               aria-modal="true"
-              aria-label="AI assistant"
+              aria-label="Spot, your training assistant"
               className="relative z-10 flex h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface shadow-xl sm:h-[70vh] sm:max-w-lg sm:rounded-2xl"
             >
               <div className="flex items-center justify-between border-b border-primary-border px-5 py-4">
                 <div className="flex items-center gap-2">
                   <IconSparkle width={18} height={18} className="text-secondary" />
-                  <h2 className="text-lg font-semibold text-primary-strong">AI Assistant</h2>
+                  <div>
+                    <h2 className="text-lg font-semibold text-primary-strong">Spot</h2>
+                    <p className="text-xs text-primary-muted">Your training assistant</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setOpen(false)}
@@ -131,9 +138,9 @@ export function AssistantChat({ storageKey, buildContext, onAddSuggestion, class
 
               <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
                 {messages.length === 0 && (
-                  <p className="mx-auto max-w-xs text-center text-sm text-primary-muted">
-                    Ask for exercise ideas, warm-up or cool-down stretches, or any training question.
-                  </p>
+                  <div className="flex flex-col items-start gap-2">
+                    <div className="max-w-[85%] rounded-2xl bg-primary-tint px-3.5 py-2.5 text-sm text-primary-strong">{greeting}</div>
+                  </div>
                 )}
                 <div className="flex flex-col gap-3">
                   {messages.map((m) => (

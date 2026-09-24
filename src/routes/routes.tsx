@@ -8,6 +8,7 @@ import { ExerciseLibraryPage } from '../features/exercises/ExerciseLibraryPage'
 import { HistoryPage } from '../features/history/HistoryPage'
 import { HistoryDetailPage } from '../features/history/HistoryDetailPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
+import { ExerciseNamesPage } from '../features/profile/ExerciseNamesPage'
 import { SessionStartPage } from '../features/session/SessionStartPage'
 import { ActiveWorkoutPage } from '../features/session/ActiveWorkoutPage'
 import { RecoverySessionStartPage } from '../features/recovery/RecoverySessionStartPage'
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: '/history', element: <HistoryPage /> },
       { path: '/history/:id', element: <HistoryDetailPage /> },
       { path: '/profile', element: <ProfilePage /> },
+      { path: '/settings/exercise-names', element: <ExerciseNamesPage /> },
       { path: '/session/start', element: <SessionStartPage /> },
       { path: '/session/:id', element: <ActiveWorkoutPage /> },
       { path: '/recovery-session/start', element: <RecoverySessionStartPage /> },

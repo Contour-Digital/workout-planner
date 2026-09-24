@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { CustomExercise, LibraryExercise } from '../models/exercise'
+import type { CustomExercise, LibraryExercise, LibraryExerciseNameOverride } from '../models/exercise'
 import type { RoutineTemplate } from '../models/routine'
 import type { RecoveryRoutineTemplate } from '../models/recovery'
 import type { RecurringSchedule, OccurrenceOverride } from '../models/schedule'
@@ -24,6 +24,7 @@ export interface SyncOutboxEntry {
 export class WorkoutDB extends Dexie {
   libraryExercises!: Table<LibraryExercise, string>
   customExercises!: Table<CustomExercise, string>
+  libraryExerciseNameOverrides!: Table<LibraryExerciseNameOverride, string>
   routines!: Table<RoutineTemplate, string>
   recoveryRoutines!: Table<RecoveryRoutineTemplate, string>
   schedules!: Table<RecurringSchedule, string>
@@ -65,6 +66,11 @@ export class WorkoutDB extends Dexie {
     // the training schedule/occurrence system.
     this.version(3).stores({
       personalEvents: 'id, startDate, endDate',
+    })
+    // v4: per-user renames of built-in library exercise titles — library exercises
+    // are shared reference data, so a rename can't mutate them directly.
+    this.version(4).stores({
+      libraryExerciseNameOverrides: 'id, exerciseId',
     })
   }
 }

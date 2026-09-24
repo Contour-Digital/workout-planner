@@ -241,6 +241,7 @@ export function RoutineEditorPage() {
             buildContext={buildAssistantContext}
             onAddSuggestion={handleAddSuggestion}
             className="w-full"
+            greeting="Hi, I'm Spot! Tell me what you're going for and I can suggest exercises for your warm-up, main workout, or cool-down — I'll add them straight into this routine."
           />
         </div>
         <div className="mx-auto flex max-w-3xl gap-3">

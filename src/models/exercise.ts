@@ -77,6 +77,16 @@ export interface CustomExercise extends ExerciseBase {
 
 export type Exercise = LibraryExercise | CustomExercise
 
+/** A personal rename of a built-in library exercise's title. Library exercises are
+ *  shared reference data (same for every user), so a rename can't mutate them
+ *  directly — this sits alongside as a per-user override, applied on read. */
+export interface LibraryExerciseNameOverride {
+  id: string
+  exerciseId: string
+  name: string
+  updatedAt: string
+}
+
 /** An AI-suggested exercise to add somewhere (a routine section, an in-progress
  *  session) — shared shape used by both the chat assistant and the post-workout
  *  summary, so both can be resolved/added the same way. */
