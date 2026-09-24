@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Sheet } from '../../components/ui/Sheet'
 import { Button } from '../../components/ui/Button'
-import type { FeelingTag, PostWorkoutReview } from '../../models/session'
+import { Badge } from '../../components/ui/Badge'
+import { IconSparkle } from '../../components/ui/icons'
+import type { Achievement, FeelingTag, MissedExercise, PerceivedEffort, PostWorkoutReview } from '../../models/session'
 
 const FEELINGS: { value: FeelingTag; label: string }[] = [
   { value: 'great', label: 'Great' },
@@ -17,17 +19,46 @@ interface PostWorkoutReviewSheetProps {
   onClose: () => void
   onSave: (review: PostWorkoutReview) => void
   existing?: PostWorkoutReview
+  missedExercises: MissedExercise[]
+  achievements: Achievement[]
+  onGenerateAiSummary: () => Promise<{ summary: string; perceivedEffort: PerceivedEffort }>
 }
 
-export function PostWorkoutReviewSheet({ open, onClose, onSave, existing }: PostWorkoutReviewSheetProps) {
+export function PostWorkoutReviewSheet({
+  open,
+  onClose,
+  onSave,
+  existing,
+  missedExercises,
+  achievements,
+  onGenerateAiSummary,
+}: PostWorkoutReviewSheetProps) {
   const [effort, setEffort] = useState<number | undefined>(existing?.effort)
   const [feelings, setFeelings] = useState<FeelingTag[]>(existing?.feelings ?? [])
   const [comments, setComments] = useState(existing?.comments ?? '')
   const [painNotes, setPainNotes] = useState(existing?.painNotes ?? '')
   const [expectation, setExpectation] = useState<PostWorkoutReview['expectationVsActual']>(existing?.expectationVsActual)
+  const [aiSummary, setAiSummary] = useState(existing?.aiSummary)
+  const [aiPerceivedEffort, setAiPerceivedEffort] = useState(existing?.aiPerceivedEffort)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
 
   function toggleFeeling(f: FeelingTag) {
     setFeelings((prev) => (prev.includes(f) ? prev.filter((v) => v !== f) : [...prev, f]))
+  }
+
+  async function handleGenerateAiSummary() {
+    setAiLoading(true)
+    setAiError(null)
+    try {
+      const result = await onGenerateAiSummary()
+      setAiSummary(result.summary)
+      setAiPerceivedEffort(result.perceivedEffort)
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Could not generate a summary.')
+    } finally {
+      setAiLoading(false)
+    }
   }
 
   function save() {
@@ -38,6 +69,10 @@ export function PostWorkoutReviewSheet({ open, onClose, onSave, existing }: Post
       comments: comments.trim() || undefined,
       painNotes: painNotes.trim() || undefined,
       expectationVsActual: expectation,
+      missedExercises: missedExercises.length ? missedExercises : undefined,
+      achievements: achievements.length ? achievements : undefined,
+      aiSummary,
+      aiPerceivedEffort,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     })
@@ -46,6 +81,52 @@ export function PostWorkoutReviewSheet({ open, onClose, onSave, existing }: Post
   return (
     <Sheet open={open} onClose={onClose} title="How was your workout?">
       <div className="flex flex-col gap-5">
+        {(missedExercises.length > 0 || achievements.length > 0) && (
+          <section className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-primary-border p-3">
+            <p className="text-sm font-semibold text-primary-strong">Session summary</p>
+            {achievements.map((a) => (
+              <p key={a.exerciseId} className="text-sm text-success">
+                🏆 {a.message}
+              </p>
+            ))}
+            {missedExercises.map((m) => (
+              <p key={m.exerciseName} className="text-sm text-warning">
+                {m.exerciseName}: {m.missedCount} of {m.totalCount} sets not completed
+              </p>
+            ))}
+          </section>
+        )}
+
+        <section className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-primary-border p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-primary-strong">AI summary</p>
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={<IconSparkle width={14} height={14} />}
+              loading={aiLoading}
+              onClick={handleGenerateAiSummary}
+            >
+              {aiSummary ? 'Regenerate' : 'Generate'}
+            </Button>
+          </div>
+          {aiError && <p className="text-xs text-danger">{aiError}</p>}
+          {aiSummary && (
+            <>
+              <p className="text-sm text-primary">{aiSummary}</p>
+              {aiPerceivedEffort && (
+                <div className="flex items-center gap-2">
+                  <Badge tone="secondary">Perceived effort: {aiPerceivedEffort.score}/10 · {aiPerceivedEffort.label.replace('_', ' ')}</Badge>
+                </div>
+              )}
+              {aiPerceivedEffort?.reasoning && <p className="text-xs text-primary-muted">{aiPerceivedEffort.reasoning}</p>}
+            </>
+          )}
+          {!aiSummary && !aiLoading && (
+            <p className="text-xs text-primary-muted">Have the assistant write a recap of this session and estimate how hard it was.</p>
+          )}
+        </section>
+
         <section>
           <p className="mb-2 text-sm font-semibold text-primary-strong">Overall effort</p>
           <div className="flex flex-wrap gap-1.5">
@@ -128,7 +209,21 @@ export function PostWorkoutReviewSheet({ open, onClose, onSave, existing }: Post
         </label>
 
         <div className="flex gap-3">
-          <Button variant="ghost" fullWidth onClick={() => onSave({ createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() })}>
+          <Button
+            variant="ghost"
+            fullWidth
+            onClick={() => {
+              const now = new Date().toISOString()
+              onSave({
+                missedExercises: missedExercises.length ? missedExercises : undefined,
+                achievements: achievements.length ? achievements : undefined,
+                aiSummary,
+                aiPerceivedEffort,
+                createdAt: existing?.createdAt ?? now,
+                updatedAt: now,
+              })
+            }}
+          >
             Skip
           </Button>
           <Button fullWidth onClick={save}>

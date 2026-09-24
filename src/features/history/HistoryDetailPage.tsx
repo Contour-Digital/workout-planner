@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Badge } from '../../components/ui/Badge'
@@ -7,8 +7,10 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { db } from '../../db/db'
 import { repeatWorkoutSession, saveWorkoutReview } from '../../db/sessionActions'
 import { elapsedSeconds } from '../../models/session'
+import { computeMissedExercises, computeSessionAchievements } from '../../lib/workoutReview'
+import { generateWorkoutSummary } from '../../lib/workoutAiSummary'
 import { PostWorkoutReviewSheet } from '../session/PostWorkoutReviewSheet'
-import type { SessionExerciseEntry, WorkoutSession } from '../../models/session'
+import type { Achievement, SessionExerciseEntry, WorkoutSession } from '../../models/session'
 
 export function HistoryDetailPage() {
   const { id } = useParams()
@@ -73,6 +75,15 @@ function WorkoutDetail({
 }) {
   const elapsed = elapsedSeconds(session.startedAt, session.finishedAt, session.pauseIntervals)
   const mm = Math.floor(elapsed / 60)
+  const missedExercises = session.review?.missedExercises ?? computeMissedExercises(session)
+  const [achievements, setAchievements] = useState<Achievement[]>(session.review?.achievements ?? [])
+
+  useEffect(() => {
+    if (!session.review?.achievements) {
+      computeSessionAchievements(session).then(setAchievements)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.id])
 
   function renderEntries(title: string, entries: SessionExerciseEntry[]) {
     if (entries.length === 0) return null
@@ -139,6 +150,33 @@ function WorkoutDetail({
             {session.review ? 'Edit' : 'Add'}
           </Button>
         </div>
+
+        {(missedExercises.length > 0 || achievements.length > 0) && (
+          <div className="mb-3 flex flex-col gap-1">
+            {achievements.map((a) => (
+              <p key={a.exerciseId} className="text-sm text-success">
+                🏆 {a.message}
+              </p>
+            ))}
+            {missedExercises.map((m) => (
+              <p key={m.exerciseName} className="text-sm text-warning">
+                {m.exerciseName}: {m.missedCount} of {m.totalCount} sets not completed
+              </p>
+            ))}
+          </div>
+        )}
+
+        {session.review?.aiSummary && (
+          <div className="mb-3 flex flex-col gap-1">
+            <p className="text-sm text-primary">{session.review.aiSummary}</p>
+            {session.review.aiPerceivedEffort && (
+              <Badge tone="secondary">
+                Perceived effort: {session.review.aiPerceivedEffort.score}/10 · {session.review.aiPerceivedEffort.label.replace('_', ' ')}
+              </Badge>
+            )}
+          </div>
+        )}
+
         {session.review ? (
           <div className="flex flex-col gap-1 text-sm text-primary-muted">
             {session.review.effort && <p>Effort: {session.review.effort}/10</p>}
@@ -155,6 +193,9 @@ function WorkoutDetail({
       <PostWorkoutReviewSheet
         open={reviewOpen}
         existing={session.review}
+        missedExercises={missedExercises}
+        achievements={achievements}
+        onGenerateAiSummary={() => generateWorkoutSummary(session, missedExercises, achievements)}
         onClose={() => setReviewOpen(false)}
         onSave={async (review) => {
           await saveWorkoutReview(session.id, review)

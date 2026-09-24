@@ -174,8 +174,8 @@ library; anything unmatched becomes a new custom exercise automatically.
 
 ## AI assistant (chat)
 
-A floating sparkle button — bottom-right in the routine editor and during an
-active workout session — opens a chat window for exercise ideas, warm-up/
+An "AI Assistant" button in the fixed bottom bar of the routine editor and
+the active workout session opens a chat window for exercise ideas, warm-up/
 cool-down stretch suggestions, and general training questions. When it
 suggests a specific exercise, an "Add" button on that suggestion adds it
 straight to the routine (or, mid-workout, to the session) using the same
@@ -186,6 +186,23 @@ survives navigating around the app but clears when the browser tab/app is
 closed. It's powered by a second Edge Function, `supabase/functions/assistant-chat`,
 sharing the same `ANTHROPIC_API_KEY` secret as `parse-workout` above — no
 extra setup needed if that's already configured.
+
+## Post-workout review
+
+Finishing a workout computes two things for free, no AI involved: any
+exercises left with unchecked sets ("missed"), and any exercise where this
+session's best set (by weight, then distance, duration, or reps — whichever
+the exercise tracks) beat your last time doing it ("achievements" — real
+progressive-overload PBs, not guessed). Both show up in the review sheet and
+stay attached to the session in history.
+
+From there, a "Generate" button on the review sheet can ask the AI to write
+a short recap of the session and estimate perceived effort (RPE 1-10) —
+fed the exact facts computed above (durations, best sets, misses,
+achievements) so it's synthesizing a write-up, not inventing numbers. Powered
+by a third Edge Function, `supabase/functions/workout-summary`, on the same
+`ANTHROPIC_API_KEY` secret. It's opt-in per session (a button, not automatic)
+so it never runs — or costs anything — unless asked for.
 
 ## Database schema
 

@@ -29,10 +29,12 @@ import {
   updateSetResult,
   updateSetResultWithCascade,
 } from '../../db/sessionActions'
-import { elapsedSeconds, workoutSetsCompleted, type SessionExerciseEntry } from '../../models/session'
+import { elapsedSeconds, workoutSetsCompleted, type Achievement, type MissedExercise, type SessionExerciseEntry } from '../../models/session'
 import { useNow } from '../../lib/useNow'
 import { getAllExercises } from '../../db/exercisesRepo'
 import { groupByPrimaryMuscle } from '../../lib/exerciseGrouping'
+import { computeMissedExercises, computeSessionAchievements } from '../../lib/workoutReview'
+import { generateWorkoutSummary } from '../../lib/workoutAiSummary'
 import { AssistantChat } from '../assistant/AssistantChat'
 import { resolveSuggestedExercise, type AssistantContext, type AssistantSuggestion } from '../../lib/assistantChat'
 import { useSettingsStore } from '../../store/settingsStore'
@@ -49,6 +51,8 @@ export function ActiveWorkoutPage() {
   const [detailExercise, setDetailExercise] = useState<Exercise | null>(null)
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
+  const [missedExercises, setMissedExercises] = useState<MissedExercise[]>([])
+  const [achievements, setAchievements] = useState<Achievement[]>([])
   const [saveRoutineName, setSaveRoutineName] = useState('')
   const [saveRoutineOpen, setSaveRoutineOpen] = useState(false)
 
@@ -64,19 +68,25 @@ export function ActiveWorkoutPage() {
   const ss = elapsed % 60
   const timeLabel = hh > 0 ? `${hh}:${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}` : `${mm}:${ss.toString().padStart(2, '0')}`
 
+  async function openReview() {
+    setMissedExercises(computeMissedExercises(session!))
+    setAchievements(await computeSessionAchievements(session!))
+    setReviewOpen(true)
+  }
+
   async function handleFinishRequest() {
     if (done < total) {
       setFinishConfirmOpen(true)
       return
     }
     await finishWorkoutSession(session!.id)
-    setReviewOpen(true)
+    await openReview()
   }
 
   async function confirmPartialFinish() {
     setFinishConfirmOpen(false)
     await finishWorkoutSession(session!.id)
-    setReviewOpen(true)
+    await openReview()
   }
 
   function renderEntry(entry: SessionExerciseEntry, section: 'warmup' | 'main' | 'cooldown') {
@@ -244,6 +254,9 @@ export function ActiveWorkoutPage() {
 
       <PostWorkoutReviewSheet
         open={reviewOpen}
+        missedExercises={missedExercises}
+        achievements={achievements}
+        onGenerateAiSummary={() => generateWorkoutSummary(session, missedExercises, achievements)}
         onSave={async (review) => {
           await saveWorkoutReview(session.id, review)
           setReviewOpen(false)

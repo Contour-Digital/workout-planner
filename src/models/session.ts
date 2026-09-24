@@ -53,12 +53,38 @@ export type SessionStatus =
 
 export type FeelingTag = 'great' | 'good' | 'okay' | 'tired' | 'sore' | 'struggling'
 
+/** An exercise with one or more sets left unchecked at finish time. */
+export interface MissedExercise {
+  exerciseName: string
+  missedCount: number
+  totalCount: number
+}
+
+/** Lifted heavier/further/longer than the last time this exercise was performed. */
+export interface Achievement {
+  exerciseId: string
+  exerciseName: string
+  message: string
+}
+
+export interface PerceivedEffort {
+  score: number // 1-10, RPE-style
+  label: string
+  reasoning: string
+}
+
 export interface PostWorkoutReview {
   effort?: number // 1-10
   feelings?: FeelingTag[]
   comments?: string
   painNotes?: string
   expectationVsActual?: 'easier' | 'about_same' | 'harder'
+  /** Computed once at finish time and carried with the review so history keeps
+   *  showing the same picture even if the session's exercises are edited later. */
+  missedExercises?: MissedExercise[]
+  achievements?: Achievement[]
+  aiSummary?: string
+  aiPerceivedEffort?: PerceivedEffort
   createdAt: string
   updatedAt: string
 }
