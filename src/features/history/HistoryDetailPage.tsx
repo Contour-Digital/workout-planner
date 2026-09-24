@@ -6,11 +6,14 @@ import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { db } from '../../db/db'
 import { repeatWorkoutSession, saveWorkoutReview } from '../../db/sessionActions'
+import { getAllExercises } from '../../db/exercisesRepo'
 import { elapsedSeconds } from '../../models/session'
 import { computeMissedExercises, computeSessionAchievements } from '../../lib/workoutReview'
 import { generateWorkoutSummary } from '../../lib/workoutAiSummary'
+import { addSuggestionToRoutine } from '../../lib/addSuggestionToRoutine'
 import { PostWorkoutReviewSheet } from '../session/PostWorkoutReviewSheet'
 import type { Achievement, SessionExerciseEntry, WorkoutSession } from '../../models/session'
+import type { ExerciseSuggestion } from '../../models/exercise'
 
 export function HistoryDetailPage() {
   const { id } = useParams()
@@ -77,6 +80,7 @@ function WorkoutDetail({
   const mm = Math.floor(elapsed / 60)
   const missedExercises = session.review?.missedExercises ?? computeMissedExercises(session)
   const [achievements, setAchievements] = useState<Achievement[]>(session.review?.achievements ?? [])
+  const exercises = useLiveQuery(() => getAllExercises(), [], [])
 
   useEffect(() => {
     if (!session.review?.achievements) {
@@ -167,12 +171,31 @@ function WorkoutDetail({
         )}
 
         {session.review?.aiSummary && (
-          <div className="mb-3 flex flex-col gap-1">
+          <div className="mb-3 flex flex-col gap-2">
             <p className="text-sm text-primary">{session.review.aiSummary}</p>
             {session.review.aiPerceivedEffort && (
               <Badge tone="secondary">
                 Perceived effort: {session.review.aiPerceivedEffort.score}/10 · {session.review.aiPerceivedEffort.label.replace('_', ' ')}
               </Badge>
+            )}
+            {session.review.aiTips && session.review.aiTips.length > 0 && (
+              <ul className="flex flex-col gap-1 pl-4 text-sm text-primary-muted">
+                {session.review.aiTips.map((tip, i) => (
+                  <li key={i} className="list-disc">
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {session.review.aiExerciseSuggestions && session.review.aiExerciseSuggestions.length > 0 && (
+              <div className="flex flex-col gap-2">
+                {session.review.aiExerciseSuggestions.map((s) => (
+                  <div key={s.name} className="rounded-[var(--radius-control)] border border-primary-border bg-surface-muted px-3 py-2">
+                    <p className="truncate text-sm font-medium text-primary-strong">{s.name}</p>
+                    <p className="truncate text-xs text-primary-muted">{s.reason}</p>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
@@ -196,6 +219,11 @@ function WorkoutDetail({
         missedExercises={missedExercises}
         achievements={achievements}
         onGenerateAiSummary={() => generateWorkoutSummary(session, missedExercises, achievements)}
+        onAddExerciseSuggestion={
+          session.routineTemplateId
+            ? (suggestion: ExerciseSuggestion) => addSuggestionToRoutine(session.routineTemplateId!, suggestion, exercises)
+            : undefined
+        }
         onClose={() => setReviewOpen(false)}
         onSave={async (review) => {
           await saveWorkoutReview(session.id, review)

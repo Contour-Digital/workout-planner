@@ -199,10 +199,18 @@ stay attached to the session in history.
 From there, a "Generate" button on the review sheet can ask the AI to write
 a short recap of the session and estimate perceived effort (RPE 1-10) —
 fed the exact facts computed above (durations, best sets, misses,
-achievements) so it's synthesizing a write-up, not inventing numbers. Powered
-by a third Edge Function, `supabase/functions/workout-summary`, on the same
-`ANTHROPIC_API_KEY` secret. It's opt-in per session (a button, not automatic)
-so it never runs — or costs anything — unless asked for.
+achievements) so it's synthesizing a write-up, not inventing numbers. The
+same call can also surface a couple of general coaching tips (pacing, rest,
+recovery) and up to two specific exercise suggestions worth adding next
+time (e.g. a missing warm-up, balancing push/pull volume) — both only when
+something genuinely stands out, not padded out for the sake of it. A
+suggested exercise can be added straight to the session's routine with one
+tap ("Add to routine"), reusing the same fuzzy-match-or-create flow as the
+AI assistant's suggestions; the button only appears when the session came
+from a saved routine. Powered by a third Edge Function,
+`supabase/functions/workout-summary`, on the same `ANTHROPIC_API_KEY`
+secret. It's opt-in per session (a button, not automatic) so it never runs
+— or costs anything — unless asked for.
 
 ## Database schema
 

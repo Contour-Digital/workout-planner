@@ -2,21 +2,16 @@ import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from './supabaseClient'
 import { findBestMatch } from './exerciseMatching'
 import { createCustomExercise } from '../db/exercisesRepo'
-import type { Equipment, Exercise, ExerciseCategory, MuscleGroup } from '../models/exercise'
+import type { Exercise, ExerciseSuggestion } from '../models/exercise'
 
 export interface AssistantMessage {
   role: 'user' | 'assistant'
   content: string
 }
 
-export interface AssistantSuggestion {
-  name: string
-  section: 'warmup' | 'main' | 'cooldown'
-  category: ExerciseCategory
-  primaryMuscles: MuscleGroup[]
-  equipment: Equipment[]
-  reason: string
-}
+/** Same shape as the post-workout summary's exercise suggestions — kept as an alias
+ *  so existing call sites don't need to change, both resolve the same way. */
+export type AssistantSuggestion = ExerciseSuggestion
 
 export interface AssistantReply {
   reply: string

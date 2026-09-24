@@ -9,9 +9,47 @@ const CORS_HEADERS = {
 
 const EFFORT_LABELS = ["very_light", "light", "moderate", "hard", "very_hard", "maximal"];
 
+const EXERCISE_CATEGORIES = ["strength", "cardio", "mobility", "bodyweight", "functional", "recovery"];
+
+const MUSCLE_GROUPS = [
+  "chest",
+  "back",
+  "shoulders",
+  "biceps",
+  "triceps",
+  "forearms",
+  "core",
+  "glutes",
+  "quads",
+  "hamstrings",
+  "calves",
+  "full_body",
+  "cardiovascular",
+  "hip_flexors",
+  "lower_back",
+];
+
+const EQUIPMENT = [
+  "none",
+  "barbell",
+  "dumbbell",
+  "kettlebell",
+  "machine",
+  "cable",
+  "resistance_band",
+  "bench",
+  "pull_up_bar",
+  "treadmill",
+  "bike",
+  "rower",
+  "foam_roller",
+  "mat",
+  "other",
+];
+
 const SUMMARY_TOOL = {
   name: "record_summary",
-  description: "Record the workout recap and perceived-effort estimate.",
+  description: "Record the workout recap, perceived-effort estimate, and any forward-looking suggestions.",
   strict: true,
   input_schema: {
     type: "object",
@@ -35,13 +73,37 @@ const SUMMARY_TOOL = {
         required: ["score", "label", "reasoning"],
         additionalProperties: false,
       },
+      tips: {
+        type: "array",
+        description:
+          "1-3 short, general, non-exercise-specific coaching tips for future sessions — pacing, rest periods, recovery, consistency. Leave empty if nothing genuinely stands out; don't pad it.",
+        items: { type: "string" },
+      },
+      exerciseSuggestions: {
+        type: "array",
+        description:
+          "0-2 specific exercises worth adding next time — e.g. a missing warm-up/cooldown, or balancing push/pull volume. Leave empty unless something concrete stands out from the actual data; don't suggest for the sake of it.",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "Exercise name, cleaned up to standard title case (e.g. 'Face Pull')." },
+            section: { type: "string", enum: ["warmup", "main", "cooldown"], description: "Which part of the routine this belongs in." },
+            category: { type: "string", enum: EXERCISE_CATEGORIES, description: "Best-guess exercise category." },
+            primaryMuscles: { type: "array", items: { type: "string", enum: MUSCLE_GROUPS }, description: "Best-guess primary muscle groups worked, most relevant first." },
+            equipment: { type: "array", items: { type: "string", enum: EQUIPMENT }, description: "Best-guess equipment used. Use ['none'] for pure bodyweight moves." },
+            reason: { type: "string", description: "One short phrase on why (e.g. 'balances the pushing volume from today')." },
+          },
+          required: ["name", "section", "category", "primaryMuscles", "equipment", "reason"],
+          additionalProperties: false,
+        },
+      },
     },
-    required: ["summary", "perceivedEffort"],
+    required: ["summary", "perceivedEffort", "tips", "exerciseSuggestions"],
     additionalProperties: false,
   },
 };
 
-const SYSTEM_PROMPT = `You write short, honest post-workout recaps for users of Workout Planner, a workout tracking app. You're given the exact facts of a just-finished session — you never invent numbers or exercises not listed. Be encouraging but truthful: if sets were missed, say so plainly rather than glossing over it. You are not a medical professional — never give medical advice. Always call record_summary exactly once.`;
+const SYSTEM_PROMPT = `You write short, honest post-workout recaps for users of Workout Planner, a workout tracking app. You're given the exact facts of a just-finished session — you never invent numbers or exercises not listed. Be encouraging but truthful: if sets were missed, say so plainly rather than glossing over it. Only offer tips or exercise suggestions when something genuinely stands out from the data (don't pad them out for the sake of it — empty is a fine answer). You are not a medical professional — never give medical advice. Always call record_summary exactly once.`;
 
 interface ExerciseFact {
   name: string;
@@ -78,7 +140,7 @@ ${listOrNone(missedLines)}
 Achievements (verified — lifted/moved more than last time):
 ${listOrNone(achievementLines)}
 
-Write the recap and perceived-effort estimate, then call record_summary.`;
+Write the recap, the perceived-effort estimate, and any tips/exercise suggestions that genuinely stand out, then call record_summary.`;
 }
 
 Deno.serve(async (req: Request) => {
@@ -115,7 +177,7 @@ Deno.serve(async (req: Request) => {
 
     const response = await client.messages.create({
       model: "claude-opus-5",
-      max_tokens: 800,
+      max_tokens: 1200,
       output_config: { effort: "low" },
       system: SYSTEM_PROMPT,
       tools: [SUMMARY_TOOL],

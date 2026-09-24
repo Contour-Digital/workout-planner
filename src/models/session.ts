@@ -1,5 +1,6 @@
 import type { SetTarget } from './routine'
 import type { RecoveryTrackingType } from './recovery'
+import type { ExerciseSuggestion } from './exercise'
 
 export interface SetResult {
   id: string
@@ -85,6 +86,11 @@ export interface PostWorkoutReview {
   achievements?: Achievement[]
   aiSummary?: string
   aiPerceivedEffort?: PerceivedEffort
+  /** General, non-exercise-specific coaching tips for future sessions. */
+  aiTips?: string[]
+  /** Specific exercises the AI thinks are worth adding next time — actionable via
+   *  "Add to routine" when this session came from a saved routine. */
+  aiExerciseSuggestions?: ExerciseSuggestion[]
   createdAt: string
   updatedAt: string
 }

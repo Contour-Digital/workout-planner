@@ -77,6 +77,18 @@ export interface CustomExercise extends ExerciseBase {
 
 export type Exercise = LibraryExercise | CustomExercise
 
+/** An AI-suggested exercise to add somewhere (a routine section, an in-progress
+ *  session) — shared shape used by both the chat assistant and the post-workout
+ *  summary, so both can be resolved/added the same way. */
+export interface ExerciseSuggestion {
+  name: string
+  section: 'warmup' | 'main' | 'cooldown'
+  category: ExerciseCategory
+  primaryMuscles: MuscleGroup[]
+  equipment: Equipment[]
+  reason: string
+}
+
 export const EXERCISE_CATEGORY_LABELS: Record<ExerciseCategory, string> = {
   strength: 'Strength',
   cardio: 'Cardio',

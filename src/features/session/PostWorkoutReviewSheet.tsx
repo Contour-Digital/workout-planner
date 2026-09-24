@@ -3,6 +3,7 @@ import { Sheet } from '../../components/ui/Sheet'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { IconSparkle } from '../../components/ui/icons'
+import type { ExerciseSuggestion } from '../../models/exercise'
 import type { Achievement, FeelingTag, MissedExercise, PerceivedEffort, PostWorkoutReview } from '../../models/session'
 
 const FEELINGS: { value: FeelingTag; label: string }[] = [
@@ -21,7 +22,10 @@ interface PostWorkoutReviewSheetProps {
   existing?: PostWorkoutReview
   missedExercises: MissedExercise[]
   achievements: Achievement[]
-  onGenerateAiSummary: () => Promise<{ summary: string; perceivedEffort: PerceivedEffort }>
+  onGenerateAiSummary: () => Promise<{ summary: string; perceivedEffort: PerceivedEffort; tips: string[]; exerciseSuggestions: ExerciseSuggestion[] }>
+  /** Omit when this session has no routine to add suggestions to (e.g. impromptu) —
+   *  suggestions still show, just without an "Add to routine" button. */
+  onAddExerciseSuggestion?: (suggestion: ExerciseSuggestion) => Promise<void>
 }
 
 export function PostWorkoutReviewSheet({
@@ -32,6 +36,7 @@ export function PostWorkoutReviewSheet({
   missedExercises,
   achievements,
   onGenerateAiSummary,
+  onAddExerciseSuggestion,
 }: PostWorkoutReviewSheetProps) {
   const [effort, setEffort] = useState<number | undefined>(existing?.effort)
   const [feelings, setFeelings] = useState<FeelingTag[]>(existing?.feelings ?? [])
@@ -40,6 +45,9 @@ export function PostWorkoutReviewSheet({
   const [expectation, setExpectation] = useState<PostWorkoutReview['expectationVsActual']>(existing?.expectationVsActual)
   const [aiSummary, setAiSummary] = useState(existing?.aiSummary)
   const [aiPerceivedEffort, setAiPerceivedEffort] = useState(existing?.aiPerceivedEffort)
+  const [aiTips, setAiTips] = useState<string[]>(existing?.aiTips ?? [])
+  const [aiExerciseSuggestions, setAiExerciseSuggestions] = useState<ExerciseSuggestion[]>(existing?.aiExerciseSuggestions ?? [])
+  const [addedSuggestions, setAddedSuggestions] = useState<string[]>([])
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
 
@@ -54,11 +62,20 @@ export function PostWorkoutReviewSheet({
       const result = await onGenerateAiSummary()
       setAiSummary(result.summary)
       setAiPerceivedEffort(result.perceivedEffort)
+      setAiTips(result.tips)
+      setAiExerciseSuggestions(result.exerciseSuggestions)
+      setAddedSuggestions([])
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'Could not generate a summary.')
     } finally {
       setAiLoading(false)
     }
+  }
+
+  async function handleAddSuggestion(suggestion: ExerciseSuggestion) {
+    if (!onAddExerciseSuggestion) return
+    await onAddExerciseSuggestion(suggestion)
+    setAddedSuggestions((prev) => [...prev, suggestion.name])
   }
 
   function save() {
@@ -73,6 +90,8 @@ export function PostWorkoutReviewSheet({
       achievements: achievements.length ? achievements : undefined,
       aiSummary,
       aiPerceivedEffort,
+      aiTips: aiTips.length ? aiTips : undefined,
+      aiExerciseSuggestions: aiExerciseSuggestions.length ? aiExerciseSuggestions : undefined,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     })
@@ -120,6 +139,40 @@ export function PostWorkoutReviewSheet({
                 </div>
               )}
               {aiPerceivedEffort?.reasoning && <p className="text-xs text-primary-muted">{aiPerceivedEffort.reasoning}</p>}
+
+              {aiTips.length > 0 && (
+                <ul className="flex flex-col gap-1 pl-4 text-sm text-primary-muted">
+                  {aiTips.map((tip, i) => (
+                    <li key={i} className="list-disc">
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {aiExerciseSuggestions.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  {aiExerciseSuggestions.map((s) => {
+                    const added = addedSuggestions.includes(s.name)
+                    return (
+                      <div
+                        key={s.name}
+                        className="flex items-center justify-between gap-2 rounded-[var(--radius-control)] border border-primary-border bg-surface-muted px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-primary-strong">{s.name}</p>
+                          <p className="truncate text-xs text-primary-muted">{s.reason}</p>
+                        </div>
+                        {onAddExerciseSuggestion && (
+                          <Button size="sm" variant={added ? 'ghost' : 'secondary'} disabled={added} onClick={() => handleAddSuggestion(s)}>
+                            {added ? 'Added' : 'Add to routine'}
+                          </Button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </>
           )}
           {!aiSummary && !aiLoading && (
@@ -219,6 +272,8 @@ export function PostWorkoutReviewSheet({
                 achievements: achievements.length ? achievements : undefined,
                 aiSummary,
                 aiPerceivedEffort,
+                aiTips: aiTips.length ? aiTips : undefined,
+                aiExerciseSuggestions: aiExerciseSuggestions.length ? aiExerciseSuggestions : undefined,
                 createdAt: existing?.createdAt ?? now,
                 updatedAt: now,
               })

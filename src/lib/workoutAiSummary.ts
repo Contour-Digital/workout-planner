@@ -1,11 +1,14 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from './supabaseClient'
 import { formatSetResult } from './formatPerformance'
+import type { ExerciseSuggestion } from '../models/exercise'
 import type { Achievement, MissedExercise, PerceivedEffort, WorkoutSession } from '../models/session'
 
 export interface WorkoutAiSummaryResult {
   summary: string
   perceivedEffort: PerceivedEffort
+  tips: string[]
+  exerciseSuggestions: ExerciseSuggestion[]
 }
 
 /** Best completed set per exercise, formatted for the summary request — not shown

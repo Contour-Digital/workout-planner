@@ -35,6 +35,7 @@ import { getAllExercises } from '../../db/exercisesRepo'
 import { groupByPrimaryMuscle } from '../../lib/exerciseGrouping'
 import { computeMissedExercises, computeSessionAchievements } from '../../lib/workoutReview'
 import { generateWorkoutSummary } from '../../lib/workoutAiSummary'
+import { addSuggestionToRoutine } from '../../lib/addSuggestionToRoutine'
 import { AssistantChat } from '../assistant/AssistantChat'
 import { resolveSuggestedExercise, type AssistantContext, type AssistantSuggestion } from '../../lib/assistantChat'
 import { useSettingsStore } from '../../store/settingsStore'
@@ -257,6 +258,11 @@ export function ActiveWorkoutPage() {
         missedExercises={missedExercises}
         achievements={achievements}
         onGenerateAiSummary={() => generateWorkoutSummary(session, missedExercises, achievements)}
+        onAddExerciseSuggestion={
+          session.routineTemplateId
+            ? (suggestion) => addSuggestionToRoutine(session.routineTemplateId!, suggestion, exercises)
+            : undefined
+        }
         onSave={async (review) => {
           await saveWorkoutReview(session.id, review)
           setReviewOpen(false)
