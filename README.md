@@ -79,6 +79,14 @@ session already exists for a given schedule occurrence, `startWorkoutSession`
 returns it instead of creating a duplicate, which is what makes app-restore
 safe.
 
+**Rest timer**: there's a global default (duration + on/off) under Profile,
+but `SessionStartPage` also asks at the top of every "start workout" flow —
+before the session is created — letting you set a duration or turn the timer
+off for just that session. The choice is stored on the session itself
+(`restTimerEnabled`/`restTimerSeconds`), overriding both the global toggle
+and each exercise's own configured rest duration for the rest of that
+workout.
+
 ### Sync architecture
 
 The app requires signing in (email/password via Supabase Auth), but every

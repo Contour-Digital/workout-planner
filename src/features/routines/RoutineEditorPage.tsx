@@ -13,6 +13,7 @@ import { createExerciseConfigWithHistory } from '../../db/sessionsRepo'
 import { createEmptySection, type ExerciseConfig, type RoutineSection, type RoutineTemplate } from '../../models/routine'
 import { resolveSuggestedExercise, type AssistantContext, type AssistantSuggestion } from '../../lib/assistantChat'
 import type { GeneratedRoutineResult } from '../../lib/aiRoutineGenerator'
+import type { Exercise } from '../../models/exercise'
 
 export function RoutineEditorPage() {
   const { id } = useParams()
@@ -91,6 +92,12 @@ export function RoutineEditorPage() {
       main: routine!.main.map((c) => exerciseName(c.exerciseId)),
       cooldown: routine!.cooldown.exercises.map((c) => exerciseName(c.exerciseId)),
     }
+  }
+
+  async function addToSection(section: 'warmup' | 'cooldown', exercise: Exercise) {
+    const target = section === 'warmup' ? routine!.warmup : routine!.cooldown
+    const config = await createExerciseConfigWithHistory(exercise.id, target.exercises.length)
+    setRoutine((r) => (r ? { ...r, [section]: { enabled: true, exercises: [...r[section].exercises, config] } } : r))
   }
 
   async function handleAddSuggestion(suggestion: AssistantSuggestion) {
@@ -177,6 +184,8 @@ export function RoutineEditorPage() {
                 exercises={routine.warmup.exercises}
                 onChange={(exercises) => setSection('warmup', { ...routine.warmup, exercises })}
                 emptyHint="Add stretches, mobility drills, or light cardio to prepare for the workout."
+                otherSectionLabel="Cool-down"
+                onAddToOtherSection={(exercise) => addToSection('cooldown', exercise)}
               />
             </div>
           )}
@@ -206,6 +215,8 @@ export function RoutineEditorPage() {
                 exercises={routine.cooldown.exercises}
                 onChange={(exercises) => setSection('cooldown', { ...routine.cooldown, exercises })}
                 emptyHint="Add stretches or breathing work to wind down."
+                otherSectionLabel="Warm-up"
+                onAddToOtherSection={(exercise) => addToSection('warmup', exercise)}
               />
             </div>
           )}

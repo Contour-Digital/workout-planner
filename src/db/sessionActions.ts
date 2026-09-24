@@ -55,6 +55,8 @@ export async function startWorkoutSession(opts: {
   origin: 'scheduled' | 'impromptu'
   scheduleId?: string
   occurrenceDate?: string
+  restTimerEnabled?: boolean
+  restTimerSeconds?: number
 }): Promise<WorkoutSession> {
   if (opts.scheduleId && opts.occurrenceDate) {
     const existing = await db.workoutSessions
@@ -86,6 +88,8 @@ export async function startWorkoutSession(opts: {
       ? { enabled: true, exercises: await buildSectionEntries(opts.routine.cooldown.exercises) }
       : { enabled: false, exercises: [] },
     notes: opts.routine.notes,
+    restTimerEnabled: opts.restTimerEnabled,
+    restTimerSeconds: opts.restTimerSeconds,
     createdAt: now,
     updatedAt: now,
   }
@@ -97,7 +101,10 @@ export async function startWorkoutSession(opts: {
   return session
 }
 
-export async function startBlankWorkoutSession(name = 'Workout'): Promise<WorkoutSession> {
+export async function startBlankWorkoutSession(
+  name = 'Workout',
+  restTimer?: { enabled?: boolean; seconds?: number },
+): Promise<WorkoutSession> {
   const now = new Date().toISOString()
   const session: WorkoutSession = {
     id: crypto.randomUUID(),
@@ -109,6 +116,8 @@ export async function startBlankWorkoutSession(name = 'Workout'): Promise<Workou
     startedAt: now,
     pauseIntervals: [],
     main: [],
+    restTimerEnabled: restTimer?.enabled,
+    restTimerSeconds: restTimer?.seconds,
     createdAt: now,
     updatedAt: now,
   }

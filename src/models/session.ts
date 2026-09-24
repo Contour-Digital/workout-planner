@@ -121,6 +121,10 @@ export interface WorkoutSession {
   /** ISO timestamp the current rest timer ends at, if one is running. Storing the
    *  target timestamp (not a countdown) keeps it correct across backgrounding/restarts. */
   restTimerEndsAt?: string
+  /** Per-session rest timer override, set once at the start-workout prompt. Undefined
+   *  falls back to the global settings toggle and each exercise's own rest duration. */
+  restTimerEnabled?: boolean
+  restTimerSeconds?: number
   createdAt: string
   updatedAt: string
 }

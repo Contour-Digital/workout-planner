@@ -46,7 +46,8 @@ export function ActiveWorkoutPage() {
   const navigate = useNavigate()
   const session = useLiveQuery(() => (id ? getWorkoutSession(id) : undefined), [id])
   const exercises = useLiveQuery(getAllExercises, [], [])
-  const restTimerEnabled = useSettingsStore((s) => s.settings.restTimerEnabled)
+  const globalRestTimerEnabled = useSettingsStore((s) => s.settings.restTimerEnabled)
+  const restTimerEnabled = session?.restTimerEnabled ?? globalRestTimerEnabled
   const now = useNow(1000)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [detailExercise, setDetailExercise] = useState<Exercise | null>(null)
@@ -103,7 +104,8 @@ export function ActiveWorkoutPage() {
         onNotesChange={(notes) => updateEntryNotes(session!.id, entry.id, notes)}
         onRemoveExercise={() => removeSessionExercise(session!.id, entry.id, section)}
         onSetCompleted={(restSeconds) => {
-          if (restTimerEnabled && restSeconds && restSeconds > 0) startRestTimer(session!.id, restSeconds)
+          const effectiveRestSeconds = session!.restTimerSeconds ?? restSeconds
+          if (restTimerEnabled && effectiveRestSeconds && effectiveRestSeconds > 0) startRestTimer(session!.id, effectiveRestSeconds)
         }}
         onViewDetail={setDetailExercise}
       />
@@ -212,6 +214,13 @@ export function ActiveWorkoutPage() {
         )}
       </div>
 
+      <AssistantChat
+        storageKey={`session:${session.id}`}
+        buildContext={buildAssistantContext}
+        onAddSuggestion={handleAddSuggestion}
+        className="mt-4 w-full"
+      />
+
       <label className="mt-5 flex flex-col gap-1">
         <span className="text-sm font-medium text-primary-strong">Session notes</span>
         <textarea
@@ -222,12 +231,6 @@ export function ActiveWorkoutPage() {
       </label>
 
       <div className="fixed inset-x-0 bottom-20 z-20 flex flex-col gap-2 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
-        <AssistantChat
-          storageKey={`session:${session.id}`}
-          buildContext={buildAssistantContext}
-          onAddSuggestion={handleAddSuggestion}
-          className="w-full"
-        />
         <Button fullWidth size="lg" onClick={handleFinishRequest}>
           Finish Workout
         </Button>

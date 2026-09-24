@@ -41,6 +41,7 @@ export function SessionExerciseCard({
   const [previous, setPrevious] = useState<string | null>(null)
   const vibrationEnabled = useSettingsStore((s) => s.settings.vibrationEnabled)
   const isCardio = exercise?.category === 'cardio'
+  const isStretch = exercise?.category === 'mobility'
 
   useEffect(() => {
     getExercise(entry.exerciseId).then((e) => e && setExercise(e))
@@ -121,7 +122,7 @@ export function SessionExerciseCard({
                     ) : (
                       <>
                         Target: {target?.targetReps ?? '–'}
-                        {target?.targetWeightKg ? ` × ${target.targetWeightKg}kg` : ''}
+                        {!isStretch && target?.targetWeightKg ? ` × ${target.targetWeightKg}kg` : ''}
                       </>
                     )}
                   </span>
@@ -154,14 +155,16 @@ export function SessionExerciseCard({
                         value={set.actualReps ?? ''}
                         onChange={(e) => onFieldChange(set.id, { actualReps: e.target.value === '' ? undefined : Number(e.target.value) })}
                       />
-                      <input
-                        type="number"
-                        aria-label={`Set ${i + 1} actual weight`}
-                        placeholder="kg"
-                        className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
-                        value={set.actualWeightKg ?? ''}
-                        onChange={(e) => onFieldChange(set.id, { actualWeightKg: e.target.value === '' ? undefined : Number(e.target.value) })}
-                      />
+                      {!isStretch && (
+                        <input
+                          type="number"
+                          aria-label={`Set ${i + 1} actual weight`}
+                          placeholder="kg"
+                          className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
+                          value={set.actualWeightKg ?? ''}
+                          onChange={(e) => onFieldChange(set.id, { actualWeightKg: e.target.value === '' ? undefined : Number(e.target.value) })}
+                        />
+                      )}
                     </>
                   )}
                   <button

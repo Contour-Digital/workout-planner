@@ -15,11 +15,15 @@ interface ExercisePickerProps {
   onClose: () => void
   onSelect: (exercise: Exercise) => void
   title?: string
+  /** When provided, stretches (mobility-category exercises) get a second small button
+   *  alongside "Add" — letting you send them to the other of warm-up/cool-down instead
+   *  of always landing in whichever section this picker was opened from. */
+  stretchAltSection?: { label: string; onSelect: (exercise: Exercise) => void }
 }
 
 const CATEGORIES: (ExerciseCategory | 'all')[] = ['all', 'strength', 'cardio', 'bodyweight', 'functional', 'mobility', 'recovery']
 
-export function ExercisePicker({ open, onClose, onSelect, title = 'Add exercise' }: ExercisePickerProps) {
+export function ExercisePicker({ open, onClose, onSelect, title = 'Add exercise', stretchAltSection }: ExercisePickerProps) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<ExerciseCategory | 'all'>('all')
   const [createOpen, setCreateOpen] = useState(false)
@@ -83,9 +87,20 @@ export function ExercisePicker({ open, onClose, onSelect, title = 'Add exercise'
                         <p className="text-xs text-primary-muted">{EXERCISE_CATEGORY_LABELS[exercise.category]}</p>
                       </div>
                     </button>
-                    <Button size="sm" onClick={() => onSelect(exercise)}>
-                      Add
-                    </Button>
+                    {stretchAltSection && exercise.category === 'mobility' ? (
+                      <div className="flex shrink-0 flex-col gap-1">
+                        <Button size="sm" onClick={() => onSelect(exercise)}>
+                          Add
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => stretchAltSection.onSelect(exercise)}>
+                          Add to {stretchAltSection.label}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button size="sm" onClick={() => onSelect(exercise)}>
+                        Add
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -20,9 +20,21 @@ interface RoutineSectionEditorProps {
    *  headers instead of as one flat list, so the routine reads sectioned the way
    *  a written workout program often is (e.g. Chest, Back, Core). */
   groupByMuscle?: boolean
+  /** Warm-up/cool-down only: lets a stretch picked here be sent to the other section
+   *  instead, via a second button in the picker. Pass both or neither. */
+  otherSectionLabel?: string
+  onAddToOtherSection?: (exercise: Exercise) => void
 }
 
-export function RoutineSectionEditor({ title, exercises, onChange, emptyHint, groupByMuscle }: RoutineSectionEditorProps) {
+export function RoutineSectionEditor({
+  title,
+  exercises,
+  onChange,
+  emptyHint,
+  groupByMuscle,
+  otherSectionLabel,
+  onAddToOtherSection,
+}: RoutineSectionEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [detailExercise, setDetailExercise] = useState<Exercise | null>(null)
   const library = useLiveQuery(getAllExercises, [], []) ?? []
@@ -128,7 +140,22 @@ export function RoutineSectionEditor({ title, exercises, onChange, emptyHint, gr
         </div>
       )}
 
-      <ExercisePicker open={pickerOpen} onClose={() => setPickerOpen(false)} onSelect={addExercise} />
+      <ExercisePicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={addExercise}
+        stretchAltSection={
+          otherSectionLabel && onAddToOtherSection
+            ? {
+                label: otherSectionLabel,
+                onSelect: (exercise) => {
+                  onAddToOtherSection(exercise)
+                  setPickerOpen(false)
+                },
+              }
+            : undefined
+        }
+      />
       <ExerciseDetailSheet exercise={detailExercise} onClose={() => setDetailExercise(null)} />
     </div>
   )
