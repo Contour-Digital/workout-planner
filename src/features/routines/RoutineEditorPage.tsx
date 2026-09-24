@@ -234,17 +234,8 @@ export function RoutineEditorPage() {
         {error && <p className="text-sm text-danger">{error}</p>}
       </div>
 
-      <div className="fixed inset-x-0 bottom-20 z-20 flex flex-col gap-2 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
-        <div className="mx-auto w-full max-w-3xl">
-          <AssistantChat
-            storageKey={`routine:${routine.id}`}
-            buildContext={buildAssistantContext}
-            onAddSuggestion={handleAddSuggestion}
-            className="w-full"
-            greeting="Hi, I'm Spot! Tell me what you're going for and I can suggest exercises for your warm-up, main workout, or cool-down — I'll add them straight into this routine."
-          />
-        </div>
-        <div className="mx-auto flex max-w-3xl gap-3">
+      <div className="fixed inset-x-0 bottom-20 z-20 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
+        <div className="mx-auto grid max-w-3xl grid-cols-2 gap-3">
           <Button variant="ghost" fullWidth onClick={() => navigate('/routines')}>
             Cancel
           </Button>
@@ -253,6 +244,15 @@ export function RoutineEditorPage() {
           </Button>
         </div>
       </div>
+
+      <AssistantChat
+        floating
+        floatingPositionClassName="bottom-44 right-4 sm:bottom-8 sm:right-8"
+        storageKey={`routine:${routine.id}`}
+        buildContext={buildAssistantContext}
+        onAddSuggestion={handleAddSuggestion}
+        greeting="Hi, I'm Spot! Tell me what you're going for and I can suggest exercises for your warm-up, main workout, or cool-down — I'll add them straight into this routine."
+      />
     </div>
   )
 }

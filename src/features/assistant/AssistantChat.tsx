@@ -30,6 +30,10 @@ interface AssistantChatProps {
    *  instead of an inline "Spot" button — for pages with no natural bottom-bar slot
    *  to place an inline trigger in (Dashboard, the Workouts list). */
   floating?: boolean
+  /** Overrides the floating trigger's fixed position classes. The default clears the
+   *  bottom nav bar; pages that also have their own fixed footer above it (e.g. a
+   *  Cancel/Save bar) need more bottom clearance to avoid overlapping it. */
+  floatingPositionClassName?: string
   /** Tappable shortcuts shown alongside the greeting, before the first message — for
    *  things Spot's own chat can't do inline (e.g. opening the from-notes generator). */
   quickActions?: { label: string; onClick: () => void }[]
@@ -57,7 +61,16 @@ function saveHistory(key: string, messages: StoredMessage[]) {
   }
 }
 
-export function AssistantChat({ storageKey, buildContext, onAddSuggestion, className, greeting, floating, quickActions }: AssistantChatProps) {
+export function AssistantChat({
+  storageKey,
+  buildContext,
+  onAddSuggestion,
+  className,
+  greeting,
+  floating,
+  floatingPositionClassName,
+  quickActions,
+}: AssistantChatProps) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<StoredMessage[]>(() => loadHistory(storageKey))
   const [input, setInput] = useState('')
@@ -117,7 +130,10 @@ export function AssistantChat({ storageKey, buildContext, onAddSuggestion, class
         <button
           onClick={() => setOpen(true)}
           aria-label="Open Spot, your training assistant"
-          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-lg hover:bg-accent-strong sm:bottom-8 sm:right-8"
+          className={clsx(
+            'fixed z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-lg hover:bg-accent-strong',
+            floatingPositionClassName ?? 'bottom-24 right-4 sm:bottom-8 sm:right-8',
+          )}
         >
           <IconSparkle width={24} height={24} />
         </button>

@@ -212,11 +212,13 @@ touched, so a rename can't affect other users or survive a "Reset".
 A "Spot" trigger opens a chat window for exercise ideas, warm-up/cool-down
 stretch suggestions, and general training questions. It has two layouts
 (`AssistantChat`'s `floating` prop): inline — a "Spot" button placed in the
-page's own layout, used in the routine editor's bottom bar and inline in
-the active workout session (between "Save as reusable routine" and
-"Session notes", not floating) — and floating — a small round icon fixed
-bottom-right, used on the Dashboard and the Workouts tab, which have no
-natural bottom-bar slot for an inline trigger. Each instance opens with a
+page's own layout, used inline in the active workout session (between
+"Save as reusable routine" and "Session notes") — and floating — a small
+round icon fixed bottom-right, used on the Dashboard, the Workouts tab, and
+the routine editor, none of which have a natural bottom-bar slot for an
+inline trigger (the routine editor's Cancel/Save bar is its own fixed
+footer, so Spot floats above it there via `floatingPositionClassName`,
+which overrides the default position to clear it). Each instance opens with a
 short greeting bubble tailored to where it was opened from, so it's clear
 what it can actually do there before you type anything; the Workouts tab's
 greeting also surfaces a "Generate a routine from notes" quick-action chip
