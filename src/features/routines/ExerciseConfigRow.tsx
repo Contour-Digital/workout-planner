@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ExerciseMediaThumb } from '../../components/ui/ExerciseMedia'
 import { IconChevronDown, IconTrash } from '../../components/ui/icons'
-import type { Exercise } from '../../models/exercise'
+import { MUSCLE_GROUP_LABELS, type Exercise } from '../../models/exercise'
 import type { ExerciseConfig, SetTarget } from '../../models/routine'
 
 interface ExerciseConfigRowProps {
@@ -86,6 +86,9 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
           {exercise && <ExerciseMediaThumb media={exercise.media} size={40} />}
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-primary-strong">{exercise?.name ?? 'Unknown exercise'}</p>
+            {exercise && exercise.primaryMuscles.length > 0 && (
+              <p className="truncate text-xs text-secondary">{exercise.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ')}</p>
+            )}
             <p className="truncate text-xs text-primary-muted">{summarize(config)}</p>
           </div>
         </button>
