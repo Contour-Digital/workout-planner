@@ -87,6 +87,21 @@ off for just that session. The choice is stored on the session itself
 and each exercise's own configured rest duration for the rest of that
 workout.
 
+When a rest period ends, `RestTimerBar` shows a system notification via
+`lib/notify.ts`'s `showNotification()` (gated behind the "Notifications"
+toggle under Profile, which requests permission the first time it's turned
+on). That helper goes through the registered service worker's
+`showNotification()` first — required on Android Chrome, where the
+page-level `Notification` constructor throws outright — falling back to
+that constructor only where no service worker is registered. It's a local
+notification (no server round-trip), which is the right fit here: the
+countdown is already tracked client-side down to the second, and a real
+push notification's delivery isn't timely enough for something that fires
+within seconds. True push (e.g. a reminder before a scheduled workout, sent
+even while the app's fully closed) would need separate infrastructure — a
+stored Web Push subscription per device and a server-side sender — and
+isn't built yet.
+
 ### Sync architecture
 
 The app requires signing in (email/password via Supabase Auth), but every

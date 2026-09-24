@@ -4,6 +4,7 @@ import { useNow } from '../../lib/useNow'
 import { Button } from '../../components/ui/Button'
 import { IconClock, IconX } from '../../components/ui/icons'
 import { useSettingsStore } from '../../store/settingsStore'
+import { showNotification } from '../../lib/notify'
 
 /** Floats above the page (fixed position, portalled to body) so it stays visible
  *  no matter how far you've scrolled into the exercise list — the whole point of a
@@ -20,7 +21,7 @@ export function RestTimerBar({ endsAt, onCancel, onComplete }: { endsAt: string;
       firedRef.current = true
       if (settings.vibrationEnabled && 'vibrate' in navigator) navigator.vibrate?.(200)
       if (settings.notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('Rest complete', { body: 'Time for your next set.' })
+        showNotification('Rest complete', { body: 'Time for your next set.', tag: 'rest-timer' })
       }
       onComplete()
     }
