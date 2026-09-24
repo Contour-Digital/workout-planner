@@ -1,118 +1,109 @@
 import { MUSCLE_GROUP_LABELS, type MuscleGroup } from '../../models/exercise'
+import { BACK_BODY_PATHS, BACK_VIEW_BOX, FRONT_BODY_PATHS, FRONT_VIEW_BOX, type BodyPathShape } from './bodyMusclePaths'
 
-interface Shape {
-  cx: number
-  cy: number
-  rx: number
-  ry: number
-  rotate?: number
+/** Maps each vendored shape id to the app's MuscleGroup, where one exists. Shapes
+ *  with no mapping (head, hands, feet, knees, elbows, …) still render — in the
+ *  neutral "unworked" tone — so the body reads as a complete silhouette; they just
+ *  never highlight, since no exercise in this app targets them specifically. */
+const MUSCLE_ID_TO_GROUP: Record<string, MuscleGroup> = {
+  'shoulder-front-left': 'shoulders',
+  'shoulder-side-left': 'shoulders',
+  'shoulder-front-right': 'shoulders',
+  'shoulder-side-right': 'shoulders',
+  'deltoid-rear-left': 'shoulders',
+  'deltoid-rear-right': 'shoulders',
+  'biceps-left': 'biceps',
+  'biceps-right': 'biceps',
+  'triceps-long-left': 'triceps',
+  'triceps-lateral-left': 'triceps',
+  'triceps-long-right': 'triceps',
+  'triceps-lateral-right': 'triceps',
+  'forearm-left': 'forearms',
+  'forearm-right': 'forearms',
+  'forearm-flexors-left': 'forearms',
+  'forearm-extensors-left': 'forearms',
+  'forearm-flexors-right': 'forearms',
+  'forearm-extensors-right': 'forearms',
+  'chest-upper-left': 'chest',
+  'chest-lower-left': 'chest',
+  'chest-upper-right': 'chest',
+  'chest-lower-right': 'chest',
+  'traps-upper-left': 'back',
+  'traps-mid-left': 'back',
+  'traps-lower-left': 'back',
+  'traps-upper-right': 'back',
+  'traps-mid-right': 'back',
+  'traps-lower-right': 'back',
+  'lats-upper-left': 'back',
+  'lats-mid-left': 'back',
+  'lats-lower-left': 'back',
+  'lats-upper-right': 'back',
+  'lats-mid-right': 'back',
+  'lats-lower-right': 'back',
+  'abs-upper-left': 'core',
+  'abs-upper-right': 'core',
+  'abs-lower-right': 'core',
+  'abs-lower-left': 'core',
+  'serratus-anterior-left': 'core',
+  'serratus-anterior-right': 'core',
+  'obliques-left': 'core',
+  'obliques-right': 'core',
+  'spine': 'lower_back',
+  'lower-back-erectors-left': 'lower_back',
+  'lower-back-ql-left': 'lower_back',
+  'lower-back-erectors-right': 'lower_back',
+  'lower-back-ql-right': 'lower_back',
+  'hip-flexor-right': 'hip_flexors',
+  'hip-flexor-left': 'hip_flexors',
+  'gluteus-medius-left': 'glutes',
+  'gluteus-maximus-left': 'glutes',
+  'gluteus-medius-right': 'glutes',
+  'gluteus-maximus-right': 'glutes',
+  'quads-left': 'quads',
+  'quads-right': 'quads',
+  'adductors-left': 'quads',
+  'adductors-right': 'quads',
+  'hamstrings-medial-left': 'hamstrings',
+  'hamstrings-lateral-left': 'hamstrings',
+  'hamstrings-medial-right': 'hamstrings',
+  'hamstrings-lateral-right': 'hamstrings',
+  'calves-gastroc-medial-left': 'calves',
+  'calves-gastroc-lateral-left': 'calves',
+  'calves-soleus-left': 'calves',
+  'calves-gastroc-medial-right': 'calves',
+  'calves-gastroc-lateral-right': 'calves',
+  'calves-soleus-right': 'calves',
 }
-
-/** Approximate, stylised body regions — not anatomically precise, just enough to
- *  show at a glance where an exercise lands. Two shapes per group (left/right)
- *  where the muscle is paired. */
-const FRONT_REGIONS: Partial<Record<MuscleGroup, Shape[]>> = {
-  shoulders: [
-    { cx: 34, cy: 58, rx: 11, ry: 13 },
-    { cx: 106, cy: 58, rx: 11, ry: 13 },
-  ],
-  chest: [{ cx: 70, cy: 72, rx: 30, ry: 18 }],
-  biceps: [
-    { cx: 26, cy: 92, rx: 8, ry: 16, rotate: -8 },
-    { cx: 114, cy: 92, rx: 8, ry: 16, rotate: 8 },
-  ],
-  forearms: [
-    { cx: 20, cy: 128, rx: 7, ry: 16, rotate: -6 },
-    { cx: 120, cy: 128, rx: 7, ry: 16, rotate: 6 },
-  ],
-  core: [{ cx: 70, cy: 106, rx: 20, ry: 24 }],
-  hip_flexors: [{ cx: 70, cy: 140, rx: 24, ry: 10 }],
-  quads: [
-    { cx: 54, cy: 182, rx: 13, ry: 28 },
-    { cx: 86, cy: 182, rx: 13, ry: 28 },
-  ],
-  calves: [
-    { cx: 55, cy: 240, rx: 9, ry: 20 },
-    { cx: 85, cy: 240, rx: 9, ry: 20 },
-  ],
-}
-
-const BACK_REGIONS: Partial<Record<MuscleGroup, Shape[]>> = {
-  shoulders: [
-    { cx: 34, cy: 58, rx: 11, ry: 13 },
-    { cx: 106, cy: 58, rx: 11, ry: 13 },
-  ],
-  back: [{ cx: 70, cy: 88, rx: 30, ry: 30 }],
-  triceps: [
-    { cx: 26, cy: 92, rx: 8, ry: 16, rotate: -8 },
-    { cx: 114, cy: 92, rx: 8, ry: 16, rotate: 8 },
-  ],
-  forearms: [
-    { cx: 20, cy: 128, rx: 7, ry: 16, rotate: -6 },
-    { cx: 120, cy: 128, rx: 7, ry: 16, rotate: 6 },
-  ],
-  lower_back: [{ cx: 70, cy: 124, rx: 18, ry: 12 }],
-  glutes: [{ cx: 70, cy: 148, rx: 24, ry: 15 }],
-  hamstrings: [
-    { cx: 54, cy: 182, rx: 13, ry: 28 },
-    { cx: 86, cy: 182, rx: 13, ry: 28 },
-  ],
-  calves: [
-    { cx: 55, cy: 240, rx: 9, ry: 20 },
-    { cx: 85, cy: 240, rx: 9, ry: 20 },
-  ],
-}
-
-const ALL_REGION_MUSCLES = Array.from(
-  new Set([...Object.keys(FRONT_REGIONS), ...Object.keys(BACK_REGIONS)]),
-) as MuscleGroup[]
 
 type Tier = 'primary' | 'secondary' | 'none'
 
-function tierFor(muscle: MuscleGroup, primary: Set<MuscleGroup>, secondary: Set<MuscleGroup>): Tier {
+function tierFor(id: string, primary: Set<MuscleGroup>, secondary: Set<MuscleGroup>): Tier {
+  const muscle = MUSCLE_ID_TO_GROUP[id]
+  if (!muscle) return 'none'
   if (primary.has(muscle)) return 'primary'
   if (secondary.has(muscle)) return 'secondary'
-  // "Full body" exercises wash every mapped region at whichever tier full_body itself has.
-  if (primary.has('full_body')) return 'secondary'
-  if (secondary.has('full_body')) return 'secondary'
+  // "Full body" exercises wash every mapped region at the secondary tier.
+  if (primary.has('full_body') || secondary.has('full_body')) return 'secondary'
   return 'none'
 }
 
-const FILL: Record<Tier, string> = {
-  primary: 'var(--color-secondary)',
-  secondary: 'var(--color-secondary-subtle)',
-  none: 'var(--color-primary-tint)',
+/** Same accent color at every tier — primary shown near-opaque, secondary
+ *  noticeably more transparent, unworked regions a flat neutral fill (the base
+ *  silhouette). Matches how the reference design shades primary vs. secondary. */
+const OPACITY: Record<Tier, number> = { primary: 0.95, secondary: 0.4, none: 1 }
+
+function fillFor(tier: Tier): string {
+  return tier === 'none' ? 'var(--color-primary-tint)' : 'var(--color-secondary)'
 }
 
-function Silhouette({ regions, tierOf, label }: { regions: Partial<Record<MuscleGroup, Shape[]>>; tierOf: (m: MuscleGroup) => Tier; label: string }) {
+function Silhouette({ shapes, viewBox, tierOf, label }: { shapes: BodyPathShape[]; viewBox: string; tierOf: (id: string) => Tier; label: string }) {
   return (
     <div className="flex flex-col items-center gap-1">
-      <svg viewBox="0 0 140 270" width={120} height={231} role="img" aria-label={`${label} view muscle diagram`}>
-        {/* Body outline for context */}
-        <circle cx="70" cy="24" r="16" fill="none" stroke="var(--color-primary-border)" strokeWidth="1.5" />
-        <path
-          d="M40 44 Q70 36 100 44 L112 96 L102 100 L96 146 L92 198 L88 254 L78 254 L80 190 L70 150 L60 190 L62 254 L52 254 L48 198 L44 146 L38 100 L28 96 Z"
-          fill="none"
-          stroke="var(--color-primary-border)"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-        {Object.entries(regions).map(([muscle, shapes]) =>
-          shapes!.map((s, i) => (
-            <ellipse
-              key={`${muscle}-${i}`}
-              cx={s.cx}
-              cy={s.cy}
-              rx={s.rx}
-              ry={s.ry}
-              transform={s.rotate ? `rotate(${s.rotate} ${s.cx} ${s.cy})` : undefined}
-              fill={FILL[tierOf(muscle as MuscleGroup)]}
-              stroke="var(--color-surface)"
-              strokeWidth="1"
-              opacity={0.92}
-            />
-          )),
-        )}
+      <svg viewBox={viewBox} width={110} height={292} role="img" aria-label={`${label} view muscle diagram`}>
+        {shapes.map((shape) => {
+          const tier = tierOf(shape.id)
+          return <path key={shape.id} d={shape.d} fill={fillFor(tier)} opacity={OPACITY[tier]} stroke="var(--color-surface)" strokeWidth={0.15} />
+        })}
       </svg>
       <span className="text-xs font-medium text-primary-muted">{label}</span>
     </div>
@@ -122,23 +113,22 @@ function Silhouette({ regions, tierOf, label }: { regions: Partial<Record<Muscle
 export function MuscleDiagram({ primaryMuscles, secondaryMuscles }: { primaryMuscles: MuscleGroup[]; secondaryMuscles: MuscleGroup[] }) {
   const primary = new Set(primaryMuscles)
   const secondary = new Set(secondaryMuscles)
-  const tierOf = (m: MuscleGroup) => tierFor(m, primary, secondary)
+  const tierOf = (id: string) => tierFor(id, primary, secondary)
 
-  const mappedMuscles = ALL_REGION_MUSCLES.filter((m) => tierOf(m) !== 'none')
+  const hasMappedRegion = [...FRONT_BODY_PATHS, ...BACK_BODY_PATHS].some((s) => tierOf(s.id) !== 'none')
   const hasCardio = primary.has('cardiovascular') || secondary.has('cardiovascular')
-  const hasAnyRegion = mappedMuscles.length > 0
 
-  if (!hasAnyRegion && !hasCardio) return null
+  if (!hasMappedRegion && !hasCardio) return null
 
   return (
     <div className="flex flex-col items-center gap-3 rounded-[var(--radius-card)] border border-primary-border bg-surface-muted p-4">
       <div className="flex gap-6">
-        <Silhouette regions={FRONT_REGIONS} tierOf={tierOf} label="Front" />
-        <Silhouette regions={BACK_REGIONS} tierOf={tierOf} label="Back" />
+        <Silhouette shapes={FRONT_BODY_PATHS} viewBox={FRONT_VIEW_BOX} tierOf={tierOf} label="Front" />
+        <Silhouette shapes={BACK_BODY_PATHS} viewBox={BACK_VIEW_BOX} tierOf={tierOf} label="Back" />
       </div>
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-primary-muted">
-        <LegendDot color="var(--color-secondary)" label="Primary" />
-        <LegendDot color="var(--color-secondary-subtle)" label="Secondary" />
+        <LegendDot opacity={OPACITY.primary} label="Primary" />
+        <LegendDot opacity={OPACITY.secondary} label="Secondary" />
       </div>
       {hasCardio && (
         <p className="text-xs text-primary-muted">
@@ -149,10 +139,10 @@ export function MuscleDiagram({ primaryMuscles, secondaryMuscles }: { primaryMus
   )
 }
 
-function LegendDot({ color, label }: { color: string; label: string }) {
+function LegendDot({ opacity, label }: { opacity: number; label: string }) {
   return (
     <span className="flex items-center gap-1.5">
-      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: color }} aria-hidden="true" />
+      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: 'var(--color-secondary)', opacity }} aria-hidden="true" />
       {label}
     </span>
   )

@@ -207,6 +207,26 @@ applied on top of the shared name wherever exercises are read
 (`getAllExercises`/`getExercise`) — the shared library row itself is never
 touched, so a rename can't affect other users or survive a "Reset".
 
+## Muscle diagrams
+
+`MuscleDiagram` (used in `ExerciseDetailSheet`) shows a front and back body
+with the exercise's primary muscles highlighted at near-full opacity and
+secondary muscles at ~40% opacity — same color, different transparency, so
+it reads as "how much" a muscle is worked at a glance. Muscles the exercise
+doesn't touch render in a flat neutral tone, so the whole body still shows
+as a complete silhouette rather than empty space.
+
+The body outline and muscle regions (`src/components/ui/bodyMusclePaths.ts`)
+are real anatomical SVG path data, vendored from
+[body-muscles](https://github.com/vulovix/body-muscles) by Ivan Vulović
+(Apache License 2.0 — full text and required NOTICE in
+`THIRD_PARTY_NOTICES.md`), trimmed to just each shape's id and path data.
+`MuscleDiagram.tsx`'s `MUSCLE_ID_TO_GROUP` maps the vendored library's ~90
+fine-grained shape ids (e.g. `chest-upper-left`, `lats-mid-right`) onto this
+app's own `MuscleGroup` type; shapes with no mapping (head, hands, feet,
+knees, …) still render in the neutral tone, since no exercise here targets
+them specifically.
+
 ## AI assistant ("Spot")
 
 A "Spot" trigger opens a chat window for exercise ideas, warm-up/cool-down
