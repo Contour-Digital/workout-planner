@@ -28,6 +28,7 @@ export type AssistantContext =
       main: { name: string; setsDone: number; setsTotal: number }[]
       cooldown: string[]
     }
+  | { kind: 'general' }
 
 /** Sends the full conversation (ending in the new user message) plus the current
  *  routine/session context, and gets back the assistant's reply and any exercise

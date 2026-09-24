@@ -19,12 +19,20 @@ interface AssistantChatProps {
   buildContext: () => AssistantContext
   /** Omit to hide "Add" buttons on suggestions (not every context can act on them). */
   onAddSuggestion?: (suggestion: AssistantSuggestion) => Promise<void>
-  /** Applied to the trigger button — the caller places it in its own bottom bar layout. */
+  /** Applied to the trigger — the caller places it in its own bottom bar layout. Not
+   *  used when `floating` is set, since the trigger positions itself. */
   className?: string
   /** Shown as a chat bubble before the first message — tailored to wherever this
    *  instance was opened from (building a routine vs. mid-workout), so it's clear
    *  what Spot can actually help with here. */
   greeting: string
+  /** Renders the trigger as a small floating round icon button (fixed bottom-right)
+   *  instead of an inline "Spot" button — for pages with no natural bottom-bar slot
+   *  to place an inline trigger in (Dashboard, the Workouts list). */
+  floating?: boolean
+  /** Tappable shortcuts shown alongside the greeting, before the first message — for
+   *  things Spot's own chat can't do inline (e.g. opening the from-notes generator). */
+  quickActions?: { label: string; onClick: () => void }[]
 }
 
 function historyKey(key: string): string {
@@ -49,7 +57,7 @@ function saveHistory(key: string, messages: StoredMessage[]) {
   }
 }
 
-export function AssistantChat({ storageKey, buildContext, onAddSuggestion, className, greeting }: AssistantChatProps) {
+export function AssistantChat({ storageKey, buildContext, onAddSuggestion, className, greeting, floating, quickActions }: AssistantChatProps) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<StoredMessage[]>(() => loadHistory(storageKey))
   const [input, setInput] = useState('')
@@ -105,9 +113,19 @@ export function AssistantChat({ storageKey, buildContext, onAddSuggestion, class
 
   return (
     <>
-      <Button variant="secondary" icon={<IconSparkle width={18} height={18} />} onClick={() => setOpen(true)} className={className}>
-        Spot
-      </Button>
+      {floating ? (
+        <button
+          onClick={() => setOpen(true)}
+          aria-label="Open Spot, your training assistant"
+          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-lg hover:bg-accent-strong sm:bottom-8 sm:right-8"
+        >
+          <IconSparkle width={24} height={24} />
+        </button>
+      ) : (
+        <Button variant="secondary" icon={<IconSparkle width={18} height={18} />} onClick={() => setOpen(true)} className={className}>
+          Spot
+        </Button>
+      )}
 
       {open &&
         createPortal(
@@ -140,6 +158,19 @@ export function AssistantChat({ storageKey, buildContext, onAddSuggestion, class
                 {messages.length === 0 && (
                   <div className="flex flex-col items-start gap-2">
                     <div className="max-w-[85%] rounded-2xl bg-primary-tint px-3.5 py-2.5 text-sm text-primary-strong">{greeting}</div>
+                    {quickActions && quickActions.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {quickActions.map((action) => (
+                          <button
+                            key={action.label}
+                            onClick={action.onClick}
+                            className="rounded-full border border-secondary px-3 py-1.5 text-xs font-medium text-secondary hover:bg-secondary-tint"
+                          >
+                            {action.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="flex flex-col gap-3">

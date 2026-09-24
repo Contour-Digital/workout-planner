@@ -19,6 +19,8 @@ import type { ResolvedOccurrence } from '../../models/schedule'
 import { assignmentColor, assignmentStyle, makeRoutineNameResolver, startOccurrence } from '../schedule/occurrenceDisplay'
 import { OccurrenceActionsSheet } from '../schedule/OccurrenceActionsSheet'
 import { ImpromptuStartSheet } from '../session/ImpromptuStartSheet'
+import { AssistantChat } from '../assistant/AssistantChat'
+import type { AssistantContext } from '../../lib/assistantChat'
 
 export function DashboardPage() {
   const navigate = useNavigate()
@@ -198,6 +200,13 @@ export function DashboardPage() {
 
       <OccurrenceActionsSheet occurrence={menuOccurrence} onClose={() => setMenuOccurrence(null)} />
       <ImpromptuStartSheet open={impromptuOpen} onClose={() => setImpromptuOpen(false)} />
+
+      <AssistantChat
+        floating
+        storageKey="dashboard"
+        buildContext={(): AssistantContext => ({ kind: 'general' })}
+        greeting="Hi, I'm Spot! Ask me about exercises, training questions, or what to do today — I'm here whenever you need a hand."
+      />
     </div>
   )
 }

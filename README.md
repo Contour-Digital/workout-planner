@@ -194,14 +194,21 @@ touched, so a rename can't affect other users or survive a "Reset".
 
 ## AI assistant ("Spot")
 
-A "Spot" button opens a chat window for exercise ideas, warm-up/cool-down
-stretch suggestions, and general training questions — inline in the routine
-editor's bottom bar, and inline in the active workout session (between
-"Save as reusable routine" and "Session notes", not floating). Each instance
-opens with a short greeting bubble tailored to where it was opened from, so
-it's clear what it can actually do there before you type anything. When it
-suggests a specific exercise, an "Add" button on that suggestion adds it
-straight to the routine (or, mid-workout, to the session) using the same
+A "Spot" trigger opens a chat window for exercise ideas, warm-up/cool-down
+stretch suggestions, and general training questions. It has two layouts
+(`AssistantChat`'s `floating` prop): inline — a "Spot" button placed in the
+page's own layout, used in the routine editor's bottom bar and inline in
+the active workout session (between "Save as reusable routine" and
+"Session notes", not floating) — and floating — a small round icon fixed
+bottom-right, used on the Dashboard and the Workouts tab, which have no
+natural bottom-bar slot for an inline trigger. Each instance opens with a
+short greeting bubble tailored to where it was opened from, so it's clear
+what it can actually do there before you type anything; the Workouts tab's
+greeting also surfaces a "Generate a routine from notes" quick-action chip
+(replacing the header's old standalone "From notes" button) that opens the
+same notes-parsing sheet described above. When Spot suggests a specific
+exercise, an "Add" button on that suggestion adds it straight to the
+routine (or, mid-workout, to the session) using the same
 fuzzy-match/auto-create-custom-exercise logic as "From notes".
 
 Conversation history is kept per routine/session in `sessionStorage`, so it

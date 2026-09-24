@@ -8,6 +8,8 @@ import { Badge } from '../../components/ui/Badge'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { GenerateRoutineSheet } from './GenerateRoutineSheet'
+import { AssistantChat } from '../assistant/AssistantChat'
+import type { AssistantContext } from '../../lib/assistantChat'
 import {
   IconArchive,
   IconCalendar,
@@ -76,11 +78,6 @@ export function RoutinesListPage() {
             {tab === 'schedules' && (
               <Button size="sm" variant="secondary" icon={<IconCalendar width={18} height={18} />} onClick={() => navigate('/calendar')}>
                 Calendar
-              </Button>
-            )}
-            {tab === 'workout' && (
-              <Button size="sm" variant="secondary" icon={<IconSparkle width={18} height={18} />} onClick={() => setGenerateOpen(true)}>
-                From notes
               </Button>
             )}
             <Button
@@ -254,6 +251,14 @@ export function RoutinesListPage() {
       />
 
       <GenerateRoutineSheet open={generateOpen} onClose={() => setGenerateOpen(false)} />
+
+      <AssistantChat
+        floating
+        storageKey="routines-list"
+        buildContext={(): AssistantContext => ({ kind: 'general' })}
+        greeting="Hi, I'm Spot! Ask me about exercises or training questions, or use the shortcut below to turn notes you've already written into a routine."
+        quickActions={tab === 'workout' ? [{ label: 'Generate a routine from notes', onClick: () => setGenerateOpen(true) }] : undefined}
+      />
     </div>
   )
 }
