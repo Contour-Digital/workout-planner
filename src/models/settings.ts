@@ -36,6 +36,8 @@ export interface AppSettings {
   showExerciseMedia: boolean
   theme: ThemeMode
   notificationsEnabled: boolean
+  /** Whether completing a set starts the floating rest-timer card during a workout. */
+  restTimerEnabled: boolean
   calendarColors: CalendarCategoryColors
   updatedAt: string
 }
@@ -49,6 +51,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showExerciseMedia: true,
   theme: 'dark',
   notificationsEnabled: false,
+  restTimerEnabled: true,
   calendarColors: DEFAULT_CALENDAR_COLORS,
   updatedAt: new Date().toISOString(),
 }

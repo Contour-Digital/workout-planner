@@ -19,8 +19,8 @@ interface AssistantChatProps {
   buildContext: () => AssistantContext
   /** Omit to hide "Add" buttons on suggestions (not every context can act on them). */
   onAddSuggestion?: (suggestion: AssistantSuggestion) => Promise<void>
-  /** Positions the floating button — override per page to clear other fixed bars. */
-  fabClassName?: string
+  /** Applied to the trigger button — the caller places it in its own bottom bar layout. */
+  className?: string
 }
 
 function historyKey(key: string): string {
@@ -45,7 +45,7 @@ function saveHistory(key: string, messages: StoredMessage[]) {
   }
 }
 
-export function AssistantChat({ storageKey, buildContext, onAddSuggestion, fabClassName }: AssistantChatProps) {
+export function AssistantChat({ storageKey, buildContext, onAddSuggestion, className }: AssistantChatProps) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<StoredMessage[]>(() => loadHistory(storageKey))
   const [input, setInput] = useState('')
@@ -101,16 +101,9 @@ export function AssistantChat({ storageKey, buildContext, onAddSuggestion, fabCl
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Open AI assistant"
-        className={clsx(
-          'fixed z-30 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-white shadow-lg transition-transform hover:scale-105 active:scale-95',
-          fabClassName ?? 'bottom-24 right-4 sm:bottom-6',
-        )}
-      >
-        <IconSparkle width={24} height={24} />
-      </button>
+      <Button variant="secondary" icon={<IconSparkle width={18} height={18} />} onClick={() => setOpen(true)} className={className}>
+        AI Assistant
+      </Button>
 
       {open &&
         createPortal(

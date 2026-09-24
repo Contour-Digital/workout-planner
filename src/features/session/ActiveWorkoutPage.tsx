@@ -35,6 +35,7 @@ import { getAllExercises } from '../../db/exercisesRepo'
 import { groupByPrimaryMuscle } from '../../lib/exerciseGrouping'
 import { AssistantChat } from '../assistant/AssistantChat'
 import { resolveSuggestedExercise, type AssistantContext, type AssistantSuggestion } from '../../lib/assistantChat'
+import { useSettingsStore } from '../../store/settingsStore'
 import type { Exercise } from '../../models/exercise'
 
 export function ActiveWorkoutPage() {
@@ -42,6 +43,7 @@ export function ActiveWorkoutPage() {
   const navigate = useNavigate()
   const session = useLiveQuery(() => (id ? getWorkoutSession(id) : undefined), [id])
   const exercises = useLiveQuery(getAllExercises, [], [])
+  const restTimerEnabled = useSettingsStore((s) => s.settings.restTimerEnabled)
   const now = useNow(1000)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [detailExercise, setDetailExercise] = useState<Exercise | null>(null)
@@ -90,7 +92,7 @@ export function ActiveWorkoutPage() {
         onNotesChange={(notes) => updateEntryNotes(session!.id, entry.id, notes)}
         onRemoveExercise={() => removeSessionExercise(session!.id, entry.id, section)}
         onSetCompleted={(restSeconds) => {
-          if (restSeconds && restSeconds > 0) startRestTimer(session!.id, restSeconds)
+          if (restTimerEnabled && restSeconds && restSeconds > 0) startRestTimer(session!.id, restSeconds)
         }}
         onViewDetail={setDetailExercise}
       />
@@ -144,7 +146,7 @@ export function ActiveWorkoutPage() {
   }
 
   return (
-    <div className="p-4 pb-36 sm:p-6">
+    <div className="p-4 pb-44 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-primary-strong">{session.name}</h1>
@@ -175,13 +177,11 @@ export function ActiveWorkoutPage() {
       </div>
 
       {session.restTimerEndsAt && (
-        <div className="mb-4">
-          <RestTimerBar
-            endsAt={session.restTimerEndsAt}
-            onCancel={() => clearRestTimer(session.id)}
-            onComplete={() => clearRestTimer(session.id)}
-          />
-        </div>
+        <RestTimerBar
+          endsAt={session.restTimerEndsAt}
+          onCancel={() => clearRestTimer(session.id)}
+          onComplete={() => clearRestTimer(session.id)}
+        />
       )}
 
       <div className="flex flex-col gap-5">
@@ -210,18 +210,17 @@ export function ActiveWorkoutPage() {
         />
       </label>
 
-      <div className="fixed inset-x-0 bottom-20 z-20 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
+      <div className="fixed inset-x-0 bottom-20 z-20 flex flex-col gap-2 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
+        <AssistantChat
+          storageKey={`session:${session.id}`}
+          buildContext={buildAssistantContext}
+          onAddSuggestion={handleAddSuggestion}
+          className="w-full"
+        />
         <Button fullWidth size="lg" onClick={handleFinishRequest}>
           Finish Workout
         </Button>
       </div>
-
-      <AssistantChat
-        storageKey={`session:${session.id}`}
-        buildContext={buildAssistantContext}
-        onAddSuggestion={handleAddSuggestion}
-        fabClassName="bottom-44 right-4 sm:bottom-6"
-      />
 
       <ExercisePicker
         open={pickerOpen}

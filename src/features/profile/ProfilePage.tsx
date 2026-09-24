@@ -166,6 +166,11 @@ export function ProfilePage() {
             onBlur={(e) => update({ defaultRestSeconds: Number(e.target.value) || 60 })}
           />
         </label>
+        <ToggleRow
+          label="Rest timer"
+          checked={settings.restTimerEnabled}
+          onChange={(v) => update({ restTimerEnabled: v })}
+        />
         <ToggleRow label="Sound" checked={settings.soundEnabled} onChange={(v) => update({ soundEnabled: v })} />
         <ToggleRow label="Vibration" checked={settings.vibrationEnabled} onChange={(v) => update({ vibrationEnabled: v })} />
         <ToggleRow label="Show exercise media" checked={settings.showExerciseMedia} onChange={(v) => update({ showExerciseMedia: v })} />
