@@ -12,6 +12,9 @@ interface SessionExerciseCardProps {
   entry: SessionExerciseEntry
   sessionId: string
   onToggleSet: (setId: string, patch: Partial<SetResult>) => void
+  /** Like onToggleSet, but for manual reps/weight/duration/distance edits — the parent
+   *  also carries the value forward onto later, not-yet-completed sets of this exercise. */
+  onFieldChange: (setId: string, patch: Partial<SetResult>) => void
   onAddSet: () => void
   onRemoveSet: (setId: string) => void
   onNotesChange: (notes: string) => void
@@ -24,6 +27,7 @@ interface SessionExerciseCardProps {
 export function SessionExerciseCard({
   entry,
   onToggleSet,
+  onFieldChange,
   onAddSet,
   onRemoveSet,
   onNotesChange,
@@ -129,7 +133,7 @@ export function SessionExerciseCard({
                         placeholder="secs"
                         className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
                         value={set.actualDurationSeconds ?? ''}
-                        onChange={(e) => onToggleSet(set.id, { actualDurationSeconds: e.target.value === '' ? undefined : Number(e.target.value) })}
+                        onChange={(e) => onFieldChange(set.id, { actualDurationSeconds: e.target.value === '' ? undefined : Number(e.target.value) })}
                       />
                       <input
                         type="number"
@@ -137,7 +141,7 @@ export function SessionExerciseCard({
                         placeholder="m"
                         className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
                         value={set.actualDistanceMeters ?? ''}
-                        onChange={(e) => onToggleSet(set.id, { actualDistanceMeters: e.target.value === '' ? undefined : Number(e.target.value) })}
+                        onChange={(e) => onFieldChange(set.id, { actualDistanceMeters: e.target.value === '' ? undefined : Number(e.target.value) })}
                       />
                     </>
                   ) : (
@@ -148,7 +152,7 @@ export function SessionExerciseCard({
                         placeholder="reps"
                         className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
                         value={set.actualReps ?? ''}
-                        onChange={(e) => onToggleSet(set.id, { actualReps: e.target.value === '' ? undefined : Number(e.target.value) })}
+                        onChange={(e) => onFieldChange(set.id, { actualReps: e.target.value === '' ? undefined : Number(e.target.value) })}
                       />
                       <input
                         type="number"
@@ -156,7 +160,7 @@ export function SessionExerciseCard({
                         placeholder="kg"
                         className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
                         value={set.actualWeightKg ?? ''}
-                        onChange={(e) => onToggleSet(set.id, { actualWeightKg: e.target.value === '' ? undefined : Number(e.target.value) })}
+                        onChange={(e) => onFieldChange(set.id, { actualWeightKg: e.target.value === '' ? undefined : Number(e.target.value) })}
                       />
                     </>
                   )}

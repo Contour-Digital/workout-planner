@@ -27,6 +27,7 @@ import {
   updateEntryNotes,
   updateSessionNotes,
   updateSetResult,
+  updateSetResultWithCascade,
 } from '../../db/sessionActions'
 import { elapsedSeconds, workoutSetsCompleted, type SessionExerciseEntry } from '../../models/session'
 import { useNow } from '../../lib/useNow'
@@ -83,6 +84,7 @@ export function ActiveWorkoutPage() {
         entry={entry}
         sessionId={session!.id}
         onToggleSet={(setId, patch) => updateSetResult(session!.id, entry.id, setId, patch)}
+        onFieldChange={(setId, patch) => updateSetResultWithCascade(session!.id, entry.id, setId, patch)}
         onAddSet={() => addSetToEntry(session!.id, entry.id)}
         onRemoveSet={(setId) => removeSetFromEntry(session!.id, entry.id, setId)}
         onNotesChange={(notes) => updateEntryNotes(session!.id, entry.id, notes)}

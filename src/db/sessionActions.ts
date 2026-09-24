@@ -226,6 +226,40 @@ export async function updateSetResult(sessionId: string, entryId: string, setId:
   await syncWorkout(sessionId)
 }
 
+/** Like updateSetResult, but also copies the same field(s) forward onto every later,
+ *  not-yet-completed set of this exercise — so typing "10 reps / 60kg" on set 1 carries
+ *  through to sets 2, 3, ... instead of having to retype it each time. A completed set
+ *  is left alone even if it's later in the list, since it's already a locked-in result. */
+export async function updateSetResultWithCascade(
+  sessionId: string,
+  entryId: string,
+  setId: string,
+  patch: Partial<Pick<SetResult, 'actualReps' | 'actualWeightKg' | 'actualDurationSeconds' | 'actualDistanceMeters'>>,
+): Promise<void> {
+  const session = await db.workoutSessions.get(sessionId)
+  if (!session) return
+
+  function patchEntries(entries: SessionExerciseEntry[]): SessionExerciseEntry[] {
+    return entries.map((entry) => {
+      if (entry.id !== entryId) return entry
+      const index = entry.actualSets.findIndex((s) => s.id === setId)
+      if (index === -1) return entry
+      return {
+        ...entry,
+        actualSets: entry.actualSets.map((s, i) => (i === index || (i > index && !s.completed) ? { ...s, ...patch } : s)),
+      }
+    })
+  }
+
+  await db.workoutSessions.update(sessionId, {
+    main: patchEntries(session.main),
+    warmup: session.warmup ? { ...session.warmup, exercises: patchEntries(session.warmup.exercises) } : session.warmup,
+    cooldown: session.cooldown ? { ...session.cooldown, exercises: patchEntries(session.cooldown.exercises) } : session.cooldown,
+    updatedAt: new Date().toISOString(),
+  })
+  await syncWorkout(sessionId)
+}
+
 export async function pauseWorkoutSession(sessionId: string): Promise<void> {
   const session = await db.workoutSessions.get(sessionId)
   if (!session || session.pauseIntervals.some((p) => !p.end)) return
