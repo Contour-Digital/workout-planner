@@ -164,14 +164,16 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
                     <NumberField label="Weight (kg)" value={config.sets[0]?.targetWeightKg} onChange={(v) => setUniformField({ targetWeightKg: v })} step={0.5} />
                   )}
                   <NumberField label="Duration (s)" value={config.sets[0]?.targetDurationSeconds} onChange={(v) => setUniformField({ targetDurationSeconds: v })} />
-                  <NumberField label="Distance (m)" value={config.sets[0]?.targetDistanceMeters} onChange={(v) => setUniformField({ targetDistanceMeters: v })} />
+                  {!isStretch && (
+                    <NumberField label="Distance (m)" value={config.sets[0]?.targetDistanceMeters} onChange={(v) => setUniformField({ targetDistanceMeters: v })} />
+                  )}
                 </>
               )}
             </div>
           ) : (
             <div className="flex flex-col gap-2">
               {config.sets.map((set, i) => (
-                <div key={set.id} className={isCardio ? 'grid grid-cols-3 items-center gap-2' : isStretch ? 'grid grid-cols-4 items-center gap-2' : 'grid grid-cols-5 items-center gap-2'}>
+                <div key={set.id} className={isCardio ? 'grid grid-cols-3 items-center gap-2' : isStretch ? 'grid grid-cols-3 items-center gap-2' : 'grid grid-cols-5 items-center gap-2'}>
                   <span className="text-xs font-medium text-primary-muted">Set {i + 1}</span>
                   {isCardio ? (
                     <>
@@ -185,7 +187,9 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
                         <NumberField compact label="Weight" value={set.targetWeightKg} onChange={(v) => updateSet(i, { targetWeightKg: v })} step={0.5} />
                       )}
                       <NumberField compact label="Dur (s)" value={set.targetDurationSeconds} onChange={(v) => updateSet(i, { targetDurationSeconds: v })} />
-                      <NumberField compact label="Dist (m)" value={set.targetDistanceMeters} onChange={(v) => updateSet(i, { targetDistanceMeters: v })} />
+                      {!isStretch && (
+                        <NumberField compact label="Dist (m)" value={set.targetDistanceMeters} onChange={(v) => updateSet(i, { targetDistanceMeters: v })} />
+                      )}
                     </>
                   )}
                 </div>
