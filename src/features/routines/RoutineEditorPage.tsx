@@ -9,7 +9,8 @@ import { RoutineSectionEditor } from './RoutineSectionEditor'
 import { AssistantChat } from '../assistant/AssistantChat'
 import { getAllExercises } from '../../db/exercisesRepo'
 import { getRoutine, saveRoutine } from '../../db/routinesRepo'
-import { createExerciseConfig, createEmptySection, type ExerciseConfig, type RoutineSection, type RoutineTemplate } from '../../models/routine'
+import { createExerciseConfigWithHistory } from '../../db/sessionsRepo'
+import { createEmptySection, type ExerciseConfig, type RoutineSection, type RoutineTemplate } from '../../models/routine'
 import { resolveSuggestedExercise, type AssistantContext, type AssistantSuggestion } from '../../lib/assistantChat'
 import type { GeneratedRoutineResult } from '../../lib/aiRoutineGenerator'
 
@@ -94,17 +95,22 @@ export function RoutineEditorPage() {
 
   async function handleAddSuggestion(suggestion: AssistantSuggestion) {
     const { exercise } = await resolveSuggestedExercise(suggestion, library)
+    const orderIndex =
+      suggestion.section === 'warmup'
+        ? routine!.warmup.exercises.length
+        : suggestion.section === 'cooldown'
+          ? routine!.cooldown.exercises.length
+          : routine!.main.length
+    const config = await createExerciseConfigWithHistory(exercise.id, orderIndex)
     setRoutine((r) => {
       if (!r) return r
       if (suggestion.section === 'warmup') {
-        const exercises = [...r.warmup.exercises, createExerciseConfig(exercise.id, r.warmup.exercises.length)]
-        return { ...r, warmup: { enabled: true, exercises } }
+        return { ...r, warmup: { enabled: true, exercises: [...r.warmup.exercises, config] } }
       }
       if (suggestion.section === 'cooldown') {
-        const exercises = [...r.cooldown.exercises, createExerciseConfig(exercise.id, r.cooldown.exercises.length)]
-        return { ...r, cooldown: { enabled: true, exercises } }
+        return { ...r, cooldown: { enabled: true, exercises: [...r.cooldown.exercises, config] } }
       }
-      return { ...r, main: [...r.main, createExerciseConfig(exercise.id, r.main.length)] }
+      return { ...r, main: [...r.main, config] }
     })
   }
 

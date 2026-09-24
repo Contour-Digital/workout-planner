@@ -1,5 +1,6 @@
 import { db } from './db'
 import { enqueueSync } from './sync/outbox'
+import { createExerciseConfig, type ExerciseConfig, type SetTarget } from '../models/routine'
 import type { RecoverySession, RestDaySession, WorkoutSession } from '../models/session'
 
 export async function getActiveWorkoutSession(): Promise<WorkoutSession | undefined> {
@@ -71,6 +72,39 @@ export async function getPreviousExercisePerformance(
     if (entry && entry.actualSets.some((s) => s.completed)) return { session, entry }
   }
   return undefined
+}
+
+/** Builds a fresh ExerciseConfig for this exercise, pre-filled with what was actually
+ *  done last time it was performed (reps/weight/duration/distance per set, and rest)
+ *  instead of generic defaults — so adding an exercise you've trained before starts
+ *  from where you left off rather than from scratch. Falls back to createExerciseConfig's
+ *  plain defaults when there's no completed history for it yet. */
+export async function createExerciseConfigWithHistory(exerciseId: string, orderIndex: number): Promise<ExerciseConfig> {
+  const base = createExerciseConfig(exerciseId, orderIndex)
+  const previous = await getPreviousExercisePerformance(exerciseId)
+  if (!previous) return base
+
+  const lastCompletedSets = previous.entry.actualSets.filter((s) => s.completed)
+  if (lastCompletedSets.length === 0) return base
+
+  const sets: SetTarget[] = lastCompletedSets.map((s, i) => ({
+    id: crypto.randomUUID(),
+    setNumber: i + 1,
+    targetReps: s.actualReps,
+    targetWeightKg: s.actualWeightKg,
+    targetDurationSeconds: s.actualDurationSeconds,
+    targetDistanceMeters: s.actualDistanceMeters,
+  }))
+  const first = lastCompletedSets[0]
+  const uniformSets = lastCompletedSets.every(
+    (s) =>
+      s.actualReps === first.actualReps &&
+      s.actualWeightKg === first.actualWeightKg &&
+      s.actualDurationSeconds === first.actualDurationSeconds &&
+      s.actualDistanceMeters === first.actualDistanceMeters,
+  )
+
+  return { ...base, uniformSets, sets, restSeconds: previous.entry.restSeconds ?? base.restSeconds }
 }
 
 /** Distinct calendar days on which at least one workout was completed/partial — the

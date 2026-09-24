@@ -11,7 +11,7 @@ import { RestTimerBar } from './RestTimerBar'
 import { PostWorkoutReviewSheet } from './PostWorkoutReviewSheet'
 import { ExercisePicker } from '../exercises/ExercisePicker'
 import { ExerciseDetailSheet } from '../exercises/ExerciseDetailSheet'
-import { getWorkoutSession } from '../../db/sessionsRepo'
+import { createExerciseConfigWithHistory, getWorkoutSession } from '../../db/sessionsRepo'
 import {
   addAdHocExercise,
   addSetToEntry,
@@ -28,7 +28,6 @@ import {
   updateSessionNotes,
   updateSetResult,
 } from '../../db/sessionActions'
-import { createExerciseConfig } from '../../models/routine'
 import { elapsedSeconds, workoutSetsCompleted, type SessionExerciseEntry } from '../../models/session'
 import { useNow } from '../../lib/useNow'
 import { getAllExercises } from '../../db/exercisesRepo'
@@ -138,8 +137,8 @@ export function ActiveWorkoutPage() {
 
   async function handleAddSuggestion(suggestion: AssistantSuggestion) {
     const { exercise } = await resolveSuggestedExercise(suggestion, exercises)
-    const config = createExerciseConfig(exercise.id, session!.main.length)
-    await addAdHocExercise(session!.id, exercise.id, config.sets)
+    const config = await createExerciseConfigWithHistory(exercise.id, session!.main.length)
+    await addAdHocExercise(session!.id, exercise.id, config.sets, config.restSeconds)
   }
 
   return (
@@ -226,8 +225,8 @@ export function ActiveWorkoutPage() {
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         onSelect={async (exercise) => {
-          const config = createExerciseConfig(exercise.id, session.main.length)
-          await addAdHocExercise(session.id, exercise.id, config.sets)
+          const config = await createExerciseConfigWithHistory(exercise.id, session.main.length)
+          await addAdHocExercise(session.id, exercise.id, config.sets, config.restSeconds)
           setPickerOpen(false)
         }}
       />

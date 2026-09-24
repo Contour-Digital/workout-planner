@@ -3,6 +3,7 @@ import { ExerciseMediaThumb } from '../../components/ui/ExerciseMedia'
 import { IconCheck, IconChevronDown, IconTrash } from '../../components/ui/icons'
 import { getExercise } from '../../db/exercisesRepo'
 import { getPreviousExercisePerformance } from '../../db/sessionsRepo'
+import { formatSetResult } from '../../lib/formatPerformance'
 import { useSettingsStore } from '../../store/settingsStore'
 import type { Exercise } from '../../models/exercise'
 import type { SessionExerciseEntry, SetResult } from '../../models/session'
@@ -42,12 +43,8 @@ export function SessionExerciseCard({
       if (!result) return
       const lastCompleted = [...result.entry.actualSets].reverse().find((s) => s.completed)
       if (!lastCompleted) return
-      const parts: string[] = []
-      if (lastCompleted.actualReps) parts.push(`${lastCompleted.actualReps} reps`)
-      if (lastCompleted.actualWeightKg) parts.push(`${lastCompleted.actualWeightKg} kg`)
-      if (lastCompleted.actualDurationSeconds) parts.push(`${lastCompleted.actualDurationSeconds}s`)
-      if (lastCompleted.actualDistanceMeters) parts.push(`${lastCompleted.actualDistanceMeters} m`)
-      if (parts.length) setPrevious(parts.join(' × '))
+      const formatted = formatSetResult(lastCompleted)
+      if (formatted) setPrevious(formatted)
     })
   }, [entry.exerciseId])
 

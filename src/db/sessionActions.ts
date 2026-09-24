@@ -117,11 +117,11 @@ export async function startBlankWorkoutSession(name = 'Workout'): Promise<Workou
   return session
 }
 
-export async function addAdHocExercise(sessionId: string, exerciseId: string, targets: SetTarget[]): Promise<void> {
+export async function addAdHocExercise(sessionId: string, exerciseId: string, targets: SetTarget[], restSeconds?: number): Promise<void> {
   const session = await db.workoutSessions.get(sessionId)
   if (!session) return
   const entry = toSessionEntry(
-    { id: crypto.randomUUID(), exerciseId, orderIndex: session.main.length, sets: targets },
+    { id: crypto.randomUUID(), exerciseId, orderIndex: session.main.length, sets: targets, restSeconds },
     await exerciseName(exerciseId),
   )
   entry.addedAdHoc = true

@@ -6,7 +6,8 @@ import { ExerciseConfigRow } from './ExerciseConfigRow'
 import { ExercisePicker } from '../exercises/ExercisePicker'
 import { ExerciseDetailSheet } from '../exercises/ExerciseDetailSheet'
 import { getAllExercises } from '../../db/exercisesRepo'
-import { createExerciseConfig, type ExerciseConfig } from '../../models/routine'
+import { createExerciseConfigWithHistory } from '../../db/sessionsRepo'
+import type { ExerciseConfig } from '../../models/routine'
 import { flattenMuscleGroupConfigSections, groupExerciseConfigsByMuscle } from '../../lib/exerciseGrouping'
 import type { Exercise } from '../../models/exercise'
 
@@ -32,11 +33,12 @@ export function RoutineSectionEditor({ title, exercises, onChange, emptyHint, gr
     return flattenMuscleGroupConfigSections(groupExerciseConfigsByMuscle(list, byId))
   }
 
-  function addExercise(exercise: Exercise) {
+  async function addExercise(exercise: Exercise) {
     // The picker can hand back a just-created custom exercise the live-query
     // snapshot in `byId` hasn't caught up to yet, so merge it in for grouping.
     const withNewExercise = new Map(byId).set(exercise.id, exercise)
-    const appended = [...exercises, createExerciseConfig(exercise.id, exercises.length)]
+    const config = await createExerciseConfigWithHistory(exercise.id, exercises.length)
+    const appended = [...exercises, config]
     onChange(
       groupByMuscle
         ? flattenMuscleGroupConfigSections(groupExerciseConfigsByMuscle(appended, withNewExercise))

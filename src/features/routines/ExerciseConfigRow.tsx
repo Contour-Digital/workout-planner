@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ExerciseMediaThumb } from '../../components/ui/ExerciseMedia'
 import { IconChevronDown, IconTrash } from '../../components/ui/icons'
+import { getPreviousExercisePerformance } from '../../db/sessionsRepo'
+import { formatSetResult } from '../../lib/formatPerformance'
 import { MUSCLE_GROUP_LABELS, type Exercise } from '../../models/exercise'
 import type { ExerciseConfig, SetTarget } from '../../models/routine'
 
@@ -32,6 +34,18 @@ function summarize(config: ExerciseConfig): string {
 
 export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMoveUp, onMoveDown, onViewDetail }: ExerciseConfigRowProps) {
   const [expanded, setExpanded] = useState(false)
+  const [previous, setPrevious] = useState<string | null>(null)
+
+  useEffect(() => {
+    setPrevious(null)
+    getPreviousExercisePerformance(config.exerciseId).then((result) => {
+      if (!result) return
+      const lastCompleted = [...result.entry.actualSets].reverse().find((s) => s.completed)
+      if (!lastCompleted) return
+      const formatted = formatSetResult(lastCompleted)
+      if (formatted) setPrevious(formatted)
+    })
+  }, [config.exerciseId])
 
   function updateSet(index: number, patch: Partial<SetTarget>) {
     const sets = config.sets.map((s, i) => (i === index ? { ...s, ...patch } : s))
@@ -90,6 +104,7 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
               <p className="truncate text-xs text-secondary">{exercise.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ')}</p>
             )}
             <p className="truncate text-xs text-primary-muted">{summarize(config)}</p>
+            {previous && <p className="truncate text-xs text-primary-subtle">Previous: {previous}</p>}
           </div>
         </button>
         <button
