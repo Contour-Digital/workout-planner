@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './routes/routes'
 import { AuthGate } from './features/auth/AuthGate'
+import { LoadingScreen } from './components/ui/LoadingScreen'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
 import { ensureProfile } from './db/profileRepo'
@@ -46,11 +47,7 @@ function SyncedApp() {
   }, [userId, loadSettings])
 
   if (!ready) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-bg text-primary-muted">
-        Loading Workout Planner…
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return <RouterProvider router={router} />

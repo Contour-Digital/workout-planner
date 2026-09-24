@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { isSupabaseConfigured } from '../../lib/supabaseClient'
+import { LoadingScreen } from '../../components/ui/LoadingScreen'
 import { SignInPage } from './SignInPage'
 import { ConfigWarning } from './ConfigWarning'
 
@@ -17,11 +18,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   if (status === 'loading') {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-bg text-primary-muted">
-        Loading Workout Planner…
-      </div>
-    )
+    return <LoadingScreen label="Signing you in…" />
   }
 
   if (status === 'signedOut') {
