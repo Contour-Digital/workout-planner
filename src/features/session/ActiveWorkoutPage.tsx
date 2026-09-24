@@ -33,6 +33,8 @@ import { elapsedSeconds, workoutSetsCompleted, type SessionExerciseEntry } from 
 import { useNow } from '../../lib/useNow'
 import { getAllExercises } from '../../db/exercisesRepo'
 import { groupByPrimaryMuscle } from '../../lib/exerciseGrouping'
+import { AssistantChat } from '../assistant/AssistantChat'
+import { resolveSuggestedExercise, type AssistantContext, type AssistantSuggestion } from '../../lib/assistantChat'
 import type { Exercise } from '../../models/exercise'
 
 export function ActiveWorkoutPage() {
@@ -123,6 +125,23 @@ export function ActiveWorkoutPage() {
     )
   }
 
+  function buildAssistantContext(): AssistantContext {
+    return {
+      kind: 'session',
+      routineName: session!.name,
+      elapsedMinutes: Math.floor(elapsedSeconds(session!.startedAt, session!.finishedAt, session!.pauseIntervals) / 60),
+      warmup: (session!.warmup?.enabled ? session!.warmup.exercises : []).map((e) => e.exerciseName),
+      main: session!.main.map((e) => ({ name: e.exerciseName, setsDone: e.actualSets.filter((s) => s.completed).length, setsTotal: e.actualSets.length })),
+      cooldown: (session!.cooldown?.enabled ? session!.cooldown.exercises : []).map((e) => e.exerciseName),
+    }
+  }
+
+  async function handleAddSuggestion(suggestion: AssistantSuggestion) {
+    const { exercise } = await resolveSuggestedExercise(suggestion, exercises)
+    const config = createExerciseConfig(exercise.id, session!.main.length)
+    await addAdHocExercise(session!.id, exercise.id, config.sets)
+  }
+
   return (
     <div className="p-4 pb-36 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -195,6 +214,13 @@ export function ActiveWorkoutPage() {
           Finish Workout
         </Button>
       </div>
+
+      <AssistantChat
+        storageKey={`session:${session.id}`}
+        buildContext={buildAssistantContext}
+        onAddSuggestion={handleAddSuggestion}
+        fabClassName="bottom-44 right-4 sm:bottom-6"
+      />
 
       <ExercisePicker
         open={pickerOpen}

@@ -155,3 +155,9 @@ export const IconSparkle = (p: SVGProps<SVGSVGElement>) => (
     <path d="M19 15c0 1.5.7 2.2 2.2 2.2C19.7 17.2 19 17.9 19 19.4c0-1.5-.7-2.2-2.2-2.2 1.5 0 2.2-.7 2.2-2.2Z" />
   </Svg>
 )
+export const IconSend = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <path d="M22 2 11 13" />
+    <path d="M22 2 15 22l-4-9-9-4Z" />
+  </Svg>
+)

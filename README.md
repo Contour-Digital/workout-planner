@@ -172,6 +172,21 @@ app is unaffected.
 Exercise names from the parsed notes are fuzzy-matched against your existing
 library; anything unmatched becomes a new custom exercise automatically.
 
+## AI assistant (chat)
+
+A floating sparkle button — bottom-right in the routine editor and during an
+active workout session — opens a chat window for exercise ideas, warm-up/
+cool-down stretch suggestions, and general training questions. When it
+suggests a specific exercise, an "Add" button on that suggestion adds it
+straight to the routine (or, mid-workout, to the session) using the same
+fuzzy-match/auto-create-custom-exercise logic as "From notes".
+
+Conversation history is kept per routine/session in `sessionStorage`, so it
+survives navigating around the app but clears when the browser tab/app is
+closed. It's powered by a second Edge Function, `supabase/functions/assistant-chat`,
+sharing the same `ANTHROPIC_API_KEY` secret as `parse-workout` above — no
+extra setup needed if that's already configured.
+
 ## Database schema
 
 The Postgres schema (tables, indexes, row-level security policies, and the

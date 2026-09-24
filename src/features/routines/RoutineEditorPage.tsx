@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Badge } from '../../components/ui/Badge'
 import { IconSparkle } from '../../components/ui/icons'
 import { RoutineSectionEditor } from './RoutineSectionEditor'
+import { AssistantChat } from '../assistant/AssistantChat'
+import { getAllExercises } from '../../db/exercisesRepo'
 import { getRoutine, saveRoutine } from '../../db/routinesRepo'
-import { createEmptySection, type ExerciseConfig, type RoutineSection, type RoutineTemplate } from '../../models/routine'
+import { createExerciseConfig, createEmptySection, type ExerciseConfig, type RoutineSection, type RoutineTemplate } from '../../models/routine'
+import { resolveSuggestedExercise, type AssistantContext, type AssistantSuggestion } from '../../lib/assistantChat'
 import type { GeneratedRoutineResult } from '../../lib/aiRoutineGenerator'
 
 export function RoutineEditorPage() {
@@ -19,6 +23,7 @@ export function RoutineEditorPage() {
   const [routine, setRoutine] = useState<RoutineTemplate | null>(null)
   const [loading, setLoading] = useState(!isNew)
   const [error, setError] = useState<string | null>(null)
+  const library = useLiveQuery(getAllExercises, [], [])
 
   useEffect(() => {
     if (isNew) {
@@ -72,6 +77,35 @@ export function RoutineEditorPage() {
 
   function setMain(main: ExerciseConfig[]) {
     setRoutine((r) => (r ? { ...r, main } : r))
+  }
+
+  const exerciseById = new Map(library.map((e) => [e.id, e]))
+  const exerciseName = (exerciseId: string) => exerciseById.get(exerciseId)?.name ?? 'Unknown exercise'
+
+  function buildAssistantContext(): AssistantContext {
+    return {
+      kind: 'routine',
+      routineName: routine!.name,
+      warmup: routine!.warmup.exercises.map((c) => exerciseName(c.exerciseId)),
+      main: routine!.main.map((c) => exerciseName(c.exerciseId)),
+      cooldown: routine!.cooldown.exercises.map((c) => exerciseName(c.exerciseId)),
+    }
+  }
+
+  async function handleAddSuggestion(suggestion: AssistantSuggestion) {
+    const { exercise } = await resolveSuggestedExercise(suggestion, library)
+    setRoutine((r) => {
+      if (!r) return r
+      if (suggestion.section === 'warmup') {
+        const exercises = [...r.warmup.exercises, createExerciseConfig(exercise.id, r.warmup.exercises.length)]
+        return { ...r, warmup: { enabled: true, exercises } }
+      }
+      if (suggestion.section === 'cooldown') {
+        const exercises = [...r.cooldown.exercises, createExerciseConfig(exercise.id, r.cooldown.exercises.length)]
+        return { ...r, cooldown: { enabled: true, exercises } }
+      }
+      return { ...r, main: [...r.main, createExerciseConfig(exercise.id, r.main.length)] }
+    })
   }
 
   return (
@@ -193,6 +227,13 @@ export function RoutineEditorPage() {
           </Button>
         </div>
       </div>
+
+      <AssistantChat
+        storageKey={`routine:${routine.id}`}
+        buildContext={buildAssistantContext}
+        onAddSuggestion={handleAddSuggestion}
+        fabClassName="bottom-44 right-4 sm:bottom-6"
+      />
     </div>
   )
 }
