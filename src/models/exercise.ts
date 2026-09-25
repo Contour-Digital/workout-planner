@@ -23,6 +23,41 @@ export type MuscleGroup =
   | 'hip_flexors'
   | 'lower_back'
 
+/** Finer detail within a broad MuscleGroup (e.g. 'chest_upper' within 'chest') —
+ *  optional, since it's only populated for exercises where the targeting is
+ *  well-established and unambiguous. Each maps to its parent group via
+ *  SPECIFIC_MUSCLE_GROUP below. Where the muscle diagram's artwork has a distinct
+ *  region for one (most of these), it highlights precisely that region instead of
+ *  the whole broad group; a few (the biceps heads, brachialis) have no distinct
+ *  shape in that artwork and fall back to the general biceps region there, but
+ *  still show as their own named muscle in the exercise detail text. */
+export type SpecificMuscle =
+  | 'chest_upper'
+  | 'chest_lower'
+  | 'front_delts'
+  | 'side_delts'
+  | 'rear_delts'
+  | 'biceps_long_head'
+  | 'biceps_short_head'
+  | 'brachialis'
+  | 'triceps_long_head'
+  | 'triceps_lateral_head'
+  | 'forearm_flexors'
+  | 'forearm_extensors'
+  | 'lats'
+  | 'traps'
+  | 'upper_abs'
+  | 'lower_abs'
+  | 'obliques'
+  | 'serratus_anterior'
+  | 'gluteus_maximus'
+  | 'gluteus_medius'
+  | 'hamstrings_medial'
+  | 'hamstrings_lateral'
+  | 'gastrocnemius'
+  | 'soleus'
+  | 'adductors'
+
 export type Equipment =
   | 'none'
   | 'barbell'
@@ -55,6 +90,10 @@ export interface ExerciseBase {
   category: ExerciseCategory
   primaryMuscles: MuscleGroup[]
   secondaryMuscles: MuscleGroup[]
+  /** Optional finer detail within primaryMuscles/secondaryMuscles above — see
+   *  SpecificMuscle. Only populated for a subset of exercises so far. */
+  primarySpecificMuscles?: SpecificMuscle[]
+  secondarySpecificMuscles?: SpecificMuscle[]
   equipment: Equipment[]
   instructions: string[]
   techniqueTips: string[]
@@ -124,6 +163,66 @@ export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
   cardiovascular: 'Cardiovascular',
   hip_flexors: 'Hip flexors',
   lower_back: 'Lower back',
+}
+
+export const SPECIFIC_MUSCLE_LABELS: Record<SpecificMuscle, string> = {
+  chest_upper: 'Upper chest',
+  chest_lower: 'Lower chest',
+  front_delts: 'Front deltoids',
+  side_delts: 'Side deltoids',
+  rear_delts: 'Rear deltoids',
+  biceps_long_head: 'Biceps (long head)',
+  biceps_short_head: 'Biceps (short head)',
+  brachialis: 'Brachialis',
+  triceps_long_head: 'Triceps (long head)',
+  triceps_lateral_head: 'Triceps (lateral head)',
+  forearm_flexors: 'Forearm flexors',
+  forearm_extensors: 'Forearm extensors',
+  lats: 'Lats',
+  traps: 'Traps',
+  upper_abs: 'Upper abs',
+  lower_abs: 'Lower abs',
+  obliques: 'Obliques',
+  serratus_anterior: 'Serratus anterior',
+  gluteus_maximus: 'Gluteus maximus',
+  gluteus_medius: 'Gluteus medius',
+  hamstrings_medial: 'Hamstrings (medial)',
+  hamstrings_lateral: 'Hamstrings (lateral)',
+  gastrocnemius: 'Gastrocnemius',
+  soleus: 'Soleus',
+  adductors: 'Adductors',
+}
+
+/** The broad MuscleGroup each SpecificMuscle falls under — used to tell whether an
+ *  exercise's specific tags fully account for a broad group's shapes on the muscle
+ *  diagram, so the untagged parts of that group don't stay highlighted alongside
+ *  the now-more-precise tagged part (see MuscleDiagram.tsx). */
+export const SPECIFIC_MUSCLE_GROUP: Record<SpecificMuscle, MuscleGroup> = {
+  chest_upper: 'chest',
+  chest_lower: 'chest',
+  front_delts: 'shoulders',
+  side_delts: 'shoulders',
+  rear_delts: 'shoulders',
+  biceps_long_head: 'biceps',
+  biceps_short_head: 'biceps',
+  brachialis: 'biceps',
+  triceps_long_head: 'triceps',
+  triceps_lateral_head: 'triceps',
+  forearm_flexors: 'forearms',
+  forearm_extensors: 'forearms',
+  lats: 'back',
+  traps: 'back',
+  upper_abs: 'core',
+  lower_abs: 'core',
+  obliques: 'core',
+  serratus_anterior: 'core',
+  gluteus_maximus: 'glutes',
+  gluteus_medius: 'glutes',
+  hamstrings_medial: 'hamstrings',
+  hamstrings_lateral: 'hamstrings',
+  gastrocnemius: 'calves',
+  soleus: 'calves',
+  adductors: 'quads',
 }
 
 export const EQUIPMENT_LABELS: Record<Equipment, string> = {

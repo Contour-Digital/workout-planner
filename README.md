@@ -254,6 +254,24 @@ app's own `MuscleGroup` type; shapes with no mapping (head, hands, feet,
 knees, …) still render in the neutral tone, since no exercise here targets
 them specifically.
 
+**Finer detail within a broad group** (`SpecificMuscle` in `models/exercise.ts`
+— e.g. `chest_lower`, `triceps_long_head`, `lats`, `front_delts`) is optional,
+exercise-by-exercise data: `primarySpecificMuscles`/`secondarySpecificMuscles`
+alongside the existing `primaryMuscles`/`secondaryMuscles`. When set, the
+"Muscles worked" text shows the specific name in parens (e.g. "Primary: Chest
+(Lower chest)"), and on the diagram `SPECIFIC_MUSCLE_TO_SHAPE_IDS` highlights
+just that shape instead of the whole broad group — the rest of that group's
+shapes fall back to unhighlighted rather than staying broadly lit, so the
+specific tag actually narrows what you see (`SPECIFIC_MUSCLE_GROUP` is what
+lets `tierFor()` recognize "this shape's group was specifically covered
+elsewhere, don't fall back to the group highlight for it"). A few specific
+muscles (the biceps heads, brachialis) have no distinct shape in the vendored
+artwork, so they still name themselves in the text but fall back to
+highlighting the general biceps region on the diagram. Only tagged for ~18
+well-established compound/isolation lifts so far (bench press, overhead
+press, rows, curls, etc.) — everything else still shows its broad group only,
+same as before; more exercises can be tagged the same way over time.
+
 ## AI assistant ("Spot")
 
 A "Spot" trigger opens a chat window for exercise ideas, warm-up/cool-down

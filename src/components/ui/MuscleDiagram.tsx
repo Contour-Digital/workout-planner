@@ -1,4 +1,4 @@
-import { MUSCLE_GROUP_LABELS, type MuscleGroup } from '../../models/exercise'
+import { MUSCLE_GROUP_LABELS, SPECIFIC_MUSCLE_GROUP, type MuscleGroup, type SpecificMuscle } from '../../models/exercise'
 import { BACK_BODY_PATHS, BACK_VIEW_BOX, FRONT_BODY_PATHS, FRONT_VIEW_BOX, type BodyPathShape } from './bodyMusclePaths'
 
 /** Maps each vendored shape id to the app's MuscleGroup, where one exists. Shapes
@@ -75,11 +75,62 @@ const MUSCLE_ID_TO_GROUP: Record<string, MuscleGroup> = {
   'calves-soleus-right': 'calves',
 }
 
+/** Which vendored shape ids light up for each SpecificMuscle. The biceps heads and
+ *  brachialis have no distinct shape in the artwork, so they fall back to the
+ *  general biceps region — still a real highlight, just not a more precise one.
+ *  forearm_flexors/extensors additionally include the front view's single
+ *  undivided forearm shape, since only the back view has that split. */
+const SPECIFIC_MUSCLE_TO_SHAPE_IDS: Record<SpecificMuscle, string[]> = {
+  chest_upper: ['chest-upper-left', 'chest-upper-right'],
+  chest_lower: ['chest-lower-left', 'chest-lower-right'],
+  front_delts: ['shoulder-front-left', 'shoulder-front-right'],
+  side_delts: ['shoulder-side-left', 'shoulder-side-right'],
+  rear_delts: ['deltoid-rear-left', 'deltoid-rear-right'],
+  biceps_long_head: ['biceps-left', 'biceps-right'],
+  biceps_short_head: ['biceps-left', 'biceps-right'],
+  brachialis: ['biceps-left', 'biceps-right'],
+  triceps_long_head: ['triceps-long-left', 'triceps-long-right'],
+  triceps_lateral_head: ['triceps-lateral-left', 'triceps-lateral-right'],
+  forearm_flexors: ['forearm-flexors-left', 'forearm-flexors-right', 'forearm-left', 'forearm-right'],
+  forearm_extensors: ['forearm-extensors-left', 'forearm-extensors-right', 'forearm-left', 'forearm-right'],
+  lats: ['lats-upper-left', 'lats-mid-left', 'lats-lower-left', 'lats-upper-right', 'lats-mid-right', 'lats-lower-right'],
+  traps: ['traps-upper-left', 'traps-mid-left', 'traps-lower-left', 'traps-upper-right', 'traps-mid-right', 'traps-lower-right'],
+  upper_abs: ['abs-upper-left', 'abs-upper-right'],
+  lower_abs: ['abs-lower-left', 'abs-lower-right'],
+  obliques: ['obliques-left', 'obliques-right'],
+  serratus_anterior: ['serratus-anterior-left', 'serratus-anterior-right'],
+  gluteus_maximus: ['gluteus-maximus-left', 'gluteus-maximus-right'],
+  gluteus_medius: ['gluteus-medius-left', 'gluteus-medius-right'],
+  hamstrings_medial: ['hamstrings-medial-left', 'hamstrings-medial-right'],
+  hamstrings_lateral: ['hamstrings-lateral-left', 'hamstrings-lateral-right'],
+  gastrocnemius: ['calves-gastroc-medial-left', 'calves-gastroc-lateral-left', 'calves-gastroc-medial-right', 'calves-gastroc-lateral-right'],
+  soleus: ['calves-soleus-left', 'calves-soleus-right'],
+  adductors: ['adductors-left', 'adductors-right'],
+}
+
 type Tier = 'primary' | 'secondary' | 'none'
 
-function tierFor(id: string, primary: Set<MuscleGroup>, secondary: Set<MuscleGroup>): Tier {
+function tierFor(
+  id: string,
+  primary: Set<MuscleGroup>,
+  secondary: Set<MuscleGroup>,
+  primarySpecificIds: Set<string>,
+  secondarySpecificIds: Set<string>,
+  specificGroupsCovered: Set<MuscleGroup>,
+): Tier {
+  // A specific tag always wins, and takes priority over the broad fallback below.
+  if (primarySpecificIds.has(id)) return 'primary'
+  if (secondarySpecificIds.has(id)) return 'secondary'
+
   const muscle = MUSCLE_ID_TO_GROUP[id]
   if (!muscle) return 'none'
+
+  // This shape's broad group was specifically tagged elsewhere on this exercise
+  // (e.g. 'chest_upper' was given, but this shape is 'chest-lower-left') — leave
+  // it unhighlighted rather than lighting up the whole group as a fallback, or
+  // the specific tag wouldn't actually narrow anything on the diagram.
+  if (specificGroupsCovered.has(muscle)) return 'none'
+
   if (primary.has(muscle)) return 'primary'
   if (secondary.has(muscle)) return 'secondary'
   // "Full body" exercises wash every mapped region at the secondary tier.
@@ -113,10 +164,25 @@ function Silhouette({ shapes, viewBox, tierOf, label }: { shapes: BodyPathShape[
   )
 }
 
-export function MuscleDiagram({ primaryMuscles, secondaryMuscles }: { primaryMuscles: MuscleGroup[]; secondaryMuscles: MuscleGroup[] }) {
+export function MuscleDiagram({
+  primaryMuscles,
+  secondaryMuscles,
+  primarySpecificMuscles,
+  secondarySpecificMuscles,
+}: {
+  primaryMuscles: MuscleGroup[]
+  secondaryMuscles: MuscleGroup[]
+  primarySpecificMuscles?: SpecificMuscle[]
+  secondarySpecificMuscles?: SpecificMuscle[]
+}) {
   const primary = new Set(primaryMuscles)
   const secondary = new Set(secondaryMuscles)
-  const tierOf = (id: string) => tierFor(id, primary, secondary)
+  const specificPrimary = primarySpecificMuscles ?? []
+  const specificSecondary = secondarySpecificMuscles ?? []
+  const primarySpecificIds = new Set(specificPrimary.flatMap((m) => SPECIFIC_MUSCLE_TO_SHAPE_IDS[m]))
+  const secondarySpecificIds = new Set(specificSecondary.flatMap((m) => SPECIFIC_MUSCLE_TO_SHAPE_IDS[m]))
+  const specificGroupsCovered = new Set([...specificPrimary, ...specificSecondary].map((m) => SPECIFIC_MUSCLE_GROUP[m]))
+  const tierOf = (id: string) => tierFor(id, primary, secondary, primarySpecificIds, secondarySpecificIds, specificGroupsCovered)
 
   const hasMappedRegion = [...FRONT_BODY_PATHS, ...BACK_BODY_PATHS].some((s) => tierOf(s.id) !== 'none')
   const hasCardio = primary.has('cardiovascular') || secondary.has('cardiovascular')

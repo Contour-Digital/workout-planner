@@ -55,6 +55,8 @@ export async function pullLibraryExercises(): Promise<void> {
     category: r.category,
     primaryMuscles: r.primary_muscles ?? [],
     secondaryMuscles: r.secondary_muscles ?? [],
+    primarySpecificMuscles: r.primary_specific_muscles ?? undefined,
+    secondarySpecificMuscles: r.secondary_specific_muscles ?? undefined,
     equipment: r.equipment ?? [],
     instructions: r.instructions ?? [],
     techniqueTips: r.technique_tips ?? [],

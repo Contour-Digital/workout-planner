@@ -7,8 +7,19 @@ import {
   EQUIPMENT_LABELS,
   EXERCISE_CATEGORY_LABELS,
   MUSCLE_GROUP_LABELS,
+  SPECIFIC_MUSCLE_LABELS,
   type Exercise,
+  type MuscleGroup,
+  type SpecificMuscle,
 } from '../../models/exercise'
+
+/** e.g. "Back (Lats)" — the broad group(s), plus finer detail in parens when known. */
+function formatMuscles(groups: MuscleGroup[], specifics: SpecificMuscle[] | undefined): string {
+  const groupLabels = groups.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ')
+  if (!specifics || specifics.length === 0) return groupLabels || '—'
+  const specificLabels = specifics.map((m) => SPECIFIC_MUSCLE_LABELS[m]).join(', ')
+  return `${groupLabels} (${specificLabels})`
+}
 
 interface ExerciseDetailSheetProps {
   exercise: Exercise | null
@@ -29,16 +40,21 @@ export function ExerciseDetailSheet({ exercise, onClose, onEdit, onDelete }: Exe
             {exercise.source === 'custom' && <Badge tone="neutral">Custom</Badge>}
           </div>
 
-          <MuscleDiagram primaryMuscles={exercise.primaryMuscles} secondaryMuscles={exercise.secondaryMuscles} />
+          <MuscleDiagram
+            primaryMuscles={exercise.primaryMuscles}
+            secondaryMuscles={exercise.secondaryMuscles}
+            primarySpecificMuscles={exercise.primarySpecificMuscles}
+            secondarySpecificMuscles={exercise.secondarySpecificMuscles}
+          />
 
           <section>
             <h3 className="mb-1 text-sm font-semibold text-primary-strong">Muscles worked</h3>
             <p className="text-sm text-primary-muted">
-              Primary: {exercise.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ') || '—'}
+              Primary: {formatMuscles(exercise.primaryMuscles, exercise.primarySpecificMuscles)}
             </p>
             {exercise.secondaryMuscles.length > 0 && (
               <p className="text-sm text-primary-muted">
-                Secondary: {exercise.secondaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ')}
+                Secondary: {formatMuscles(exercise.secondaryMuscles, exercise.secondarySpecificMuscles)}
               </p>
             )}
           </section>

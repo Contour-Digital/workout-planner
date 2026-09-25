@@ -36,6 +36,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['hamstrings', 'glutes', 'lower_back'],
     secondaryMuscles: ['back', 'forearms', 'core'],
+    primarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['barbell'],
     instructions: [
       'Stand with mid-foot under the bar, feet hip-width apart.',
@@ -53,6 +54,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['chest'],
     secondaryMuscles: ['triceps', 'shoulders'],
+    primarySpecificMuscles: ['chest_lower'],
     equipment: ['barbell', 'bench'],
     instructions: [
       'Lie on the bench with eyes under the bar, feet flat on the floor.',
@@ -70,6 +72,8 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['shoulders'],
     secondaryMuscles: ['triceps', 'core'],
+    primarySpecificMuscles: ['front_delts'],
+    secondarySpecificMuscles: ['triceps_lateral_head'],
     equipment: ['barbell'],
     instructions: [
       'Hold the bar at shoulder height with an overhand grip, elbows slightly in front.',
@@ -87,6 +91,8 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps', 'shoulders'],
+    primarySpecificMuscles: ['lats'],
+    secondarySpecificMuscles: ['rear_delts'],
     equipment: ['barbell'],
     instructions: [
       'Hinge forward from the hips to roughly 45 degrees, knees slightly bent, back flat.',
@@ -104,6 +110,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'bodyweight',
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps', 'forearms'],
+    primarySpecificMuscles: ['lats'],
     equipment: ['pull_up_bar'],
     instructions: [
       'Hang from the bar with an overhand grip, slightly wider than shoulders.',
@@ -153,6 +160,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['shoulders'],
     secondaryMuscles: ['triceps'],
+    primarySpecificMuscles: ['front_delts'],
     equipment: ['dumbbell', 'bench'],
     instructions: [
       'Sit or stand holding a dumbbell at each shoulder, palms facing forward.',
@@ -169,6 +177,8 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'bodyweight',
     primaryMuscles: ['core'],
     secondaryMuscles: ['shoulders', 'glutes'],
+    primarySpecificMuscles: ['lower_abs'],
+    secondarySpecificMuscles: ['obliques'],
     equipment: ['mat'],
     instructions: [
       'Rest on your forearms and toes, elbows under shoulders.',
@@ -452,6 +462,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['triceps'],
     secondaryMuscles: [],
+    primarySpecificMuscles: ['triceps_lateral_head'],
     equipment: ['cable'],
     instructions: [
       'Attach a bar or rope to a high pulley and grip with palms down (or facing in for a rope).',
@@ -469,6 +480,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['biceps'],
     secondaryMuscles: ['forearms'],
+    primarySpecificMuscles: ['biceps_short_head', 'biceps_long_head'],
     equipment: ['cable'],
     instructions: [
       'Attach a straight or EZ bar to a low pulley and grip with palms facing up.',
@@ -486,6 +498,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps', 'shoulders'],
+    primarySpecificMuscles: ['lats'],
     equipment: ['cable'],
     instructions: [
       'Sit at the row station with knees slightly bent and feet on the platform, grip the handle with arms extended.',
@@ -503,6 +516,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['shoulders'],
     secondaryMuscles: ['back'],
+    primarySpecificMuscles: ['rear_delts'],
     equipment: ['cable'],
     instructions: [
       'Attach a rope to a high pulley, set roughly at face height.',
@@ -520,6 +534,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['shoulders'],
     secondaryMuscles: [],
+    primarySpecificMuscles: ['side_delts'],
     equipment: ['cable'],
     instructions: [
       'Set a pulley to its lowest position and stand side-on to the machine, gripping the handle with the far hand.',
@@ -554,6 +569,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps', 'shoulders'],
+    primarySpecificMuscles: ['lats'],
     equipment: ['cable'],
     instructions: [
       'Sit at the pulldown station and secure your thighs under the pad, gripping the bar wider than shoulder-width.',
@@ -606,6 +622,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['chest'],
     secondaryMuscles: ['triceps'],
+    primarySpecificMuscles: ['chest_lower'],
     equipment: ['machine'],
     notes: 'Plate-loaded machine; targets the lower chest with a downward pressing angle.',
     instructions: [
@@ -624,6 +641,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['shoulders'],
     secondaryMuscles: ['triceps'],
+    primarySpecificMuscles: ['front_delts'],
     equipment: ['machine'],
     notes: 'Plate-loaded, independent arms.',
     instructions: [
@@ -642,6 +660,8 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps', 'shoulders'],
+    primarySpecificMuscles: ['traps'],
+    secondarySpecificMuscles: ['rear_delts'],
     equipment: ['machine'],
     notes: 'Plate-loaded machine, chest-supported with a high pulling angle for the upper back.',
     instructions: [
@@ -660,6 +680,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps'],
+    primarySpecificMuscles: ['lats'],
     equipment: ['machine'],
     notes: 'Plate-loaded machine, chest-supported with a low pulling angle for the mid-back and lats.',
     instructions: [
@@ -696,6 +717,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['hamstrings'],
     secondaryMuscles: ['calves'],
+    primarySpecificMuscles: ['hamstrings_medial', 'hamstrings_lateral'],
     equipment: ['machine'],
     instructions: [
       'Sit in the machine with the back pad adjusted and the lever pad resting just above your heels.',
