@@ -16,6 +16,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['quads', 'glutes'],
     secondaryMuscles: ['hamstrings', 'core', 'lower_back'],
+    primarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['barbell'],
     instructions: [
       'Set the bar on a rack at upper-chest height and step under it, resting it across your upper back.',
@@ -128,6 +129,8 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'bodyweight',
     primaryMuscles: ['chest'],
     secondaryMuscles: ['triceps', 'shoulders', 'core'],
+    primarySpecificMuscles: ['chest_lower'],
+    secondarySpecificMuscles: ['triceps_lateral_head'],
     equipment: ['none'],
     instructions: [
       'Start in a plank with hands slightly wider than shoulders.',
@@ -144,6 +147,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['quads', 'glutes'],
     secondaryMuscles: ['hamstrings', 'core'],
+    primarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['dumbbell'],
     instructions: [
       'Hold a dumbbell in each hand at your sides.',
@@ -195,6 +199,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'functional',
     primaryMuscles: ['glutes', 'hamstrings'],
     secondaryMuscles: ['core', 'back'],
+    primarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['kettlebell'],
     instructions: [
       'Stand with feet shoulder-width apart, kettlebell on the floor in front of you.',
@@ -212,6 +217,8 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'functional',
     primaryMuscles: ['quads', 'glutes'],
     secondaryMuscles: ['calves', 'core'],
+    primarySpecificMuscles: ['gluteus_maximus'],
+    secondarySpecificMuscles: ['gastrocnemius'],
     equipment: ['other'],
     instructions: [
       'Stand facing a sturdy box, feet shoulder-width apart.',
@@ -259,6 +266,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'cardio',
     primaryMuscles: ['back', 'cardiovascular'],
     secondaryMuscles: ['hamstrings', 'biceps'],
+    primarySpecificMuscles: ['lats'],
     equipment: ['rower'],
     instructions: [
       'Drive with the legs first, then lean back slightly, then pull the handle to your ribcage.',
@@ -318,6 +326,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'mobility',
     primaryMuscles: ['shoulders', 'back'],
     secondaryMuscles: [],
+    primarySpecificMuscles: ['rear_delts', 'traps'],
     equipment: ['resistance_band'],
     instructions: [
       'Hold a light resistance band with arms extended in front at shoulder height.',
@@ -411,6 +420,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'functional',
     primaryMuscles: ['quads', 'glutes'],
     secondaryMuscles: ['core'],
+    primarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['dumbbell', 'kettlebell'],
     instructions: [
       'Hold a dumbbell or kettlebell vertically against your chest.',
@@ -427,6 +437,8 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'functional',
     primaryMuscles: ['core'],
     secondaryMuscles: ['shoulders'],
+    primarySpecificMuscles: ['obliques'],
+    secondarySpecificMuscles: ['front_delts'],
     equipment: ['mat'],
     instructions: [
       'Start in a high plank with hands under shoulders and feet wide.',
@@ -552,6 +564,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'functional',
     primaryMuscles: ['core'],
     secondaryMuscles: ['shoulders', 'glutes'],
+    primarySpecificMuscles: ['obliques'],
     equipment: ['cable'],
     instructions: [
       'Set a pulley to the top position and stand side-on, gripping the handle with both hands.',
@@ -587,6 +600,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['glutes', 'hamstrings'],
     secondaryMuscles: ['lower_back'],
+    primarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['cable'],
     instructions: [
       'Attach a rope to a low pulley and stand facing away from the machine, straddling the cable with the rope between your legs.',
@@ -604,6 +618,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['chest'],
     secondaryMuscles: ['shoulders', 'triceps'],
+    primarySpecificMuscles: ['chest_lower'],
     equipment: ['machine'],
     notes: 'Plate-loaded, independent (iso-lateral) arms — each side moves on its own path.',
     instructions: [
@@ -752,6 +767,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['quads'],
     secondaryMuscles: ['glutes'],
+    secondarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['machine'],
     instructions: [
       'Set the bar at upper-back height and step under it, unracking by rotating it out of the hooks.',

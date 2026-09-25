@@ -271,10 +271,15 @@ lets `tierFor()` recognize "this shape's group was specifically covered
 elsewhere, don't fall back to the group highlight for it"). A few specific
 muscles (the biceps heads, brachialis) have no distinct shape in the vendored
 artwork, so they still name themselves in the text but fall back to
-highlighting the general biceps region on the diagram. Only tagged for ~18
-well-established compound/isolation lifts so far (bench press, overhead
-press, rows, curls, etc.) — everything else still shows its broad group only,
-same as before; more exercises can be tagged the same way over time.
+highlighting the general biceps region on the diagram. Tagged across the
+strength and functional-training exercises in the library (compound lifts,
+isolation work, machine/cable movements, hinge and squat patterns) wherever
+a `SpecificMuscle` maps cleanly onto what the movement targets. Cardio,
+stretches, and recovery exercises (treadmill, band stretches, foam rolling,
+breathing drills, …) are intentionally left at the broad-group level, since
+none of the defined specific muscles describe what those actually train —
+new specific muscles can be added to the type and tagged the same way if
+that ever changes.
 
 ## AI assistant ("Spot")
 
