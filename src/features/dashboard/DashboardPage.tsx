@@ -16,7 +16,7 @@ import { computeStreak } from '../../lib/streak'
 import { useSettingsStore } from '../../store/settingsStore'
 import { workoutSetsCompleted } from '../../models/session'
 import type { ResolvedOccurrence } from '../../models/schedule'
-import { assignmentColor, assignmentStyle, makeRoutineNameResolver, startOccurrence } from '../schedule/occurrenceDisplay'
+import { assignmentColor, assignmentStyle, dropRedundantOffOccurrences, makeRoutineNameResolver, startOccurrence } from '../schedule/occurrenceDisplay'
 import { OccurrenceActionsSheet } from '../schedule/OccurrenceActionsSheet'
 import { ImpromptuStartSheet } from '../session/ImpromptuStartSheet'
 import { AssistantChat } from '../assistant/AssistantChat'
@@ -29,7 +29,7 @@ export function DashboardPage() {
   const settings = useSettingsStore((s) => s.settings)
 
   const today = toDateKey(new Date())
-  const todayOccurrences = useLiveQuery(() => getOccurrencesInRange(today, today), [today], []) ?? []
+  const todayOccurrences = dropRedundantOffOccurrences(useLiveQuery(() => getOccurrencesInRange(today, today), [today], []) ?? [])
   const allSchedulesAndOverrides = useLiveQuery(
     async () => ({ schedules: await db.schedules.toArray(), overrides: await db.occurrenceOverrides.toArray() }),
     [],

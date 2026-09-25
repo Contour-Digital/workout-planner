@@ -66,6 +66,16 @@ untouched future days don't shift. All recurrence math is calendar-day based
 (`differenceInCalendarDays`/`addDays` on Y-M-D), which sidesteps DST
 entirely rather than trying to account for it with offsets.
 
+Because multiple schedules can each generate an occurrence for the same
+date, a day's `off` occurrence (a cycle's own "nothing today" day, e.g. day
+4 of a 4-day Push/Pull/Legs/Off rotation) is dropped from what's actually
+shown whenever another schedule has also assigned a real workout, recovery,
+or rest day to that date (`dropRedundantOffOccurrences` in
+`occurrenceDisplay.tsx`, used by both the Dashboard and the Calendar) — both
+are correct data, but surfacing "No plan" right next to an actual plan for
+the same day was just confusing. A day with only an `off` occurrence still
+shows it, since that's the useful case for it.
+
 **Streaks** are computed by `src/lib/streak.ts` from the distinct calendar
 days that have a completed/partial workout (so multiple sessions on one day
 count once), grouped into configurable periods (rolling or fixed-weekday),

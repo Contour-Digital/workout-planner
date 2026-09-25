@@ -14,7 +14,7 @@ import { getOccurrencesInRange } from '../../db/scheduleRepo'
 import { getAllPersonalEvents } from '../../db/personalEventsRepo'
 import { toDateKey } from '../../lib/recurrence'
 import { resolvePersonalEventsInRange, type ResolvedPersonalEvent } from '../../lib/personalEvents'
-import { assignmentColor, assignmentStyle, makeRoutineNameResolver, startOccurrence } from './occurrenceDisplay'
+import { assignmentColor, assignmentStyle, dropRedundantOffOccurrences, makeRoutineNameResolver, startOccurrence } from './occurrenceDisplay'
 import { OccurrenceActionsSheet } from './OccurrenceActionsSheet'
 import { PersonalEventSheet } from './PersonalEventSheet'
 import { useSettingsStore } from '../../store/settingsStore'
@@ -62,6 +62,7 @@ export function CalendarPage() {
       if (list) list.push(occ)
       else map.set(occ.date, [occ])
     }
+    for (const [date, list] of map) map.set(date, dropRedundantOffOccurrences(list))
     return map
   }, [occurrences])
 
