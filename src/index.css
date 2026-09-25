@@ -56,6 +56,17 @@
   --radius-control: 0.75rem;
 }
 
+/* Rendered height of the mobile bottom nav bar (AppLayout's <nav>, hidden at
+   sm: and up): 2 × py-3 (1.5rem) + 22px icon + gap-1 (0.25rem) + text-xs
+   line-height (1rem) + border-t (1px) + the nav's own extra bottom padding
+   (0.625rem), plus its safe-area inset. Fixed elements elsewhere that need
+   to sit cleanly above the nav (rather than overlap it, or leave a gap on
+   phones with no safe-area inset) build on this instead of guessing with a
+   flat pixel offset. */
+:root {
+  --bottom-nav-height: calc(env(safe-area-inset-bottom) + 4.875rem);
+}
+
 /* Light theme — opt-in via Settings (or system preference when the user
    has left the app on "system" and their OS prefers light). */
 @media (prefers-color-scheme: light) {

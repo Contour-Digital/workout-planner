@@ -195,6 +195,23 @@ app is unaffected.
 Exercise names from the parsed notes are fuzzy-matched against your existing
 library; anything unmatched becomes a new custom exercise automatically.
 
+## Fixed footers and floating buttons on mobile
+
+Several screens have their own fixed bottom bar (Cancel/Save, Finish
+Workout, …) or a floating "Spot" trigger, stacked above the mobile bottom
+nav (`AppLayout`'s `<nav>`, hidden at `sm:` and up). That nav's actual
+height isn't a fixed number — it grows on phones with a safe-area inset
+(the home-indicator area on notched iPhones), so a flat pixel offset
+either overlapped the nav on those devices or left an oversized gap on
+devices without one. `--bottom-nav-height` (`src/index.css`) computes the
+nav's real height, including `env(safe-area-inset-bottom)`, once; every
+fixed footer, floating trigger, and scroll-content bottom padding that
+needs to clear the nav builds on it via a Tailwind arbitrary value (e.g.
+`bottom-[var(--bottom-nav-height)]`, `bottom-[calc(var(--bottom-nav-height)+5.5rem)]`
+to also clear a page's own footer above that) instead of a guessed
+constant — so a future nav style change (or a device with a different
+safe-area) doesn't silently reintroduce the overlap.
+
 ## Renaming library exercises
 
 Custom exercises are already fully editable. Built-in library exercises

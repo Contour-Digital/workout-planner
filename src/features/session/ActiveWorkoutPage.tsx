@@ -159,7 +159,7 @@ export function ActiveWorkoutPage() {
   }
 
   return (
-    <div className="p-4 pb-44 sm:p-6">
+    <div className="p-4 pb-[calc(var(--bottom-nav-height)+6rem)] sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-primary-strong">{session.name}</h1>
@@ -231,7 +231,7 @@ export function ActiveWorkoutPage() {
         />
       </label>
 
-      <div className="fixed inset-x-0 bottom-20 z-20 flex flex-col gap-2 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
+      <div className="fixed inset-x-0 bottom-[var(--bottom-nav-height)] z-20 flex flex-col gap-2 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
         <Button fullWidth size="lg" onClick={handleFinishRequest}>
           Finish Workout
         </Button>

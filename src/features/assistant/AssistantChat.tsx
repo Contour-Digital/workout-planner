@@ -132,7 +132,7 @@ export function AssistantChat({
           aria-label="Open Spot, your training assistant"
           className={clsx(
             'fixed z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-lg hover:bg-accent-strong',
-            floatingPositionClassName ?? 'bottom-24 right-4 sm:bottom-8 sm:right-8',
+            floatingPositionClassName ?? 'bottom-[calc(var(--bottom-nav-height)+1rem)] right-4 sm:bottom-8 sm:right-8',
           )}
         >
           <IconSparkle width={24} height={24} />

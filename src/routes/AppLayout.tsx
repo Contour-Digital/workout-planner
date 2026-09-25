@@ -68,7 +68,7 @@ export function AppLayout() {
         </NavLink>
       </div>
 
-      <main className="flex-1 pb-28 sm:pb-8">
+      <main className="flex-1 pb-[calc(var(--bottom-nav-height)+1rem)] sm:pb-8">
         <Outlet />
       </main>
 

@@ -17,7 +17,7 @@ export function RecoverySessionPage() {
   const total = session.activities.length
 
   return (
-    <div className="p-4 pb-32 sm:p-6">
+    <div className="p-4 pb-[calc(var(--bottom-nav-height)+6rem)] sm:p-6">
       <h1 className="mb-1 text-xl font-bold text-primary-strong">{session.name}</h1>
       <p className="mb-4 text-sm text-primary-muted">
         Recovery sessions can stay open — come back any time today to finish activities like your sleep goal.
@@ -51,7 +51,7 @@ export function RecoverySessionPage() {
         />
       </label>
 
-      <div className="fixed inset-x-0 bottom-20 z-20 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
+      <div className="fixed inset-x-0 bottom-[var(--bottom-nav-height)] z-20 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
         <Button
           fullWidth
           size="lg"

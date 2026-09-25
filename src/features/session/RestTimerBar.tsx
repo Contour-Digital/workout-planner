@@ -31,7 +31,7 @@ export function RestTimerBar({ endsAt, onCancel, onComplete }: { endsAt: string;
   const ss = remainingSeconds % 60
 
   return createPortal(
-    <div className="fixed inset-x-4 bottom-56 z-40 flex justify-center sm:inset-x-auto sm:right-6 sm:bottom-8 sm:justify-end">
+    <div className="fixed inset-x-4 bottom-[calc(var(--bottom-nav-height)+5.75rem)] z-40 flex justify-center sm:inset-x-auto sm:right-6 sm:bottom-8 sm:justify-end">
       <div className="flex w-full max-w-xs items-center gap-3 rounded-[var(--radius-card)] bg-secondary-tint px-4 py-3 shadow-xl ring-1 ring-secondary/30">
         <IconClock width={20} height={20} className="shrink-0 text-secondary" />
         <span className="text-2xl font-bold tabular-nums text-secondary">

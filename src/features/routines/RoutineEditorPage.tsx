@@ -122,7 +122,7 @@ export function RoutineEditorPage() {
   }
 
   return (
-    <div className="p-4 pb-40 sm:p-6">
+    <div className="p-4 pb-[calc(var(--bottom-nav-height)+6rem)] sm:p-6">
       <PageHeader title={isNew ? 'New Routine' : 'Edit Routine'} />
 
       {aiDraft?.aiSummary && (
@@ -234,7 +234,7 @@ export function RoutineEditorPage() {
         {error && <p className="text-sm text-danger">{error}</p>}
       </div>
 
-      <div className="fixed inset-x-0 bottom-20 z-20 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
+      <div className="fixed inset-x-0 bottom-[var(--bottom-nav-height)] z-20 border-t border-primary-border bg-surface p-3 sm:static sm:mt-6 sm:border-none sm:bg-transparent sm:p-0">
         <div className="mx-auto grid max-w-3xl grid-cols-2 gap-3">
           <Button variant="ghost" fullWidth onClick={() => navigate('/routines')}>
             Cancel
@@ -247,7 +247,7 @@ export function RoutineEditorPage() {
 
       <AssistantChat
         floating
-        floatingPositionClassName="bottom-44 right-4 sm:bottom-8 sm:right-8"
+        floatingPositionClassName="bottom-[calc(var(--bottom-nav-height)+5.5rem)] right-4 sm:bottom-8 sm:right-8"
         storageKey={`routine:${routine.id}`}
         buildContext={buildAssistantContext}
         onAddSuggestion={handleAddSuggestion}
