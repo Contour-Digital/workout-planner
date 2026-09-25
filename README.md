@@ -73,8 +73,12 @@ shown whenever another schedule has also assigned a real workout, recovery,
 or rest day to that date (`dropRedundantOffOccurrences` in
 `occurrenceDisplay.tsx`, used by both the Dashboard and the Calendar) — both
 are correct data, but surfacing "No plan" right next to an actual plan for
-the same day was just confusing. A day with only an `off` occurrence still
-shows it, since that's the useful case for it.
+the same day was just confusing. The same function also caps `off`
+occurrences at one even when *no* real occurrence exists that day, since two
+different schedules can each independently land on "off" for the same
+date — showing two or three "No plan" cards for one day is exactly as
+confusing as showing one next to an actual plan. A day with only a single
+`off` occurrence still shows it, since that's the useful case for it.
 
 **Streaks** are computed by `src/lib/streak.ts` from the distinct calendar
 days that have a completed/partial workout (so multiple sessions on one day

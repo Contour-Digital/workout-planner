@@ -40,11 +40,14 @@ export function makeRoutineNameResolver(routines: RoutineTemplate[], recoveryRou
 /** An "off" occurrence just means "this particular schedule's own cycle has
  *  nothing for you today" — useful when it's the only thing going on that day,
  *  but confusing ("No plan") once another schedule has assigned a real
- *  workout/recovery/rest day to the same date. Drops "off" entries whenever
- *  the same date also has a real one, leaving them alone otherwise. */
+ *  workout/recovery/rest day to the same date, or once a second schedule's own
+ *  cycle also happens to land on "off" the same day (two or three "No plan"
+ *  cards for one day is exactly as confusing as one next to a real plan). Keeps
+ *  at most one "off" entry, and none at all once a real one exists. */
 export function dropRedundantOffOccurrences(occurrences: ResolvedOccurrence[]): ResolvedOccurrence[] {
-  const hasReal = occurrences.some((o) => o.assignment.kind !== 'off')
-  return hasReal ? occurrences.filter((o) => o.assignment.kind !== 'off') : occurrences
+  const real = occurrences.filter((o) => o.assignment.kind !== 'off')
+  if (real.length > 0) return real
+  return occurrences.slice(0, 1)
 }
 
 export function startOccurrence(navigate: NavigateFunction, occurrence: ResolvedOccurrence): void {
