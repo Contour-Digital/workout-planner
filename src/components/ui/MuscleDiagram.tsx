@@ -93,7 +93,10 @@ function tierFor(id: string, primary: Set<MuscleGroup>, secondary: Set<MuscleGro
 const OPACITY: Record<Tier, number> = { primary: 0.95, secondary: 0.4, none: 1 }
 
 function fillFor(tier: Tier): string {
-  return tier === 'none' ? 'var(--color-primary-tint)' : 'var(--color-secondary)'
+  // primary-border reads clearly against the card's surface-muted background —
+  // primary-tint (tried first) was nearly the same value as the background,
+  // so unworked regions all but disappeared instead of forming a body outline.
+  return tier === 'none' ? 'var(--color-primary-border)' : 'var(--color-secondary)'
 }
 
 function Silhouette({ shapes, viewBox, tierOf, label }: { shapes: BodyPathShape[]; viewBox: string; tierOf: (id: string) => Tier; label: string }) {
@@ -102,7 +105,7 @@ function Silhouette({ shapes, viewBox, tierOf, label }: { shapes: BodyPathShape[
       <svg viewBox={viewBox} width={110} height={292} role="img" aria-label={`${label} view muscle diagram`}>
         {shapes.map((shape) => {
           const tier = tierOf(shape.id)
-          return <path key={shape.id} d={shape.d} fill={fillFor(tier)} opacity={OPACITY[tier]} stroke="var(--color-surface)" strokeWidth={0.15} />
+          return <path key={shape.id} d={shape.d} fill={fillFor(tier)} opacity={OPACITY[tier]} stroke="var(--color-surface)" strokeWidth={0.25} />
         })}
       </svg>
       <span className="text-xs font-medium text-primary-muted">{label}</span>
