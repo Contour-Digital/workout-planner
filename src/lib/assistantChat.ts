@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient'
 import { findBestMatch } from './exerciseMatching'
 import { createCustomExercise } from '../db/exercisesRepo'
 import type { Exercise, ExerciseSuggestion } from '../models/exercise'
+import type { ParsedRoutine } from './aiRoutineGenerator'
 
 export interface AssistantMessage {
   role: 'user' | 'assistant'
@@ -16,6 +17,10 @@ export type AssistantSuggestion = ExerciseSuggestion
 export interface AssistantReply {
   reply: string
   suggestions: AssistantSuggestion[]
+  /** Present only in the 'routines-list' context, when the user asked Spot to build
+   *  a whole routine — same shape parse-workout produces, so it goes through the
+   *  same matching/build pipeline (buildRoutineDraftFromParsed). */
+  routine?: ParsedRoutine
 }
 
 export type AssistantContext =
@@ -29,6 +34,9 @@ export type AssistantContext =
       cooldown: string[]
     }
   | { kind: 'general' }
+  /** The Workouts list — the only context where Spot can create and save a whole
+   *  new routine, not just suggest a single exercise. */
+  | { kind: 'routines-list' }
 
 /** Sends the full conversation (ending in the new user message) plus the current
  *  routine/session context, and gets back the assistant's reply and any exercise

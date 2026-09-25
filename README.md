@@ -281,6 +281,20 @@ closed. It's powered by a second Edge Function, `supabase/functions/assistant-ch
 sharing the same `ANTHROPIC_API_KEY` secret as `parse-workout` above — no
 extra setup needed if that's already configured.
 
+**On the Workouts tab only** (`AssistantContext`'s `kind: 'routines-list'`),
+Spot can also create and save a whole new routine from a plain request —
+"create a 4-day upper/lower split", "build me a full body workout" — instead
+of just suggesting one exercise. The Edge Function offers a second tool,
+`create_routine`, only in this context; when the model calls it instead of
+`record_reply`, the response carries a `routine` field shaped exactly like
+`parse-workout`'s output, so it runs through the same matching/build
+pipeline — `buildRoutineDraftFromParsed` in `lib/aiRoutineGenerator.ts`,
+extracted out of `generateRoutineFromNotes` so both entry points (pasted
+notes and a chat request) share one path from "AI-shaped JSON" to a saved
+`RoutineTemplate`. The routine is saved immediately (no separate review
+step) and the chat shows an "Open {name}" button to jump straight into the
+routine editor afterward.
+
 ## Post-workout review
 
 Finishing a workout computes two things for free, no AI involved: any

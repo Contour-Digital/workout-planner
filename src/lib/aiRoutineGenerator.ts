@@ -5,14 +5,14 @@ import { createCustomExercise, getAllExercises } from '../db/exercisesRepo'
 import type { Equipment, ExerciseCategory, MuscleGroup } from '../models/exercise'
 import { createEmptySection, createEmptySetTarget, type ExerciseConfig, type RoutineTemplate, type SetTarget } from '../models/routine'
 
-interface ParsedSet {
+export interface ParsedSet {
   targetReps: number | null
   targetWeightKg: number | null
   targetDurationSeconds: number | null
   targetDistanceMeters: number | null
 }
 
-interface ParsedExercise {
+export interface ParsedExercise {
   name: string
   section: 'warmup' | 'main' | 'cooldown'
   category: ExerciseCategory
@@ -23,7 +23,7 @@ interface ParsedExercise {
   notes: string | null
 }
 
-interface ParsedRoutine {
+export interface ParsedRoutine {
   name: string
   description: string | null
   notes: string | null
@@ -36,8 +36,7 @@ export interface GeneratedRoutineResult {
   createdExerciseNames: string[]
 }
 
-/** Calls the parse-workout edge function, matches parsed exercise names against the
- * library (creating custom exercises for unmatched ones), and builds a draft routine
+/** Calls the parse-workout edge function, then matches and builds a draft routine
  * ready for the user to review in the routine editor. Never saves anything itself. */
 export async function generateRoutineFromNotes(notes: string): Promise<GeneratedRoutineResult> {
   const parsed = await callParseWorkout(notes)
@@ -46,6 +45,15 @@ export async function generateRoutineFromNotes(notes: string): Promise<Generated
     throw new Error('No exercises were found in these notes. Try including exercise names and sets/reps.')
   }
 
+  return buildRoutineDraftFromParsed(parsed)
+}
+
+/** Matches a parsed routine's exercise names against the library (creating custom
+ * exercises for unmatched ones) and builds a draft RoutineTemplate — the shared
+ * second half of both "From notes" (parse-workout) and Spot's conversational
+ * routine creation (assistant-chat's create_routine tool), which both produce the
+ * same ParsedRoutine shape upstream. Never saves anything itself. */
+export async function buildRoutineDraftFromParsed(parsed: ParsedRoutine): Promise<GeneratedRoutineResult> {
   const library = await getAllExercises()
   let matchedCount = 0
   const createdExerciseNames: string[] = []

@@ -10,6 +10,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { GenerateRoutineSheet } from './GenerateRoutineSheet'
 import { AssistantChat } from '../assistant/AssistantChat'
 import type { AssistantContext } from '../../lib/assistantChat'
+import { buildRoutineDraftFromParsed, type ParsedRoutine } from '../../lib/aiRoutineGenerator'
 import {
   IconArchive,
   IconCalendar,
@@ -31,6 +32,7 @@ import {
   deleteRoutine,
   duplicateRecoveryRoutine,
   duplicateRoutine,
+  saveRoutine,
 } from '../../db/routinesRepo'
 import { deleteSchedule, getAllSchedules } from '../../db/scheduleRepo'
 import { describeSchedule } from '../../lib/scheduleDescribe'
@@ -67,6 +69,15 @@ export function RoutinesListPage() {
 
   function setTab(t: Tab) {
     setSearchParams(t === 'workout' ? {} : { tab: t })
+  }
+
+  async function handleCreateRoutine(routine: ParsedRoutine) {
+    if (routine.exercises.length === 0) {
+      throw new Error("Didn't get any exercises back for that routine — try asking again with a bit more detail.")
+    }
+    const { draft } = await buildRoutineDraftFromParsed(routine)
+    await saveRoutine(draft)
+    return { id: draft.id, name: draft.name }
   }
 
   return (
@@ -255,9 +266,10 @@ export function RoutinesListPage() {
       <AssistantChat
         floating
         storageKey="routines-list"
-        buildContext={(): AssistantContext => ({ kind: 'general' })}
-        greeting="Hi, I'm Spot! Ask me about exercises or training questions, or use the shortcut below to turn notes you've already written into a routine."
+        buildContext={(): AssistantContext => ({ kind: 'routines-list' })}
+        greeting="Hi, I'm Spot! Ask me to build a whole routine — e.g. 'create a 4-day upper/lower split' — and I'll save it straight to your Workouts, or use the shortcut below to turn notes you've already written into one."
         quickActions={tab === 'workout' ? [{ label: 'Generate a routine from notes', onClick: () => setGenerateOpen(true) }] : undefined}
+        onCreateRoutine={handleCreateRoutine}
       />
     </div>
   )

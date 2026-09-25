@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { IconSend, IconSparkle, IconX } from '../../components/ui/icons'
 import { sendAssistantMessage, type AssistantContext, type AssistantMessage, type AssistantSuggestion } from '../../lib/assistantChat'
+import type { ParsedRoutine } from '../../lib/aiRoutineGenerator'
 
 interface StoredMessage extends AssistantMessage {
   id: string
   suggestions?: AssistantSuggestion[]
   addedNames?: string[]
+  createdRoutine?: { id: string; name: string }
 }
 
 interface AssistantChatProps {
@@ -37,6 +40,10 @@ interface AssistantChatProps {
   /** Tappable shortcuts shown alongside the greeting, before the first message — for
    *  things Spot's own chat can't do inline (e.g. opening the from-notes generator). */
   quickActions?: { label: string; onClick: () => void }[]
+  /** Omit to disable whole-routine creation (only the 'routines-list' context offers
+   *  it server-side anyway). Matches and saves the routine, returning its id/name so
+   *  the chat can offer to open it. */
+  onCreateRoutine?: (routine: ParsedRoutine) => Promise<{ id: string; name: string }>
 }
 
 function historyKey(key: string): string {
@@ -70,7 +77,9 @@ export function AssistantChat({
   floating,
   floatingPositionClassName,
   quickActions,
+  onCreateRoutine,
 }: AssistantChatProps) {
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<StoredMessage[]>(() => loadHistory(storageKey))
   const [input, setInput] = useState('')
@@ -105,15 +114,26 @@ export function AssistantChat({
     try {
       const history: AssistantMessage[] = nextMessages.map(({ role, content }) => ({ role, content }))
       const result = await sendAssistantMessage(history, buildContext())
-      setMessages((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), role: 'assistant', content: result.reply, suggestions: result.suggestions, addedNames: [] },
-      ])
+
+      if (result.routine && onCreateRoutine) {
+        const saved = await onCreateRoutine(result.routine)
+        setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: result.reply, createdRoutine: saved }])
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { id: crypto.randomUUID(), role: 'assistant', content: result.reply, suggestions: result.suggestions, addedNames: [] },
+        ])
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
       setLoading(false)
     }
+  }
+
+  function openCreatedRoutine(id: string) {
+    setOpen(false)
+    navigate(`/routines/${id}`)
   }
 
   async function handleAdd(messageId: string, suggestion: AssistantSuggestion) {
@@ -222,6 +242,11 @@ export function AssistantChat({
                             )
                           })}
                         </div>
+                      )}
+                      {m.createdRoutine && (
+                        <Button size="sm" variant="secondary" onClick={() => openCreatedRoutine(m.createdRoutine!.id)}>
+                          Open {m.createdRoutine.name}
+                        </Button>
                       )}
                     </div>
                   ))}
