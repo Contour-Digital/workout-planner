@@ -116,6 +116,18 @@ even while the app's fully closed) would need separate infrastructure — a
 stored Web Push subscription per device and a server-side sender — and
 isn't built yet.
 
+**Pace** for cardio exercises (walking, running, rowing, and anything else
+that tracks both duration and distance) is a derived display, not a stored
+field — `formatPace()` in `models/units.ts` divides the two whenever both
+are present, so there's nothing extra to fill in and no way for a typed-in
+pace to drift out of sync with the duration/distance it came from. It shows
+wherever those two numbers already appear: the routine builder's target
+summary and per-set rows, the live "Pace: …" readout while logging actuals
+in an active session, the "Previous" line pulled from last time, and each
+set's line in workout history. `paceSplitMetersFor()` picks the split by
+name — rowing machines get the conventional per-500m split, everything
+else (running, walking, cycling, jump rope) gets per-km.
+
 ### Sync architecture
 
 The app requires signing in (email/password via Supabase Auth), but every

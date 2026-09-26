@@ -11,6 +11,7 @@ import { elapsedSeconds } from '../../models/session'
 import { computeMissedExercises, computeSessionAchievements } from '../../lib/workoutReview'
 import { generateWorkoutSummary } from '../../lib/workoutAiSummary'
 import { addSuggestionToRoutine } from '../../lib/addSuggestionToRoutine'
+import { formatPace, paceSplitMetersFor } from '../../models/units'
 import { PostWorkoutReviewSheet } from '../session/PostWorkoutReviewSheet'
 import type { Achievement, SessionExerciseEntry, WorkoutSession } from '../../models/session'
 import type { ExerciseSuggestion } from '../../models/exercise'
@@ -99,19 +100,23 @@ function WorkoutDetail({
             <div key={e.id} className="rounded-[var(--radius-control)] border border-primary-border bg-surface p-3">
               <p className="text-sm font-semibold text-primary-strong">{e.exerciseName}</p>
               <div className="mt-1 flex flex-col gap-0.5">
-                {e.actualSets.map((s, i) => (
-                  <p key={s.id} className="text-xs text-primary-muted">
-                    Set {i + 1}: {s.completed ? (
-                      <span className="font-medium text-primary">
-                        {s.actualReps ?? '–'} reps{s.actualWeightKg ? ` × ${s.actualWeightKg}kg` : ''}
-                        {s.actualDurationSeconds ? ` · ${s.actualDurationSeconds}s` : ''}
-                        {s.actualDistanceMeters ? ` · ${s.actualDistanceMeters}m` : ''}
-                      </span>
-                    ) : (
-                      'not completed'
-                    )}
-                  </p>
-                ))}
+                {e.actualSets.map((s, i) => {
+                  const pace = formatPace(s.actualDistanceMeters, s.actualDurationSeconds, paceSplitMetersFor(e.exerciseName))
+                  return (
+                    <p key={s.id} className="text-xs text-primary-muted">
+                      Set {i + 1}: {s.completed ? (
+                        <span className="font-medium text-primary">
+                          {s.actualReps ?? '–'} reps{s.actualWeightKg ? ` × ${s.actualWeightKg}kg` : ''}
+                          {s.actualDurationSeconds ? ` · ${s.actualDurationSeconds}s` : ''}
+                          {s.actualDistanceMeters ? ` · ${s.actualDistanceMeters}m` : ''}
+                          {pace ? ` · ${pace}` : ''}
+                        </span>
+                      ) : (
+                        'not completed'
+                      )}
+                    </p>
+                  )
+                })}
               </div>
               {e.notes && <p className="mt-1 text-sm text-primary-muted">Note: {e.notes}</p>}
             </div>

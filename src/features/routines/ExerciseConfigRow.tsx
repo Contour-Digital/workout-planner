@@ -3,6 +3,7 @@ import { ExerciseMediaThumb } from '../../components/ui/ExerciseMedia'
 import { IconChevronDown, IconTrash } from '../../components/ui/icons'
 import { getPreviousExercisePerformance } from '../../db/sessionsRepo'
 import { formatSetResult } from '../../lib/formatPerformance'
+import { formatPace, paceSplitMetersFor } from '../../models/units'
 import { MUSCLE_GROUP_LABELS, type Exercise } from '../../models/exercise'
 import type { ExerciseConfig, SetTarget } from '../../models/routine'
 
@@ -16,7 +17,7 @@ interface ExerciseConfigRowProps {
   onViewDetail: () => void
 }
 
-function summarize(config: ExerciseConfig, isCardio: boolean, isStretch: boolean): string {
+function summarize(config: ExerciseConfig, isCardio: boolean, isStretch: boolean, exerciseName: string): string {
   if (config.sets.length === 0) return 'No sets configured'
   const first = config.sets[0]
   const parts: string[] = []
@@ -25,6 +26,8 @@ function summarize(config: ExerciseConfig, isCardio: boolean, isStretch: boolean
       if (first.targetDurationSeconds) parts.push(`${config.sets.length} × ${first.targetDurationSeconds}s`)
       else parts.push(`${config.sets.length} sets`)
       if (first.targetDistanceMeters) parts.push(`${first.targetDistanceMeters} m`)
+      const pace = formatPace(first.targetDistanceMeters, first.targetDurationSeconds, paceSplitMetersFor(exerciseName))
+      if (pace) parts.push(pace)
     } else {
       if (first.targetReps) parts.push(`${config.sets.length} × ${first.targetReps} reps`)
       else parts.push(`${config.sets.length} sets`)
@@ -51,10 +54,10 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
       if (!result) return
       const lastCompleted = [...result.entry.actualSets].reverse().find((s) => s.completed)
       if (!lastCompleted) return
-      const formatted = formatSetResult(lastCompleted)
+      const formatted = formatSetResult(lastCompleted, exercise?.name)
       if (formatted) setPrevious(formatted)
     })
-  }, [config.exerciseId])
+  }, [config.exerciseId, exercise?.name])
 
   function updateSet(index: number, patch: Partial<SetTarget>) {
     const sets = config.sets.map((s, i) => (i === index ? { ...s, ...patch } : s))
@@ -112,7 +115,7 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
             {exercise && exercise.primaryMuscles.length > 0 && (
               <p className="truncate text-xs text-secondary">{exercise.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ')}</p>
             )}
-            <p className="truncate text-xs text-primary-muted">{summarize(config, isCardio, isStretch)}</p>
+            <p className="truncate text-xs text-primary-muted">{summarize(config, isCardio, isStretch, exercise?.name ?? '')}</p>
             {previous && <p className="truncate text-xs text-primary-subtle">Previous: {previous}</p>}
           </div>
         </button>
@@ -173,12 +176,15 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
           ) : (
             <div className="flex flex-col gap-2">
               {config.sets.map((set, i) => (
-                <div key={set.id} className={isCardio ? 'grid grid-cols-3 items-center gap-2' : isStretch ? 'grid grid-cols-3 items-center gap-2' : 'grid grid-cols-5 items-center gap-2'}>
+                <div key={set.id} className={isCardio ? 'grid grid-cols-4 items-center gap-2' : isStretch ? 'grid grid-cols-3 items-center gap-2' : 'grid grid-cols-5 items-center gap-2'}>
                   <span className="text-xs font-medium text-primary-muted">Set {i + 1}</span>
                   {isCardio ? (
                     <>
                       <NumberField compact label="Dur (s)" value={set.targetDurationSeconds} onChange={(v) => updateSet(i, { targetDurationSeconds: v })} />
                       <NumberField compact label="Dist (m)" value={set.targetDistanceMeters} onChange={(v) => updateSet(i, { targetDistanceMeters: v })} />
+                      <span className="truncate text-xs text-primary-subtle">
+                        {formatPace(set.targetDistanceMeters, set.targetDurationSeconds, paceSplitMetersFor(exercise?.name ?? '')) ?? ''}
+                      </span>
                     </>
                   ) : (
                     <>

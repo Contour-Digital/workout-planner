@@ -58,6 +58,27 @@ export function parseDistanceToMeters(value: number, unit: DistanceUnit): number
   return unit === 'km' ? kmToMeters(value) : milesToMeters(value)
 }
 
+/** Rowing machines conventionally show pace per 500m ("splits"); everything else
+ *  that tracks distance (running, walking, cycling, jump rope) uses per-km. */
+export function paceSplitMetersFor(exerciseName: string): number {
+  return /row/i.test(exerciseName) ? 500 : 1000
+}
+
+/** Formats elapsed time per a fixed distance split, e.g. "5:30 /km" or "2:05 /500m".
+ *  Returns null if either input is missing or zero, since pace is meaningless then. */
+export function formatPace(distanceMeters: number | undefined, durationSeconds: number | undefined, splitMeters = 1000): string | null {
+  if (!distanceMeters || !durationSeconds) return null
+  const secondsPerSplit = durationSeconds / (distanceMeters / splitMeters)
+  let mins = Math.floor(secondsPerSplit / 60)
+  let secs = Math.round(secondsPerSplit - mins * 60)
+  if (secs === 60) {
+    mins += 1
+    secs = 0
+  }
+  const label = splitMeters === 500 ? '/500m' : splitMeters === 1000 ? '/km' : `/${splitMeters}m`
+  return `${mins}:${secs < 10 ? '0' : ''}${secs} ${label}`
+}
+
 export function formatWeight(kg: number | undefined, unit: WeightUnit): string {
   if (kg === undefined) return '—'
   const v = displayWeight(kg, unit)

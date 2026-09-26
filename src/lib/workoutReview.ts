@@ -54,7 +54,7 @@ export async function computeSessionAchievements(session: WorkoutSession): Promi
       if (currentBest <= 0 || currentBest <= previousBest) continue
 
       const bestSet = completed.find((s) => s[metric.field] === currentBest)
-      const detail = bestSet ? formatSetResult(bestSet) : null
+      const detail = bestSet ? formatSetResult(bestSet, entry.exerciseName) : null
       achievements.push({
         exerciseId: entry.exerciseId,
         exerciseName: entry.exerciseName,

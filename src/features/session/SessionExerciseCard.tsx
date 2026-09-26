@@ -4,6 +4,7 @@ import { IconCheck, IconChevronDown, IconTrash } from '../../components/ui/icons
 import { getExercise } from '../../db/exercisesRepo'
 import { getPreviousExercisePerformance } from '../../db/sessionsRepo'
 import { formatSetResult } from '../../lib/formatPerformance'
+import { formatPace, paceSplitMetersFor } from '../../models/units'
 import { useSettingsStore } from '../../store/settingsStore'
 import type { Exercise } from '../../models/exercise'
 import type { SessionExerciseEntry, SetResult } from '../../models/session'
@@ -49,10 +50,10 @@ export function SessionExerciseCard({
       if (!result) return
       const lastCompleted = [...result.entry.actualSets].reverse().find((s) => s.completed)
       if (!lastCompleted) return
-      const formatted = formatSetResult(lastCompleted)
+      const formatted = formatSetResult(lastCompleted, entry.exerciseName)
       if (formatted) setPrevious(formatted)
     })
-  }, [entry.exerciseId])
+  }, [entry.exerciseId, entry.exerciseName])
 
   const doneCount = entry.actualSets.filter((s) => s.completed).length
 
@@ -110,81 +111,89 @@ export function SessionExerciseCard({
           <div className="flex flex-col gap-2">
             {entry.actualSets.map((set, i) => {
               const target = entry.targetSets[i]
+              const livePace = isCardio ? formatPace(set.actualDistanceMeters, set.actualDurationSeconds, paceSplitMetersFor(entry.exerciseName)) : null
               return (
-                <div key={set.id} className="flex items-center gap-2">
-                  <span className="w-6 shrink-0 text-xs font-semibold text-primary-muted">{i + 1}</span>
-                  <span className="w-24 shrink-0 text-xs text-primary-muted">
+                <div key={set.id} className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 shrink-0 text-xs font-semibold text-primary-muted">{i + 1}</span>
+                    <span className="w-24 shrink-0 text-xs text-primary-muted">
+                      {isCardio ? (
+                        <>
+                          Target: {target?.targetDurationSeconds ? `${target.targetDurationSeconds}s` : '–'}
+                          {target?.targetDistanceMeters ? ` × ${target.targetDistanceMeters}m` : ''}
+                          {(() => {
+                            const pace = formatPace(target?.targetDistanceMeters, target?.targetDurationSeconds, paceSplitMetersFor(entry.exerciseName))
+                            return pace ? ` (${pace})` : ''
+                          })()}
+                        </>
+                      ) : (
+                        <>
+                          Target: {target?.targetReps ?? '–'}
+                          {!isStretch && target?.targetWeightKg ? ` × ${target.targetWeightKg}kg` : ''}
+                        </>
+                      )}
+                    </span>
                     {isCardio ? (
                       <>
-                        Target: {target?.targetDurationSeconds ? `${target.targetDurationSeconds}s` : '–'}
-                        {target?.targetDistanceMeters ? ` × ${target.targetDistanceMeters}m` : ''}
+                        <input
+                          type="number"
+                          aria-label={`Set ${i + 1} actual duration in seconds`}
+                          placeholder="secs"
+                          className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
+                          value={set.actualDurationSeconds ?? ''}
+                          onChange={(e) => onFieldChange(set.id, { actualDurationSeconds: e.target.value === '' ? undefined : Number(e.target.value) })}
+                        />
+                        <input
+                          type="number"
+                          aria-label={`Set ${i + 1} actual distance in meters`}
+                          placeholder="m"
+                          className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
+                          value={set.actualDistanceMeters ?? ''}
+                          onChange={(e) => onFieldChange(set.id, { actualDistanceMeters: e.target.value === '' ? undefined : Number(e.target.value) })}
+                        />
                       </>
                     ) : (
                       <>
-                        Target: {target?.targetReps ?? '–'}
-                        {!isStretch && target?.targetWeightKg ? ` × ${target.targetWeightKg}kg` : ''}
-                      </>
-                    )}
-                  </span>
-                  {isCardio ? (
-                    <>
-                      <input
-                        type="number"
-                        aria-label={`Set ${i + 1} actual duration in seconds`}
-                        placeholder="secs"
-                        className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
-                        value={set.actualDurationSeconds ?? ''}
-                        onChange={(e) => onFieldChange(set.id, { actualDurationSeconds: e.target.value === '' ? undefined : Number(e.target.value) })}
-                      />
-                      <input
-                        type="number"
-                        aria-label={`Set ${i + 1} actual distance in meters`}
-                        placeholder="m"
-                        className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
-                        value={set.actualDistanceMeters ?? ''}
-                        onChange={(e) => onFieldChange(set.id, { actualDistanceMeters: e.target.value === '' ? undefined : Number(e.target.value) })}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <input
-                        type="number"
-                        aria-label={`Set ${i + 1} actual reps`}
-                        placeholder="reps"
-                        className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
-                        value={set.actualReps ?? ''}
-                        onChange={(e) => onFieldChange(set.id, { actualReps: e.target.value === '' ? undefined : Number(e.target.value) })}
-                      />
-                      {!isStretch && (
                         <input
                           type="number"
-                          aria-label={`Set ${i + 1} actual weight`}
-                          placeholder="kg"
+                          aria-label={`Set ${i + 1} actual reps`}
+                          placeholder="reps"
                           className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
-                          value={set.actualWeightKg ?? ''}
-                          onChange={(e) => onFieldChange(set.id, { actualWeightKg: e.target.value === '' ? undefined : Number(e.target.value) })}
+                          value={set.actualReps ?? ''}
+                          onChange={(e) => onFieldChange(set.id, { actualReps: e.target.value === '' ? undefined : Number(e.target.value) })}
                         />
-                      )}
-                    </>
-                  )}
-                  <button
-                    onClick={() => handleQuickComplete(set, i)}
-                    aria-pressed={set.completed}
-                    aria-label={set.completed ? `Set ${i + 1} completed, tap to undo` : `Mark set ${i + 1} complete`}
-                    className={
-                      'ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 transition-colors ' +
-                      (set.completed ? 'border-success bg-success text-white' : 'border-primary-border text-primary-subtle hover:border-secondary')
-                    }
-                  >
-                    <IconCheck width={20} height={20} />
-                  </button>
-                  <button
-                    onClick={() => onRemoveSet(set.id)}
-                    aria-label={`Remove set ${i + 1}`}
-                    className="text-primary-subtle hover:text-danger"
-                  >
-                    <IconTrash width={16} height={16} />
-                  </button>
+                        {!isStretch && (
+                          <input
+                            type="number"
+                            aria-label={`Set ${i + 1} actual weight`}
+                            placeholder="kg"
+                            className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-sm"
+                            value={set.actualWeightKg ?? ''}
+                            onChange={(e) => onFieldChange(set.id, { actualWeightKg: e.target.value === '' ? undefined : Number(e.target.value) })}
+                          />
+                        )}
+                      </>
+                    )}
+                    <button
+                      onClick={() => handleQuickComplete(set, i)}
+                      aria-pressed={set.completed}
+                      aria-label={set.completed ? `Set ${i + 1} completed, tap to undo` : `Mark set ${i + 1} complete`}
+                      className={
+                        'ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 transition-colors ' +
+                        (set.completed ? 'border-success bg-success text-white' : 'border-primary-border text-primary-subtle hover:border-secondary')
+                      }
+                    >
+                      <IconCheck width={20} height={20} />
+                    </button>
+                    <button
+                      onClick={() => onRemoveSet(set.id)}
+                      aria-label={`Remove set ${i + 1}`}
+                      className="text-primary-subtle hover:text-danger"
+                    >
+                      <IconTrash width={16} height={16} />
+                    </button>
+                  </div>
+                  {livePace && <p className="pl-8 text-xs text-primary-subtle">Pace: {livePace}</p>}
                 </div>
               )
             })}
