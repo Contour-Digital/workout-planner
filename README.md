@@ -382,6 +382,15 @@ that short of shipping this as a native wrapper (e.g. Capacitor) with a
 native background-geolocation plugin — a materially bigger, separate
 project, not attempted here.
 
+The live "Avg pace" stat is total distance over total elapsed time so far
+— but a running average over a tiny "whole so far" is dominated by
+whichever GPS point just arrived, so it flashes around like an instant
+reading rather than a stable average for the first while (the same reason
+Strava/Garmin hold off showing pace at the very start of an activity). It
+stays hidden (`–`) until at least 20 seconds and 20m have accumulated;
+once the activity is finished, the same number is always shown regardless,
+since a finished activity's totals are final rather than still building up.
+
 On "Finish", `findLoggableTargets()` (`lib/cardioActivityMatch.ts`) checks
 whether today has a matching distance/duration-tracked exercise to log
 this against — from a recovery/workout session already in progress, or

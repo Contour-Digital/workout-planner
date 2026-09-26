@@ -15,6 +15,13 @@ import { CARDIO_ACTIVITY_TYPE_LABELS, type CardioActivity, type CardioActivityTy
 type Phase = 'idle' | 'recording' | 'paused' | 'summary'
 
 const ROUTE_COLOR = '#8b5cf6'
+// A running average over a tiny "whole so far" is dominated by whatever the last GPS
+// point happened to be — it looks like it's flashing an instant reading rather than
+// settling into a stable average, exactly like Strava/Garmin hide pace for the first
+// few seconds too. Hold off showing a number until there's enough of the activity
+// behind it for the average to actually mean something.
+const MIN_SECONDS_FOR_LIVE_PACE = 20
+const MIN_METERS_FOR_LIVE_PACE = 20
 // A phone's reported accuracy commonly sits in the 20-70m range outdoors (worse near
 // buildings/tree cover), so 50m silently dropped a large fraction of real fixes —
 // leaving distance built from a handful of sparse points while the timer kept running
@@ -274,7 +281,11 @@ export function RecordActivityPage() {
     }
   }
 
-  const pace = formatPace(distanceMeters, elapsedSeconds, paceSplitMetersFor(activityType))
+  const rawPace = formatPace(distanceMeters, elapsedSeconds, paceSplitMetersFor(activityType))
+  // Once finished, distance/time are the activity's real final totals, so its average
+  // pace is always meaningful — only gate the number while it's still building up live.
+  const enoughForLivePace = elapsedSeconds >= MIN_SECONDS_FOR_LIVE_PACE && distanceMeters >= MIN_METERS_FOR_LIVE_PACE
+  const pace = phase === 'summary' || enoughForLivePace ? rawPace : null
   const mapHeight = phase === 'recording' || phase === 'paused' ? 'h-[45vh]' : 'h-64'
 
   return (
