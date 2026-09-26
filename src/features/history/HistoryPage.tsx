@@ -6,7 +6,10 @@ import { Badge, type BadgeTone } from '../../components/ui/Badge'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { IconHistory } from '../../components/ui/icons'
 import { getHistorySessions } from '../../db/sessionsRepo'
+import { getAllCardioActivities } from '../../db/cardioActivityRepo'
 import { db } from '../../db/db'
+import { formatPace, paceSplitMetersFor } from '../../models/units'
+import { CARDIO_ACTIVITY_TYPE_LABELS } from '../../models/cardioActivity'
 import type { SessionStatus } from '../../models/session'
 
 const STATUS_TONE: Record<SessionStatus, BadgeTone> = {
@@ -22,6 +25,7 @@ export function HistoryPage() {
   const navigate = useNavigate()
   const sessions = useLiveQuery(() => getHistorySessions(), [], []) ?? []
   const routines = useLiveQuery(() => db.routines.toArray(), [], []) ?? []
+  const cardioActivities = useLiveQuery(() => getAllCardioActivities(), [], []) ?? []
 
   const [statusFilter, setStatusFilter] = useState<'all' | SessionStatus>('all')
   const [routineFilter, setRoutineFilter] = useState<'all' | string>('all')
@@ -93,6 +97,34 @@ export function HistoryPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {cardioActivities.length > 0 && (
+        <div className="mt-6">
+          <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-primary-muted">Recorded activities</h2>
+          <ul className="flex flex-col gap-2">
+            {cardioActivities.map((a) => {
+              const pace = formatPace(a.distanceMeters, a.durationSeconds, paceSplitMetersFor(a.activityType))
+              return (
+                <li key={a.id}>
+                  <button
+                    onClick={() => navigate(`/activity/${a.id}`)}
+                    className="flex w-full items-center justify-between rounded-[var(--radius-control)] border border-primary-border bg-surface px-4 py-3 text-left hover:bg-primary-tint"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-primary-strong">{a.name}</p>
+                      <p className="text-xs text-primary-muted">
+                        {a.startedAt.slice(0, 10)} · {CARDIO_ACTIVITY_TYPE_LABELS[a.activityType]} · {(a.distanceMeters / 1000).toFixed(2)} km
+                        {pace ? ` · ${pace}` : ''}
+                      </p>
+                    </div>
+                    {a.loggedAgainst && <Badge tone="secondary">Logged</Badge>}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
       )}
     </div>
   )

@@ -7,6 +7,7 @@ import type { PersonalEvent } from '../models/calendarEvent'
 import type { WorkoutSession, RecoverySession, RestDaySession } from '../models/session'
 import type { Profile, WeightEntry, HeightEntry } from '../models/profile'
 import type { AppSettings } from '../models/settings'
+import type { CardioActivity } from '../models/cardioActivity'
 
 /** Lightweight pending-push record. Keyed by `${dexieTableName}:${recordId}`, so
  *  repeated writes to the same record before the outbox drains just overwrite the
@@ -37,6 +38,7 @@ export class WorkoutDB extends Dexie {
   weightEntries!: Table<WeightEntry, string>
   heightEntries!: Table<HeightEntry, string>
   settings!: Table<AppSettings, string>
+  cardioActivities!: Table<CardioActivity, string>
   syncOutbox!: Table<SyncOutboxEntry, string>
 
   constructor() {
@@ -71,6 +73,12 @@ export class WorkoutDB extends Dexie {
     // are shared reference data, so a rename can't mutate them directly.
     this.version(4).stores({
       libraryExerciseNameOverrides: 'id, exerciseId',
+    })
+    // v5: recorded walk/run activities (GPS route, distance, pace) — kept in their
+    // own table rather than folded into workout/recovery sessions since they're not
+    // bound to sets or a routine template, just an optional link back to one.
+    this.version(5).stores({
+      cardioActivities: 'id, startedAt',
     })
   }
 }

@@ -359,6 +359,40 @@ from a saved routine. Powered by a third Edge Function,
 secret. It's opt-in per session (a button, not automatic) so it never runs
 — or costs anything — unless asked for.
 
+## Recording a walk or run
+
+The "Record" button on the Dashboard (`/activity/record`,
+`RecordActivityPage.tsx`) tracks a walk/run live: `navigator.geolocation
+.watchPosition()` samples GPS fixes (dropping any with >50m accuracy as
+noise) into a `route: GeoPoint[]`, distance accumulates incrementally via
+`haversineDistance()` between consecutive points (`lib/geo.ts`), and a
+Leaflet + OpenStreetMap map (no API key needed) draws the growing route
+live. The Screen Wake Lock API keeps the screen on for the duration — this
+is a foreground-only feature: continuous GPS sampling stops the moment the
+tab is backgrounded or the screen locks, since Service Workers have no
+access to `navigator.geolocation` and no combination of web APIs grants
+"background" location the way a native app can. There's no workaround for
+that short of shipping this as a native wrapper (e.g. Capacitor) with a
+native background-geolocation plugin — a materially bigger, separate
+project, not attempted here.
+
+On "Finish", `findLoggableTargets()` (`lib/cardioActivityMatch.ts`) checks
+whether today has a matching distance/duration-tracked exercise to log
+this against — from a recovery/workout session already in progress, or
+from today's schedule if not started yet (in which case saving starts that
+session for you, via the same `startRecoverySession`/`startWorkoutSession`
+used elsewhere). Candidates whose name matches the activity type ("walk"
+vs "run"/"jog") are ranked first. Picking one calls
+`applyCardioActivityToTarget()`, which marks that activity/set complete
+with the recorded distance/duration; picking "Save as a standalone
+activity" just saves it on its own. Either way the activity itself is
+stored in its own `cardio_activities` table (own Dexie table + Supabase
+table, synced like everything else) rather than folded into a workout/
+recovery session, since it isn't bound to a routine's sets — `loggedAgainst`
+is only an optional link back to whatever it fulfilled. Recorded activities
+show up under History → "Recorded activities", each with a read-only map/
+stats view (`ActivityDetailPage.tsx`).
+
 ## Database schema
 
 The Postgres schema (tables, indexes, row-level security policies, and the

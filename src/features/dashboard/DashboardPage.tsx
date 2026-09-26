@@ -7,7 +7,7 @@ import { Badge } from '../../components/ui/Badge'
 import { CategoryBadge } from '../../components/ui/CategoryBadge'
 import { ProgressBar, ProgressRing } from '../../components/ui/ProgressBar'
 import { EmptyState } from '../../components/ui/EmptyState'
-import { IconCalendar, IconDumbbell, IconFlame, IconMoon, IconPlay, IconPlus } from '../../components/ui/icons'
+import { IconDumbbell, IconFlame, IconMapPin, IconMoon, IconPlay, IconPlus } from '../../components/ui/icons'
 import { db } from '../../db/db'
 import { getOccurrencesInRange } from '../../db/scheduleRepo'
 import { getActiveRecoverySession, getActiveWorkoutSession, getCompletedWorkoutDayKeys, getHistorySessions } from '../../db/sessionsRepo'
@@ -59,8 +59,8 @@ export function DashboardPage() {
           <p className="text-sm font-medium text-primary-muted">{dateLabel}</p>
           <h1 className="text-2xl font-bold text-primary-strong">Today</h1>
         </div>
-        <Button variant="secondary" size="sm" icon={<IconCalendar width={18} height={18} />} onClick={() => navigate('/calendar')}>
-          Calendar
+        <Button variant="secondary" size="sm" icon={<IconMapPin width={18} height={18} />} onClick={() => navigate('/activity/record')}>
+          Record
         </Button>
       </div>
 

@@ -15,6 +15,8 @@ import { RecoverySessionStartPage } from '../features/recovery/RecoverySessionSt
 import { RecoverySessionPage } from '../features/recovery/RecoverySessionPage'
 import { ScheduleEditorPage } from '../features/schedule/ScheduleEditorPage'
 import { CalendarPage } from '../features/schedule/CalendarPage'
+import { RecordActivityPage } from '../features/activity/RecordActivityPage'
+import { ActivityDetailPage } from '../features/activity/ActivityDetailPage'
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +40,8 @@ export const router = createBrowserRouter([
       { path: '/schedules/new', element: <ScheduleEditorPage /> },
       { path: '/schedules/:id', element: <ScheduleEditorPage /> },
       { path: '/calendar', element: <CalendarPage /> },
+      { path: '/activity/record', element: <RecordActivityPage /> },
+      { path: '/activity/:id', element: <ActivityDetailPage /> },
     ],
   },
 ])
