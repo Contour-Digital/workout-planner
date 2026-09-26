@@ -363,10 +363,16 @@ secret. It's opt-in per session (a button, not automatic) so it never runs
 
 The "Record" button on the Dashboard (`/activity/record`,
 `RecordActivityPage.tsx`) tracks a walk/run live: `navigator.geolocation
-.watchPosition()` samples GPS fixes (dropping any with >50m accuracy as
-noise) into a `route: GeoPoint[]`, distance accumulates incrementally via
-`haversineDistance()` between consecutive points (`lib/geo.ts`), and a
-Leaflet + OpenStreetMap map (no API key needed) draws the growing route
+.watchPosition()` samples GPS fixes into a `route: GeoPoint[]`, rejecting
+only fixes with >100m reported accuracy (a phone commonly reports 20-70m
+outdoors, so a tighter cutoff silently drops too many real fixes — leaving
+distance built from a handful of sparse points while the duration timer
+keeps running regardless, understating distance and so overstating pace
+for the whole activity) or ones implying an implausible speed (>~29km/h) to
+the previous point, which is a GPS jump artifact rather than real movement.
+Distance accumulates incrementally via `haversineDistance()` between
+consecutive accepted points (`lib/geo.ts`), and a Leaflet + OpenStreetMap
+map (no API key needed) draws the growing route
 live. The Screen Wake Lock API keeps the screen on for the duration — this
 is a foreground-only feature: continuous GPS sampling stops the moment the
 tab is backgrounded or the screen locks, since Service Workers have no

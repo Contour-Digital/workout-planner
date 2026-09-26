@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { PageHeader } from '../../components/ui/PageHeader'
-import { IconTrash } from '../../components/ui/icons'
+import { IconTrash, IconX } from '../../components/ui/icons'
 import { deleteCardioActivity, getCardioActivity } from '../../db/cardioActivityRepo'
 import { formatPace, paceSplitMetersFor } from '../../models/units'
 import { CARDIO_ACTIVITY_TYPE_LABELS, type CardioActivity } from '../../models/cardioActivity'
@@ -74,6 +74,15 @@ export function ActivityDetailPage() {
       <PageHeader
         title={activity.name}
         subtitle={`${CARDIO_ACTIVITY_TYPE_LABELS[activity.activityType]} · ${new Date(activity.startedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}`}
+        action={
+          <button
+            onClick={() => navigate(-1)}
+            aria-label="Close"
+            className="rounded-full p-2 text-primary-muted hover:bg-primary-tint"
+          >
+            <IconX width={22} height={22} />
+          </button>
+        }
       />
 
       <div ref={mapElRef} className="mb-4 h-64 w-full overflow-hidden rounded-[var(--radius-card)] border border-primary-border" />

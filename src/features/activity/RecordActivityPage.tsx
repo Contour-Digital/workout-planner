@@ -15,7 +15,15 @@ import { CARDIO_ACTIVITY_TYPE_LABELS, type CardioActivity, type CardioActivityTy
 type Phase = 'idle' | 'recording' | 'paused' | 'summary'
 
 const ROUTE_COLOR = '#8b5cf6'
-const ACCURACY_THRESHOLD_METERS = 50
+// A phone's reported accuracy commonly sits in the 20-70m range outdoors (worse near
+// buildings/tree cover), so 50m silently dropped a large fraction of real fixes —
+// leaving distance built from a handful of sparse points while the timer kept running
+// regardless, understating distance (and so overstating pace) for the whole activity.
+// 100m keeps effectively all real fixes and only rejects clearly bad ones.
+const ACCURACY_THRESHOLD_METERS = 100
+// Rejects a fix only when the implied speed to it is physically implausible for a
+// walk/run (faster than an ~29km/h sprint) — a GPS jump artifact, not real movement.
+const MAX_PLAUSIBLE_SPEED_MPS = 8
 
 interface WakeLockSentinelLike {
   release: () => Promise<void>
@@ -153,7 +161,13 @@ export function RecordActivityPage() {
       accuracy: pos.coords.accuracy,
     }
     setRoute((prev) => {
-      if (prev.length > 0) setDistanceMeters((d) => d + haversineDistance(prev[prev.length - 1], point))
+      if (prev.length > 0) {
+        const last = prev[prev.length - 1]
+        const segmentMeters = haversineDistance(last, point)
+        const segmentSeconds = (new Date(point.timestamp).getTime() - new Date(last.timestamp).getTime()) / 1000
+        if (segmentSeconds > 0 && segmentMeters / segmentSeconds > MAX_PLAUSIBLE_SPEED_MPS) return prev
+        setDistanceMeters((d) => d + segmentMeters)
+      }
       return [...prev, point]
     })
   }
