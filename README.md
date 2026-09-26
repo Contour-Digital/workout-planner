@@ -408,6 +408,35 @@ is only an optional link back to whatever it fulfilled. Recorded activities
 show up under History → "Recorded activities", each with a read-only map/
 stats view (`ActivityDetailPage.tsx`).
 
+The map's container changes height between phases (a taller box while
+recording than while idle/reviewing), but Leaflet caches its pixel origin
+at init and has no way to notice a CSS-driven resize on its own — without
+calling `map.invalidateSize()` after the resize, it renders blank. A
+`useEffect` keyed on `phase` calls it on the next frame whenever that
+happens.
+
+Both the finished-recording summary and the saved activity view
+(`ActivityCharts.tsx`) show an elevation/pace toggle, mirroring Strava's
+post-activity review. Elevation comes from `GeoPoint.altitude` (captured
+from `GeolocationCoordinates.altitude` when the device reports one — many
+don't, especially on network-based fixes, so the Elevation tab is simply
+hidden when none of the recorded points have it, rather than faking a flat
+line); elevation gain sums climbs over a 1m floor per step to filter out
+GPS altitude jitter rather than counting every wobble as a "climb". Pace is
+the raw, un-smoothed pace of each individual GPS segment (`geo.ts`'s
+`paceSeries()`), so a real stop or a burst of speed shows up as a spike
+rather than being averaged away — same as Strava's own pace chart. Its
+axis is deliberately not the usual "bigger number = higher up": a smaller
+pace value (faster) plots higher, matching how a runner reads "the line
+went up" as "I sped up". Both charts are a single hand-rolled inline-SVG
+component (`AreaChart` inside `ActivityCharts.tsx`) rather than a charting
+library — the project has no other charting dependency, and a single-series
+area/line chart with a hover crosshair is little enough code to not be
+worth one. The chart measures its own container via `ResizeObserver` and
+sets its `viewBox` to the real pixel width, so it scales responsively
+without distorting the line stroke or hover markers the way a fixed-aspect
+`viewBox` stretched with `preserveAspectRatio="none"` would.
+
 ## Database schema
 
 The Postgres schema (tables, indexes, row-level security policies, and the

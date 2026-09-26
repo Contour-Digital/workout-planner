@@ -5,6 +5,9 @@ export interface GeoPoint {
   lng: number
   timestamp: string
   accuracy?: number
+  /** Metres above sea level, when the device reports one (not all do — network-based
+   *  or low-end GPS fixes often omit it). Elevation charts are hidden when absent. */
+  altitude?: number
 }
 
 /** What a recorded activity was logged against, if anything — lets history cross-reference

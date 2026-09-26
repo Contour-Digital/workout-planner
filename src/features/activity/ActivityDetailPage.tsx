@@ -9,6 +9,7 @@ import { IconTrash, IconX } from '../../components/ui/icons'
 import { deleteCardioActivity, getCardioActivity } from '../../db/cardioActivityRepo'
 import { formatPace, paceSplitMetersFor } from '../../models/units'
 import { CARDIO_ACTIVITY_TYPE_LABELS, type CardioActivity } from '../../models/cardioActivity'
+import { ActivityCharts } from './ActivityCharts'
 
 const ROUTE_COLOR = '#8b5cf6'
 
@@ -103,6 +104,8 @@ export function ActivityDetailPage() {
           </div>
         </div>
       </Card>
+
+      <ActivityCharts route={activity.route} activityType={activity.activityType} />
 
       {activity.loggedAgainst && (
         <Card className="mb-4">

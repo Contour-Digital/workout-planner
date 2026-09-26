@@ -11,6 +11,7 @@ import { applyCardioActivityToTarget, findLoggableTargets, type LoggableTarget }
 import { haversineDistance } from '../../lib/geo'
 import { formatPace, paceSplitMetersFor } from '../../models/units'
 import { CARDIO_ACTIVITY_TYPE_LABELS, type CardioActivity, type CardioActivityType, type GeoPoint } from '../../models/cardioActivity'
+import { ActivityCharts } from './ActivityCharts'
 
 type Phase = 'idle' | 'recording' | 'paused' | 'summary'
 
@@ -105,6 +106,15 @@ export function RecordActivityPage() {
     }
   }, [])
 
+  // The map container's height changes with phase (a taller box while recording), but
+  // Leaflet caches its pixel origin/tile layout at init and has no way to notice a
+  // CSS-driven resize on its own — without this it renders blank until some other
+  // event (like a drag) happens to trigger a recalculation.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => mapRef.current?.invalidateSize())
+    return () => cancelAnimationFrame(raf)
+  }, [phase])
+
   // Keep the polyline and markers in sync with the recorded route.
   useEffect(() => {
     if (!mapRef.current || !polylineRef.current) return
@@ -166,6 +176,7 @@ export function RecordActivityPage() {
       lng: pos.coords.longitude,
       timestamp: new Date().toISOString(),
       accuracy: pos.coords.accuracy,
+      altitude: pos.coords.altitude ?? undefined,
     }
     setRoute((prev) => {
       if (prev.length > 0) {
@@ -361,6 +372,8 @@ export function RecordActivityPage() {
 
       {phase === 'summary' && (
         <div className="flex flex-col gap-4">
+          <ActivityCharts route={route} activityType={activityType} />
+
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-primary-muted">Title</span>
             <input
