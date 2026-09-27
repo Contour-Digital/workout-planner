@@ -22,11 +22,11 @@ import { ImpromptuStartSheet } from '../session/ImpromptuStartSheet'
 import { AssistantChat } from '../assistant/AssistantChat'
 import type { AssistantContext } from '../../lib/assistantChat'
 
-/** "2026-09-27" -> "27 09 2026" — date-key strings are stored/compared as YYYY-MM-DD
- *  throughout the app, but read better to a person as day-month-year. */
+/** "2026-09-27" -> "27/09/26" — date-key strings are stored/compared as YYYY-MM-DD
+ *  throughout the app, but read better to a person as day/month/year. */
 function formatDateKeyAsDMY(dateKey: string): string {
   const [year, month, day] = dateKey.split('-')
-  return `${day} ${month} ${year}`
+  return `${day}/${month}/${year.slice(2)}`
 }
 
 export function DashboardPage() {
