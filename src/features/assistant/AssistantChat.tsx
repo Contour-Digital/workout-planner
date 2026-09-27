@@ -265,7 +265,7 @@ export function AssistantChat({
               <div className="flex items-center gap-2 border-t border-primary-border p-3">
                 <input
                   className="flex-1 rounded-[var(--radius-control)] border border-primary-border px-3 py-2.5 text-sm focus:border-secondary focus:outline-none"
-                  placeholder="Ask the assistant…"
+                  placeholder="Ask Spot…"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
