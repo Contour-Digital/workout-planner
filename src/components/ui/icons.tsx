@@ -172,3 +172,13 @@ export const IconStop = (p: SVGProps<SVGSVGElement>) => (
     <rect x="5" y="5" width="14" height="14" rx="1.5" />
   </Svg>
 )
+export const IconWalking = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <circle cx="12" cy="3.5" r="1.8" />
+    <path d="M11 5.5 10 12" />
+    <path d="M10 12 6 14 5 20" />
+    <path d="M10 12 14 15 16 20" />
+    <path d="M11 6.5 7 9" />
+    <path d="M11 6.5 15 10 17 8" />
+  </Svg>
+)
