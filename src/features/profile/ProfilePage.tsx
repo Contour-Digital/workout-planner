@@ -13,6 +13,7 @@ import { db } from '../../db/db'
 import { StreakSettingsCard } from './StreakSettingsCard'
 import { supabase } from '../../lib/supabaseClient'
 import { useSyncStore } from '../../store/syncStore'
+import { AiExerciseForm } from '../exercises/AiExerciseForm'
 
 export function ProfilePage() {
   const navigate = useNavigate()
@@ -23,6 +24,7 @@ export function ProfilePage() {
 
   const [newWeight, setNewWeight] = useState('')
   const [newHeight, setNewHeight] = useState('')
+  const [addExerciseOpen, setAddExerciseOpen] = useState(false)
 
   if (!profile) return <div className="p-6 text-sm text-primary-muted">Loading…</div>
 
@@ -212,6 +214,9 @@ export function ProfilePage() {
         <Button variant="secondary" onClick={() => navigate('/settings/exercise-names')}>
           Rename exercises
         </Button>
+        <Button variant="secondary" onClick={() => setAddExerciseOpen(true)}>
+          Add exercise
+        </Button>
       </Card>
 
       <Card className="mb-4 flex flex-col gap-3">
@@ -222,6 +227,8 @@ export function ProfilePage() {
       </Card>
 
       <AccountCard />
+
+      <AiExerciseForm open={addExerciseOpen} onClose={() => setAddExerciseOpen(false)} onSaved={() => setAddExerciseOpen(false)} />
     </div>
   )
 }
