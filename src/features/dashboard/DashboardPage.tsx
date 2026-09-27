@@ -22,6 +22,13 @@ import { ImpromptuStartSheet } from '../session/ImpromptuStartSheet'
 import { AssistantChat } from '../assistant/AssistantChat'
 import type { AssistantContext } from '../../lib/assistantChat'
 
+/** "2026-09-27" -> "27 09 2026" — date-key strings are stored/compared as YYYY-MM-DD
+ *  throughout the app, but read better to a person as day-month-year. */
+function formatDateKeyAsDMY(dateKey: string): string {
+  const [year, month, day] = dateKey.split('-')
+  return `${day} ${month} ${year}`
+}
+
 export function DashboardPage() {
   const navigate = useNavigate()
   const [menuOccurrence, setMenuOccurrence] = useState<ResolvedOccurrence | null>(null)
@@ -165,7 +172,7 @@ export function DashboardPage() {
           value={streak.currentPeriod.workoutDayKeys.length / Math.max(1, settings.streak.targetDaysPerPeriod)}
         />
         <p className="mt-2 text-xs text-primary-muted">
-          Current period: {streak.currentPeriod.startDate} – {streak.currentPeriod.endDate} ({settings.streak.periodLengthDays}-day{' '}
+          Current period: {formatDateKeyAsDMY(streak.currentPeriod.startDate)} – {formatDateKeyAsDMY(streak.currentPeriod.endDate)} ({settings.streak.periodLengthDays}-day{' '}
           {settings.streak.anchor.type === 'rolling' ? 'rolling' : 'weekly'} period). Multiple workouts on one day count once;
           hitting {settings.streak.targetDaysPerPeriod} workout day{settings.streak.targetDaysPerPeriod === 1 ? '' : 's'} keeps
           the streak going.
