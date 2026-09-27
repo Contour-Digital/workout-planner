@@ -65,4 +65,34 @@ describe('computeStreak', () => {
     expect(result.currentPeriod.startDate).toBe('2026-01-05')
     expect(result.currentPeriod.goalMet).toBe(true)
   })
+
+  it('ignores workouts before an explicit rolling start date', () => {
+    const pinnedSettings: StreakSettings = { ...settings, startDate: '2026-01-12' }
+    const today = new Date(2026, 0, 15)
+    // Two days before the pinned start (shouldn't count) and two after (should).
+    const days = ['2026-01-10', '2026-01-11', '2026-01-13', '2026-01-14']
+    const result = computeStreak(days, pinnedSettings, today)
+    expect(result.currentPeriod.startDate).toBe('2026-01-12')
+    expect(result.currentPeriod.workoutDayKeys).toEqual(['2026-01-13', '2026-01-14'])
+  })
+
+  it('anchors a weekday period to the first matching weekday on/after an explicit start date', () => {
+    const weekdaySettings: StreakSettings = {
+      periodLengthDays: 7,
+      targetDaysPerPeriod: 1,
+      anchor: { type: 'weekday', weekday: 1 }, // Monday
+      startDate: '2026-01-07', // a Wednesday
+    }
+    const today = new Date(2026, 0, 15)
+    const result = computeStreak([], weekdaySettings, today)
+    // The first Monday on/after 2026-01-07 is 2026-01-12, not the 5th (before the pin).
+    expect(result.periods[0].startDate).toBe('2026-01-12')
+  })
+
+  it('does not crash when the start date is in the future', () => {
+    const pinnedSettings: StreakSettings = { ...settings, startDate: '2026-02-01' }
+    const today = new Date(2026, 0, 15)
+    const result = computeStreak([], pinnedSettings, today)
+    expect(result.currentPeriod).toBeDefined()
+  })
 })

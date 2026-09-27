@@ -30,7 +30,10 @@ export function computeStreak(
   const anchorStart = periodAnchorStart(settings, uniqueDays, todayKey, periodLength)
 
   const periods: StreakPeriod[] = []
-  let cursorStart = anchorStart
+  // A future start date (shouldn't normally happen — the settings UI caps it at
+  // today — but settings can be edited outside the app) would otherwise leave the
+  // loop below never running, and currentPeriod undefined.
+  let cursorStart = differenceInCalendarDays(parseDateKey(anchorStart), parseDateKey(todayKey)) > 0 ? todayKey : anchorStart
   while (differenceInCalendarDays(parseDateKey(cursorStart), parseDateKey(todayKey)) <= 0) {
     const cursorEnd = toDateKey(addDays(parseDateKey(cursorStart), periodLength - 1))
     const daysInPeriod = [...uniqueDays].filter(
@@ -69,6 +72,15 @@ function periodAnchorStart(
   periodLength: number,
 ): string {
   if (settings.anchor.type === 'weekday') {
+    if (settings.startDate) {
+      // The first period starts on the first matching weekday on/after startDate,
+      // not before it — a pinned start date means "don't count anything earlier".
+      let d = parseDateKey(settings.startDate)
+      while ((d.getDay() as number) !== settings.anchor.weekday) {
+        d = addDays(d, 1)
+      }
+      return toDateKey(d)
+    }
     // Walk back from today to the most recent matching weekday, then keep
     // walking back by full periods to the earliest one worth displaying.
     let d = parseDateKey(todayKey)
@@ -88,8 +100,11 @@ function periodAnchorStart(
     return toDateKey(start)
   }
 
-  // Rolling: anchor to the earliest recorded workout day (or fall back to a
-  // short recent window so a brand-new user still sees a sensible period).
+  // Rolling: a pinned start date wins outright — anything logged before it simply
+  // falls outside every period. Otherwise anchor to the earliest recorded workout
+  // day (or fall back to a short recent window so a brand-new user still sees a
+  // sensible period).
+  if (settings.startDate) return settings.startDate
   const earliestDay = [...workoutDays].sort()[0]
   if (earliestDay) return earliestDay
   return toDateKey(addDays(parseDateKey(todayKey), -(periodLength - 1)))

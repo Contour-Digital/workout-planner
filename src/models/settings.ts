@@ -8,6 +8,12 @@ export interface StreakSettings {
   periodLengthDays: number // default 7
   targetDaysPerPeriod: number // 1-10
   anchor: StreakAnchor
+  /** ISO calendar date (YYYY-MM-DD) the first period begins on, if set. Without one,
+   *  the first period anchors to the earliest recorded workout day instead (see
+   *  periodAnchorStart in lib/streak.ts) — this lets a user pin it explicitly, e.g.
+   *  to start counting fresh from today rather than from workouts logged before they
+   *  cared about the streak. */
+  startDate?: string
 }
 
 /** Colors for the calendar's category badges/dots (Workout, Recovery, Rest, and the

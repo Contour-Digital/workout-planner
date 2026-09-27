@@ -83,7 +83,15 @@ confusing as showing one next to an actual plan. A day with only a single
 **Streaks** are computed by `src/lib/streak.ts` from the distinct calendar
 days that have a completed/partial workout (so multiple sessions on one day
 count once), grouped into configurable periods (rolling or fixed-weekday),
-each of which needs N qualifying days to keep the streak.
+each of which needs N qualifying days to keep the streak. The first
+period's start defaults to the earliest recorded workout day, but
+`StreakSettings.startDate` (Profile -> Streak settings) can pin it
+explicitly — workouts logged before that date simply fall outside every
+period rather than counting, which is the point: it lets someone start
+counting fresh from a chosen date rather than from workouts logged before
+they cared about the streak. It rides along inside the same `streak` jsonb
+column everything else in `StreakSettings` already uses, so no schema
+change was needed for it.
 
 **Active session persistence**: a session's elapsed time is derived from
 stored timestamps (`startedAt`, `pauseIntervals`, `restTimerEndsAt`) via

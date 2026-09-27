@@ -1,4 +1,6 @@
 import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { toDateKey } from '../../lib/recurrence'
 import type { StreakAnchor, StreakSettings } from '../../models/settings'
 
 const WEEKDAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -41,6 +43,29 @@ export function StreakSettingsCard({ settings, onChange }: { settings: StreakSet
           />
         </label>
       </div>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-medium text-primary-muted">Streak start date (optional)</span>
+        <div className="flex gap-2">
+          <input
+            type="date"
+            max={toDateKey(new Date())}
+            className="flex-1 rounded-[var(--radius-control)] border border-primary-border px-2 py-2 text-sm"
+            value={settings.startDate ?? ''}
+            onChange={(e) => onChange({ ...settings, startDate: e.target.value || undefined })}
+          />
+          {settings.startDate && (
+            <Button size="sm" variant="ghost" onClick={() => onChange({ ...settings, startDate: undefined })}>
+              Clear
+            </Button>
+          )}
+        </div>
+        <span className="text-xs text-primary-muted">
+          {settings.startDate
+            ? `Only workouts on or after ${settings.startDate} count toward your streak.`
+            : 'Defaults to your earliest logged workout — set a date to start counting fresh from then instead.'}
+        </span>
+      </label>
 
       <fieldset className="flex flex-col gap-2">
         <legend className="text-xs font-medium text-primary-muted">Period reset</legend>
