@@ -250,6 +250,23 @@ applied on top of the shared name wherever exercises are read
 (`getAllExercises`/`getExercise`) — the shared library row itself is never
 touched, so a rename can't affect other users or survive a "Reset".
 
+That same page also has an "Add exercise" button, and the exercise
+picker's own add-custom-exercise button (`ExercisePicker.tsx`) now opens
+the exact same flow — both use `AiExerciseForm.tsx` in place of a blank
+manual form. It's a two-step Sheet: enter just the exercise name plus
+optional equipment/machine name and brand, and a new Edge Function,
+`supabase/functions/generate-exercise-details`, asks Claude to research it
+— category, primary/secondary muscles, equipment, instructions, technique
+tips, common mistakes, and a standardized name that folds in the
+equipment/brand hint when that's how the movement is normally named (e.g.
+"Hammer Strength Chest Press"). That comes back as an ordinary editable
+draft, identical in shape to the manual custom-exercise form's own fields,
+so nothing is saved until the user reviews and approves it — Spot's
+research is a starting point, not the final word. `ExerciseLibraryPage`'s
+own create/edit flow keeps the plain manual `CustomExerciseForm` as-is,
+since editing an exercise you already know the details for doesn't
+benefit from a research step the same way starting from just a name does.
+
 ## Muscle diagrams
 
 `MuscleDiagram` (used in `ExerciseDetailSheet`) shows a front and back body

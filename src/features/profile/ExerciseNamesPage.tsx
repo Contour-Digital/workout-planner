@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
-import { IconSearch } from '../../components/ui/icons'
+import { IconPlus, IconSearch } from '../../components/ui/icons'
 import { db } from '../../db/db'
 import { resetLibraryExerciseName, setLibraryExerciseName } from '../../db/exercisesRepo'
 import { EXERCISE_CATEGORY_LABELS } from '../../models/exercise'
+import { AiExerciseForm } from '../exercises/AiExerciseForm'
 
 /** Renaming here only ever touches a per-user override (see exercisesRepo.ts) —
  *  the shared library row itself is never modified, so this can't affect other
@@ -14,6 +15,7 @@ export function ExerciseNamesPage() {
   const [query, setQuery] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const [addOpen, setAddOpen] = useState(false)
 
   const library = useLiveQuery(() => db.libraryExercises.toArray(), [], []) ?? []
   const overrides = useLiveQuery(() => db.libraryExerciseNameOverrides.toArray(), [], []) ?? []
@@ -109,6 +111,12 @@ export function ExerciseNamesPage() {
         })}
         {rows.length === 0 && <p className="py-6 text-center text-sm text-primary-muted">No exercises match.</p>}
       </ul>
+
+      <Button fullWidth variant="secondary" className="mt-4" icon={<IconPlus width={18} height={18} />} onClick={() => setAddOpen(true)}>
+        Add exercise
+      </Button>
+
+      <AiExerciseForm open={addOpen} onClose={() => setAddOpen(false)} onSaved={() => setAddOpen(false)} />
     </div>
   )
 }

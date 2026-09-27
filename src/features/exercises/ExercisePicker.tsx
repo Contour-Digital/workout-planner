@@ -7,7 +7,7 @@ import { IconPlus, IconSearch } from '../../components/ui/icons'
 import { EXERCISE_CATEGORY_LABELS, type Exercise, type ExerciseCategory } from '../../models/exercise'
 import { getAllExercises } from '../../db/exercisesRepo'
 import { groupExercisesByPrimaryMuscle } from '../../lib/exerciseGrouping'
-import { CustomExerciseForm } from './CustomExerciseForm'
+import { AiExerciseForm } from './AiExerciseForm'
 import { ExerciseDetailSheet } from './ExerciseDetailSheet'
 
 interface ExercisePickerProps {
@@ -70,7 +70,7 @@ export function ExercisePicker({ open, onClose, onSelect, title = 'Add exercise'
         </div>
 
         <Button variant="secondary" icon={<IconPlus width={18} height={18} />} onClick={() => setCreateOpen(true)}>
-          Create custom exercise
+          Add exercise
         </Button>
 
         <div className="flex flex-col gap-4">
@@ -110,7 +110,7 @@ export function ExercisePicker({ open, onClose, onSelect, title = 'Add exercise'
         </div>
       </div>
 
-      <CustomExerciseForm
+      <AiExerciseForm
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onSaved={(created) => onSelect(created)}
