@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
+import { addDays } from 'date-fns'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -36,7 +37,9 @@ export function DashboardPage() {
   const settings = useSettingsStore((s) => s.settings)
 
   const today = toDateKey(new Date())
+  const tomorrow = toDateKey(addDays(new Date(), 1))
   const todayOccurrences = dropRedundantOffOccurrences(useLiveQuery(() => getOccurrencesInRange(today, today), [today], []) ?? [])
+  const tomorrowOccurrences = dropRedundantOffOccurrences(useLiveQuery(() => getOccurrencesInRange(tomorrow, tomorrow), [tomorrow], []) ?? [])
   const allSchedulesAndOverrides = useLiveQuery(
     async () => ({ schedules: await db.schedules.toArray(), overrides: await db.occurrenceOverrides.toArray() }),
     [],
@@ -201,6 +204,35 @@ export function DashboardPage() {
                   <Badge tone={s.status === 'completed' ? 'success' : 'warning'}>{s.status}</Badge>
                 </button>
               ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-primary-muted">Upcoming</h2>
+        {tomorrowOccurrences.filter((occ) => occ.assignment.kind !== 'off').length === 0 ? (
+          <p className="text-sm text-primary-muted">Nothing scheduled for tomorrow.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {tomorrowOccurrences
+              .filter((occ) => occ.assignment.kind !== 'off')
+              .map((occ, i) => {
+                const style = assignmentStyle(occ.assignment)
+                return (
+                  <div
+                    key={`${occ.scheduleId}-${occ.originalDate}-${i}`}
+                    className="flex items-center justify-between rounded-[var(--radius-control)] border border-primary-border bg-surface px-4 py-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <CategoryBadge color={assignmentColor(occ.assignment, settings.calendarColors)} icon={style.icon}>
+                        {style.label}
+                      </CategoryBadge>
+                      <p className="text-sm font-semibold text-primary-strong">{routineName(occ.assignment)}</p>
+                    </div>
+                    <span className="text-xs text-primary-muted">Tomorrow</span>
+                  </div>
+                )
+              })}
           </div>
         )}
       </div>

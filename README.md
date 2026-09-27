@@ -80,6 +80,15 @@ date — showing two or three "No plan" cards for one day is exactly as
 confusing as showing one next to an actual plan. A day with only a single
 `off` occurrence still shows it, since that's the useful case for it.
 
+The Dashboard's "Upcoming" section (below "Recently completed") fetches
+the same way as today's occurrences, just for tomorrow's date instead
+(`getOccurrencesInRange(tomorrow, tomorrow)`), and additionally filters
+out `off`-kind occurrences entirely rather than showing them — an "Off"
+badge is useful context for *today*, but in a one-line preview of
+*tomorrow* it reads as noise, so a tomorrow that's genuinely just a rest/
+off day shows the plain "Nothing scheduled for tomorrow" empty state
+instead.
+
 **Streaks** are computed by `src/lib/streak.ts` from the distinct calendar
 days that have a completed/partial workout (so multiple sessions on one day
 count once), grouped into configurable periods (rolling or fixed-weekday),
