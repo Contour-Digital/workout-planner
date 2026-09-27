@@ -1,6 +1,7 @@
 import { db } from './db'
 import { enqueueSync } from './sync/outbox'
 import { getExercise } from './exercisesRepo'
+import { unlinkOccurrenceSession } from './scheduleRepo'
 import { createExerciseConfig, type ExerciseConfig, type SetTarget } from '../models/routine'
 import type { RecoverySession, RestDaySession, WorkoutSession } from '../models/session'
 
@@ -22,9 +23,14 @@ export async function saveWorkoutSession(session: WorkoutSession): Promise<void>
   await enqueueSync('workoutSessions', session.id, 'upsert')
 }
 
+/** Used both to cancel an in-progress session and to delete one from history —
+ *  either way, a linked schedule occurrence needs to fall back to "not started"
+ *  rather than keep pointing at a session that no longer exists. */
 export async function deleteWorkoutSession(id: string): Promise<void> {
+  const session = await db.workoutSessions.get(id)
   await db.workoutSessions.delete(id)
   await enqueueSync('workoutSessions', id, 'delete')
+  if (session?.scheduleId && session.occurrenceDate) await unlinkOccurrenceSession(session.scheduleId, session.occurrenceDate)
 }
 
 export async function getRecoverySession(id: string): Promise<RecoverySession | undefined> {
@@ -36,9 +42,23 @@ export async function saveRecoverySession(session: RecoverySession): Promise<voi
   await enqueueSync('recoverySessions', session.id, 'upsert')
 }
 
+export async function deleteRecoverySession(id: string): Promise<void> {
+  const session = await db.recoverySessions.get(id)
+  await db.recoverySessions.delete(id)
+  await enqueueSync('recoverySessions', id, 'delete')
+  if (session?.scheduleId && session.occurrenceDate) await unlinkOccurrenceSession(session.scheduleId, session.occurrenceDate)
+}
+
 export async function saveRestDaySession(session: RestDaySession): Promise<void> {
   await db.restDaySessions.put({ ...session, updatedAt: new Date().toISOString() })
   await enqueueSync('restDaySessions', session.id, 'upsert')
+}
+
+export async function deleteRestDaySession(id: string): Promise<void> {
+  const session = await db.restDaySessions.get(id)
+  await db.restDaySessions.delete(id)
+  await enqueueSync('restDaySessions', id, 'delete')
+  if (session?.scheduleId && session.occurrenceDate) await unlinkOccurrenceSession(session.scheduleId, session.occurrenceDate)
 }
 
 export async function getHistorySessions(): Promise<(WorkoutSession | RecoverySession | RestDaySession)[]> {

@@ -359,6 +359,29 @@ from a saved routine. Powered by a third Edge Function,
 secret. It's opt-in per session (a button, not automatic) so it never runs
 — or costs anything — unless asked for.
 
+## Canceling and deleting sessions
+
+Every in-progress session type (`ActiveWorkoutPage`, `RecoverySessionPage`,
+`RecordActivityPage`'s recording/paused/summary phases) has a "Cancel" (or
+"Discard") action behind a `ConfirmDialog`, matching the destructive-action
+pattern used for deleting routines/schedules elsewhere in the app. Canceling
+a workout or recovery session deletes it outright rather than marking it
+"skipped" or "partial" — it was never really a session, just an attempt
+that didn't happen, so nothing should linger in history. History itself
+also has a Delete action per session (`HistoryDetailPage`, alongside the
+existing one on `ActivityDetailPage` for recorded activities), for removing
+old entries you don't want kept.
+
+Both paths funnel through the same `deleteWorkoutSession`/
+`deleteRecoverySession`/`deleteRestDaySession` functions (`sessionsRepo.ts`)
+— canceling mid-session and deleting from history are the same operation,
+just triggered at a different point. Either way, if the session was tied to
+a scheduled occurrence, `unlinkOccurrenceSession` (`scheduleRepo.ts`) clears
+the override's `sessionId` back to unset: `resolveOccurrences` reads that
+field directly to decide whether the Dashboard offers "Continue" or
+"Start", so leaving a stale id pointed at a now-deleted session would send
+the user to a session page that no longer exists.
+
 ## Recording a walk or run
 
 The "Record" button on the Dashboard (`/activity/record`,

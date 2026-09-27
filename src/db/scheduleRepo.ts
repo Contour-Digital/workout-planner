@@ -74,6 +74,13 @@ export async function linkOccurrenceSession(scheduleId: string, originalDate: st
   await upsertOverride(scheduleId, originalDate, { sessionId })
 }
 
+/** Reverses linkOccurrenceSession — call this whenever a session it points at is
+ *  deleted (cancelled or removed from history), so the occurrence goes back to
+ *  "not started" instead of offering to "Continue" into a session that's gone. */
+export async function unlinkOccurrenceSession(scheduleId: string, originalDate: string): Promise<void> {
+  await upsertOverride(scheduleId, originalDate, { sessionId: undefined })
+}
+
 /** Edit this occurrence only: replaces the day's assignment without touching the series. */
 export async function editOccurrenceOnly(
   scheduleId: string,

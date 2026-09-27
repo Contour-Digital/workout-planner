@@ -4,8 +4,9 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { PageHeader } from '../../components/ui/PageHeader'
-import { IconMapPin, IconPause, IconPlay, IconStop } from '../../components/ui/icons'
+import { IconMapPin, IconPause, IconPlay, IconStop, IconX } from '../../components/ui/icons'
 import { saveCardioActivity } from '../../db/cardioActivityRepo'
 import { applyCardioActivityToTarget, findLoggableTargets, type LoggableTarget } from '../../lib/cardioActivityMatch'
 import { haversineDistance } from '../../lib/geo'
@@ -67,6 +68,7 @@ export function RecordActivityPage() {
   const [loadingTargets, setLoadingTargets] = useState(false)
   const [selectedTargetIndex, setSelectedTargetIndex] = useState<number | null>(null)
   const [finishedActivity, setFinishedActivity] = useState<CardioActivity | null>(null)
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
 
   const mapRef = useRef<L.Map | null>(null)
   const mapElRef = useRef<HTMLDivElement | null>(null)
@@ -276,6 +278,13 @@ export function RecordActivityPage() {
     }
   }
 
+  function confirmAbandon() {
+    setCancelConfirmOpen(false)
+    stopWatch()
+    releaseWakeLock()
+    navigate('/', { replace: true })
+  }
+
   async function handleSave() {
     if (!finishedActivity) return
     setSaving(true)
@@ -349,23 +358,33 @@ export function RecordActivityPage() {
       )}
 
       {phase === 'recording' && (
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="ghost" className="border border-primary-border" size="lg" icon={<IconPause width={20} height={20} />} onClick={handlePause}>
-            Pause
-          </Button>
-          <Button variant="danger" size="lg" icon={<IconStop width={20} height={20} />} onClick={handleStop}>
-            Finish
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="ghost" className="border border-primary-border" size="lg" icon={<IconPause width={20} height={20} />} onClick={handlePause}>
+              Pause
+            </Button>
+            <Button variant="danger" size="lg" icon={<IconStop width={20} height={20} />} onClick={handleStop}>
+              Finish
+            </Button>
+          </div>
+          <Button fullWidth variant="ghost" icon={<IconX width={16} height={16} />} onClick={() => setCancelConfirmOpen(true)} className="text-danger">
+            Cancel
           </Button>
         </div>
       )}
 
       {phase === 'paused' && (
-        <div className="grid grid-cols-2 gap-2">
-          <Button size="lg" icon={<IconPlay width={20} height={20} />} onClick={handleResume}>
-            Resume
-          </Button>
-          <Button variant="danger" size="lg" icon={<IconStop width={20} height={20} />} onClick={handleStop}>
-            Finish
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Button size="lg" icon={<IconPlay width={20} height={20} />} onClick={handleResume}>
+              Resume
+            </Button>
+            <Button variant="danger" size="lg" icon={<IconStop width={20} height={20} />} onClick={handleStop}>
+              Finish
+            </Button>
+          </div>
+          <Button fullWidth variant="ghost" icon={<IconX width={16} height={16} />} onClick={() => setCancelConfirmOpen(true)} className="text-danger">
+            Cancel
           </Button>
         </div>
       )}
@@ -409,11 +428,21 @@ export function RecordActivityPage() {
           <Button fullWidth size="lg" icon={<IconMapPin width={20} height={20} />} onClick={handleSave} loading={saving}>
             Save
           </Button>
-          <Button fullWidth variant="ghost" onClick={() => navigate('/', { replace: true })}>
+          <Button fullWidth variant="ghost" className="text-danger" onClick={() => setCancelConfirmOpen(true)}>
             Discard
           </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={cancelConfirmOpen}
+        title={phase === 'summary' ? 'Discard this activity?' : 'Cancel this activity?'}
+        description="It hasn't been saved — this can't be undone."
+        confirmLabel={phase === 'summary' ? 'Discard' : 'Cancel activity'}
+        danger
+        onCancel={() => setCancelConfirmOpen(false)}
+        onConfirm={confirmAbandon}
+      />
     </div>
   )
 }

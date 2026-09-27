@@ -1,15 +1,19 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Button } from '../../components/ui/Button'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { ProgressBar } from '../../components/ui/ProgressBar'
+import { IconX } from '../../components/ui/icons'
 import { RecoveryActivityCard } from './RecoveryActivityCard'
-import { getRecoverySession } from '../../db/sessionsRepo'
+import { deleteRecoverySession, getRecoverySession } from '../../db/sessionsRepo'
 import { closeRecoverySession, updateRecoveryActivity, updateRecoverySessionNotes } from '../../db/sessionActions'
 
 export function RecoverySessionPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const session = useLiveQuery(() => (id ? getRecoverySession(id) : undefined), [id])
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
 
   if (!session) return <div className="p-6 text-sm text-primary-muted">Loading…</div>
 
@@ -18,7 +22,12 @@ export function RecoverySessionPage() {
 
   return (
     <div className="p-4 pb-[calc(var(--bottom-nav-height)+6rem)] sm:p-6">
-      <h1 className="mb-1 text-xl font-bold text-primary-strong">{session.name}</h1>
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-primary-strong">{session.name}</h1>
+        <Button variant="ghost" size="sm" icon={<IconX width={16} height={16} />} onClick={() => setCancelConfirmOpen(true)} className="text-danger">
+          Cancel
+        </Button>
+      </div>
       <p className="mb-4 text-sm text-primary-muted">
         Recovery sessions can stay open — come back any time today to finish activities like your sleep goal.
       </p>
@@ -63,6 +72,20 @@ export function RecoverySessionPage() {
           Close recovery session
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={cancelConfirmOpen}
+        title="Cancel this recovery session?"
+        description="This session and anything logged so far will be deleted — it won't be saved to history. This can't be undone."
+        confirmLabel="Cancel session"
+        danger
+        onCancel={() => setCancelConfirmOpen(false)}
+        onConfirm={async () => {
+          setCancelConfirmOpen(false)
+          await deleteRecoverySession(session.id)
+          navigate('/', { replace: true })
+        }}
+      />
     </div>
   )
 }

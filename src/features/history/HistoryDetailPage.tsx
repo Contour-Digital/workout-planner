@@ -3,9 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { PageHeader } from '../../components/ui/PageHeader'
+import { IconTrash } from '../../components/ui/icons'
 import { db } from '../../db/db'
 import { repeatWorkoutSession, saveWorkoutReview } from '../../db/sessionActions'
+import { deleteRecoverySession, deleteRestDaySession, deleteWorkoutSession } from '../../db/sessionsRepo'
 import { getAllExercises } from '../../db/exercisesRepo'
 import { elapsedSeconds } from '../../models/session'
 import { computeMissedExercises, computeSessionAchievements } from '../../lib/workoutReview'
@@ -20,20 +23,60 @@ export function HistoryDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [reviewOpen, setReviewOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
   const workout = useLiveQuery(() => (id ? db.workoutSessions.get(id) : undefined), [id])
   const recovery = useLiveQuery(() => (id ? db.recoverySessions.get(id) : undefined), [id])
   const rest = useLiveQuery(() => (id ? db.restDaySessions.get(id) : undefined), [id])
 
-  if (workout) return <WorkoutDetail session={workout} onRepeat={async () => {
-    const s = await repeatWorkoutSession(workout.id)
-    navigate(`/session/${s.id}`)
-  }} reviewOpen={reviewOpen} setReviewOpen={setReviewOpen} />
+  async function handleDelete() {
+    setDeleteConfirmOpen(false)
+    if (workout) await deleteWorkoutSession(workout.id)
+    else if (recovery) await deleteRecoverySession(recovery.id)
+    else if (rest) await deleteRestDaySession(rest.id)
+    navigate('/history', { replace: true })
+  }
+
+  const deleteDialog = (
+    <ConfirmDialog
+      open={deleteConfirmOpen}
+      title="Delete this session?"
+      description="This will be permanently deleted from history — this can't be undone."
+      confirmLabel="Delete"
+      danger
+      onCancel={() => setDeleteConfirmOpen(false)}
+      onConfirm={handleDelete}
+    />
+  )
+
+  if (workout) return (
+    <>
+      <WorkoutDetail
+        session={workout}
+        onRepeat={async () => {
+          const s = await repeatWorkoutSession(workout.id)
+          navigate(`/session/${s.id}`)
+        }}
+        onDeleteRequest={() => setDeleteConfirmOpen(true)}
+        reviewOpen={reviewOpen}
+        setReviewOpen={setReviewOpen}
+      />
+      {deleteDialog}
+    </>
+  )
 
   if (recovery) {
     return (
       <div className="p-4 sm:p-6">
-        <PageHeader title={recovery.name} subtitle={`${recovery.scheduledDate} · Recovery`} />
+        <PageHeader
+          title={recovery.name}
+          subtitle={`${recovery.scheduledDate} · Recovery`}
+          action={
+            <Button variant="danger" size="sm" icon={<IconTrash width={16} height={16} />} onClick={() => setDeleteConfirmOpen(true)}>
+              Delete
+            </Button>
+          }
+        />
         <Badge tone="recovery">{recovery.status}</Badge>
         <div className="mt-4 flex flex-col gap-2">
           {recovery.activities.map((a) => (
@@ -50,6 +93,7 @@ export function HistoryDetailPage() {
             <p className="text-sm text-primary-muted">{recovery.notes}</p>
           </div>
         )}
+        {deleteDialog}
       </div>
     )
   }
@@ -57,8 +101,17 @@ export function HistoryDetailPage() {
   if (rest) {
     return (
       <div className="p-4 sm:p-6">
-        <PageHeader title="Rest day" subtitle={rest.scheduledDate} />
+        <PageHeader
+          title="Rest day"
+          subtitle={rest.scheduledDate}
+          action={
+            <Button variant="danger" size="sm" icon={<IconTrash width={16} height={16} />} onClick={() => setDeleteConfirmOpen(true)}>
+              Delete
+            </Button>
+          }
+        />
         <Badge tone="rest">{rest.status}</Badge>
+        {deleteDialog}
       </div>
     )
   }
@@ -69,11 +122,13 @@ export function HistoryDetailPage() {
 function WorkoutDetail({
   session,
   onRepeat,
+  onDeleteRequest,
   reviewOpen,
   setReviewOpen,
 }: {
   session: WorkoutSession
   onRepeat: () => void
+  onDeleteRequest: () => void
   reviewOpen: boolean
   setReviewOpen: (v: boolean) => void
 }) {
@@ -132,9 +187,14 @@ function WorkoutDetail({
         title={session.name}
         subtitle={`${session.scheduledDate} · ${mm} min`}
         action={
-          <Button size="sm" onClick={onRepeat}>
-            Repeat workout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={onRepeat}>
+              Repeat workout
+            </Button>
+            <Button variant="danger" size="sm" icon={<IconTrash width={16} height={16} />} onClick={onDeleteRequest}>
+              Delete
+            </Button>
+          </div>
         }
       />
       <Badge tone={session.status === 'completed' ? 'success' : session.status === 'partial' ? 'warning' : 'neutral'}>{session.status}</Badge>

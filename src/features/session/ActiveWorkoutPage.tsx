@@ -5,13 +5,13 @@ import { Button } from '../../components/ui/Button'
 import { ProgressBar } from '../../components/ui/ProgressBar'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Sheet } from '../../components/ui/Sheet'
-import { IconClock, IconPause, IconPlay, IconPlus } from '../../components/ui/icons'
+import { IconClock, IconPause, IconPlay, IconPlus, IconX } from '../../components/ui/icons'
 import { SessionExerciseCard } from './SessionExerciseCard'
 import { RestTimerBar } from './RestTimerBar'
 import { PostWorkoutReviewSheet } from './PostWorkoutReviewSheet'
 import { ExercisePicker } from '../exercises/ExercisePicker'
 import { ExerciseDetailSheet } from '../exercises/ExerciseDetailSheet'
-import { createExerciseConfigWithHistory, getWorkoutSession } from '../../db/sessionsRepo'
+import { createExerciseConfigWithHistory, deleteWorkoutSession, getWorkoutSession } from '../../db/sessionsRepo'
 import {
   addAdHocExercise,
   addSetToEntry,
@@ -52,6 +52,7 @@ export function ActiveWorkoutPage() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [detailExercise, setDetailExercise] = useState<Exercise | null>(null)
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false)
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
   const [missedExercises, setMissedExercises] = useState<MissedExercise[]>([])
   const [achievements, setAchievements] = useState<Achievement[]>([])
@@ -89,6 +90,12 @@ export function ActiveWorkoutPage() {
     setFinishConfirmOpen(false)
     await finishWorkoutSession(session!.id)
     await openReview()
+  }
+
+  async function confirmCancel() {
+    setCancelConfirmOpen(false)
+    await deleteWorkoutSession(session!.id)
+    navigate('/', { replace: true })
   }
 
   function renderEntry(entry: SessionExerciseEntry, section: 'warmup' | 'main' | 'cooldown') {
@@ -169,14 +176,19 @@ export function ActiveWorkoutPage() {
             {isPaused && <span className="font-medium text-warning">· Paused</span>}
           </p>
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={isPaused ? <IconPlay width={16} height={16} /> : <IconPause width={16} height={16} />}
-          onClick={() => (isPaused ? resumeWorkoutSession(session.id) : pauseWorkoutSession(session.id))}
-        >
-          {isPaused ? 'Resume' : 'Pause'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={isPaused ? <IconPlay width={16} height={16} /> : <IconPause width={16} height={16} />}
+            onClick={() => (isPaused ? resumeWorkoutSession(session.id) : pauseWorkoutSession(session.id))}
+          >
+            {isPaused ? 'Resume' : 'Pause'}
+          </Button>
+          <Button variant="ghost" size="sm" icon={<IconX width={16} height={16} />} onClick={() => setCancelConfirmOpen(true)} className="text-danger">
+            Cancel
+          </Button>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -255,6 +267,16 @@ export function ActiveWorkoutPage() {
         confirmLabel="Finish as partial"
         onCancel={() => setFinishConfirmOpen(false)}
         onConfirm={confirmPartialFinish}
+      />
+
+      <ConfirmDialog
+        open={cancelConfirmOpen}
+        title="Cancel this workout?"
+        description="This session and anything logged so far will be deleted — it won't be saved to history. This can't be undone."
+        confirmLabel="Cancel workout"
+        danger
+        onCancel={() => setCancelConfirmOpen(false)}
+        onConfirm={confirmCancel}
       />
 
       <PostWorkoutReviewSheet
