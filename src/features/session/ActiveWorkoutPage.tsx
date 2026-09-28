@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { ProgressBar } from '../../components/ui/ProgressBar'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Sheet } from '../../components/ui/Sheet'
-import { IconClock, IconPause, IconPlay, IconPlus, IconX } from '../../components/ui/icons'
+import { IconChevronDown, IconClock, IconPause, IconPlay, IconPlus, IconX } from '../../components/ui/icons'
 import { SessionExerciseCard } from './SessionExerciseCard'
 import { RestTimerBar } from './RestTimerBar'
 import { PostWorkoutReviewSheet } from './PostWorkoutReviewSheet'
@@ -58,6 +58,11 @@ export function ActiveWorkoutPage() {
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [saveRoutineName, setSaveRoutineName] = useState('')
   const [saveRoutineOpen, setSaveRoutineOpen] = useState(false)
+  /** null = no manual toggle yet, so the section's open/closed state is driven
+   *  automatically by completion (see warmupOpen/cooldownOpen below). Once the
+   *  user taps a section's header, their choice wins from then on. */
+  const [warmupOverride, setWarmupOverride] = useState<boolean | null>(null)
+  const [cooldownOverride, setCooldownOverride] = useState<boolean | null>(null)
 
   if (!session) return <div className="p-6 text-sm text-primary-muted">Loading…</div>
 
@@ -66,6 +71,12 @@ export function ActiveWorkoutPage() {
   const elapsed = elapsedSeconds(session.startedAt, session.finishedAt, session.pauseIntervals)
   void now // force re-render each tick while active
   const { done, total } = workoutSetsCompleted(session)
+  const warmupExercises = session.warmup?.enabled ? session.warmup.exercises : []
+  const cooldownExercises = session.cooldown?.enabled ? session.cooldown.exercises : []
+  const warmupAllDone = warmupExercises.length > 0 && warmupExercises.every(isEntryComplete)
+  const mainAllDone = session.main.length > 0 && session.main.every(isEntryComplete)
+  const warmupOpen = warmupOverride ?? !warmupAllDone
+  const cooldownOpen = cooldownOverride ?? mainAllDone
   const hh = Math.floor(elapsed / 3600)
   const mm = Math.floor((elapsed % 3600) / 60)
   const ss = elapsed % 60
@@ -133,7 +144,7 @@ export function ActiveWorkoutPage() {
       const groups = groupByPrimaryMuscle(sectionExercises, exerciseById)
       return (
         <section className="flex flex-col gap-6">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-primary-muted">{title}</h2>
+          <h2 className="text-base font-bold uppercase tracking-wide text-primary-strong">{title}</h2>
           {groups.map((group) => {
             // Finished exercises sink to the bottom of their muscle group, so what's
             // still left to do stays at the top as you work through the workout.
@@ -151,8 +162,48 @@ export function ActiveWorkoutPage() {
 
     return (
       <section className="flex flex-col gap-2">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-primary-muted">{title}</h2>
+        <h2 className="text-base font-bold uppercase tracking-wide text-primary-strong">{title}</h2>
         {sectionExercises.map((entry) => renderEntry(entry, section))}
+      </section>
+    )
+  }
+
+  // Warm-up starts open and auto-collapses once every stretch is checked off;
+  // cool-down starts collapsed and auto-opens once the main workout is fully
+  // done, nudging you straight into the cool-down stretches. Either can still
+  // be tapped open/closed manually — that choice then sticks for the rest of
+  // the session (see warmupOverride/cooldownOverride above).
+  function renderCollapsibleSection(
+    title: string,
+    sectionExercises: SessionExerciseEntry[],
+    section: 'warmup' | 'cooldown',
+    open: boolean,
+    onToggle: () => void,
+  ) {
+    if (sectionExercises.length === 0) return null
+    const doneCount = sectionExercises.filter(isEntryComplete).length
+
+    return (
+      <section className="overflow-hidden rounded-[var(--radius-card)] border border-primary-border">
+        <button
+          onClick={onToggle}
+          aria-expanded={open}
+          aria-label={`${open ? 'Collapse' : 'Expand'} ${title}`}
+          className="flex w-full items-center justify-between gap-2 p-3 text-left"
+        >
+          <span className="text-base font-bold uppercase tracking-wide text-primary-strong">{title}</span>
+          <span className="flex items-center gap-2 text-primary-muted">
+            <span className="text-xs font-medium tabular-nums">
+              {doneCount} of {sectionExercises.length}
+            </span>
+            <IconChevronDown width={18} height={18} className={open ? 'rotate-180 transition-transform' : 'transition-transform'} />
+          </span>
+        </button>
+        {open && (
+          <div className="flex flex-col gap-2 border-t border-primary-border p-3">
+            {sectionExercises.map((entry) => renderEntry(entry, section))}
+          </div>
+        )}
       </section>
     )
   }
@@ -221,10 +272,10 @@ export function ActiveWorkoutPage() {
       )}
 
       <div className="flex flex-col gap-5">
-        {renderSection('Warm-up', session.warmup?.enabled ? session.warmup.exercises : [], 'warmup')}
+        {renderCollapsibleSection('Warm-up', warmupExercises, 'warmup', warmupOpen, () => setWarmupOverride(!warmupOpen))}
         {renderSection('Workout', session.main, 'main')}
         {renderSection('Finisher', session.finisher?.enabled ? session.finisher.exercises : [], 'finisher')}
-        {renderSection('Cool-down', session.cooldown?.enabled ? session.cooldown.exercises : [], 'cooldown')}
+        {renderCollapsibleSection('Cool-down', cooldownExercises, 'cooldown', cooldownOpen, () => setCooldownOverride(!cooldownOpen))}
       </div>
 
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
