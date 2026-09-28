@@ -157,6 +157,34 @@ describe('resolveOccurrences', () => {
       routineTemplateId: 'r1',
     })
   })
+
+  it('surfaces a future occurrence rescheduled back into today-only range', () => {
+    // Regression: querying just today (a single-day [from, to] range, as the
+    // dashboard does) must still find an occurrence whose *original* date is
+    // later than the range, if it was rescheduled to land inside it — not just
+    // ones originally dated earlier than the range (already covered above).
+    const schedule = makeSchedule()
+    const overrides: OccurrenceOverride[] = [
+      {
+        id: 'o1',
+        scheduleId: 's1',
+        originalDate: '2026-01-15',
+        newDate: '2026-01-05',
+        createdAt: '',
+        updatedAt: '',
+      },
+    ]
+    const results = resolveOccurrences([schedule], overrides, '2026-01-05', '2026-01-05')
+    // Both land on 2026-01-05: the schedule's own occurrence for that day, and
+    // the rescheduled-in one originally dated 2026-01-15.
+    expect(results.map((r) => ({ date: r.date, originalDate: r.originalDate }))).toEqual(
+      expect.arrayContaining([
+        { date: '2026-01-05', originalDate: '2026-01-05' },
+        { date: '2026-01-05', originalDate: '2026-01-15' },
+      ]),
+    )
+    expect(results).toHaveLength(2)
+  })
 })
 
 describe('splitScheduleAtDate', () => {

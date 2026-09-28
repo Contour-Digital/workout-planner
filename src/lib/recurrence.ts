@@ -59,14 +59,19 @@ export function resolveOccurrences(
   const results: ResolvedOccurrence[] = []
   const from = parseDateKey(fromDate)
   const to = parseDateKey(toDate)
-  const scanFrom = addDays(from, -60) // rescheduled occurrences may originate before the window
+  // Rescheduling can move an occurrence's effective date either direction relative to
+  // its original one — earlier (moved up from later in the schedule) or later (pushed
+  // back from before the window) — so the scan has to look both ways past [from, to]
+  // to find the original date whose override lands inside it.
+  const scanFrom = addDays(from, -60)
+  const scanTo = addDays(to, 60)
 
   for (const schedule of schedules) {
     let cursor = scanFrom
     const scheduleStart = parseDateKey(schedule.startDate)
     if (differenceInCalendarDays(scheduleStart, cursor) > 0) cursor = scheduleStart
 
-    while (differenceInCalendarDays(cursor, to) <= 0) {
+    while (differenceInCalendarDays(cursor, scanTo) <= 0) {
       const dateKey = toDateKey(cursor)
       const assignment = assignmentForDate(schedule, dateKey)
       cursor = addDays(cursor, 1)
