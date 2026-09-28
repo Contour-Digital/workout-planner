@@ -102,7 +102,7 @@ export function ActiveWorkoutPage() {
     return entry.actualSets.length > 0 && entry.actualSets.every((s) => s.completed)
   }
 
-  function renderEntry(entry: SessionExerciseEntry, section: 'warmup' | 'main' | 'cooldown') {
+  function renderEntry(entry: SessionExerciseEntry, section: 'warmup' | 'main' | 'finisher' | 'cooldown') {
     return (
       <SessionExerciseCard
         key={entry.id}
@@ -123,7 +123,7 @@ export function ActiveWorkoutPage() {
     )
   }
 
-  function renderSection(title: string, sectionExercises: SessionExerciseEntry[], section: 'warmup' | 'main' | 'cooldown') {
+  function renderSection(title: string, sectionExercises: SessionExerciseEntry[], section: 'warmup' | 'main' | 'finisher' | 'cooldown') {
     if (sectionExercises.length === 0) return null
 
     // Group only the main workout section by muscle — carried over from how the
@@ -164,6 +164,7 @@ export function ActiveWorkoutPage() {
       elapsedMinutes: Math.floor(elapsedSeconds(session!.startedAt, session!.finishedAt, session!.pauseIntervals) / 60),
       warmup: (session!.warmup?.enabled ? session!.warmup.exercises : []).map((e) => e.exerciseName),
       main: session!.main.map((e) => ({ name: e.exerciseName, setsDone: e.actualSets.filter((s) => s.completed).length, setsTotal: e.actualSets.length })),
+      finisher: (session!.finisher?.enabled ? session!.finisher.exercises : []).map((e) => e.exerciseName),
       cooldown: (session!.cooldown?.enabled ? session!.cooldown.exercises : []).map((e) => e.exerciseName),
     }
   }
@@ -222,6 +223,7 @@ export function ActiveWorkoutPage() {
       <div className="flex flex-col gap-5">
         {renderSection('Warm-up', session.warmup?.enabled ? session.warmup.exercises : [], 'warmup')}
         {renderSection('Workout', session.main, 'main')}
+        {renderSection('Finisher', session.finisher?.enabled ? session.finisher.exercises : [], 'finisher')}
         {renderSection('Cool-down', session.cooldown?.enabled ? session.cooldown.exercises : [], 'cooldown')}
       </div>
 

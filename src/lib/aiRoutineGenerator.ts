@@ -14,7 +14,7 @@ export interface ParsedSet {
 
 export interface ParsedExercise {
   name: string
-  section: 'warmup' | 'main' | 'cooldown'
+  section: 'warmup' | 'main' | 'finisher' | 'cooldown'
   category: ExerciseCategory
   primaryMuscles: MuscleGroup[]
   equipment: Equipment[]
@@ -59,10 +59,12 @@ export async function buildRoutineDraftFromParsed(parsed: ParsedRoutine): Promis
   const createdExerciseNames: string[] = []
 
   const warmup = createEmptySection()
+  const finisher = createEmptySection()
   const cooldown = createEmptySection()
   const main: ExerciseConfig[] = []
   let warmupOrder = 0
   let mainOrder = 0
+  let finisherOrder = 0
   let cooldownOrder = 0
 
   for (const parsedExercise of parsed.exercises) {
@@ -94,7 +96,13 @@ export async function buildRoutineDraftFromParsed(parsed: ParsedRoutine): Promis
       id: crypto.randomUUID(),
       exerciseId,
       orderIndex:
-        parsedExercise.section === 'warmup' ? warmupOrder++ : parsedExercise.section === 'cooldown' ? cooldownOrder++ : mainOrder++,
+        parsedExercise.section === 'warmup'
+          ? warmupOrder++
+          : parsedExercise.section === 'finisher'
+            ? finisherOrder++
+            : parsedExercise.section === 'cooldown'
+              ? cooldownOrder++
+              : mainOrder++,
       uniformSets: areSetsUniform(parsedExercise.sets),
       sets: buildSetTargets(parsedExercise.sets, parsedExercise.category),
       restSeconds: parsedExercise.restSeconds ?? undefined,
@@ -104,6 +112,9 @@ export async function buildRoutineDraftFromParsed(parsed: ParsedRoutine): Promis
     if (parsedExercise.section === 'warmup') {
       warmup.exercises.push(config)
       warmup.enabled = true
+    } else if (parsedExercise.section === 'finisher') {
+      finisher.exercises.push(config)
+      finisher.enabled = true
     } else if (parsedExercise.section === 'cooldown') {
       cooldown.exercises.push(config)
       cooldown.enabled = true
@@ -121,6 +132,7 @@ export async function buildRoutineDraftFromParsed(parsed: ParsedRoutine): Promis
     notes: parsed.notes ?? '',
     warmup,
     main,
+    finisher,
     cooldown,
     defaultRestSeconds: 60,
     archived: false,

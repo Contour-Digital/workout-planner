@@ -115,6 +115,7 @@ export interface WorkoutSession {
   pauseIntervals: PauseInterval[]
   warmup?: { enabled: boolean; exercises: SessionExerciseEntry[] }
   main: SessionExerciseEntry[]
+  finisher?: { enabled: boolean; exercises: SessionExerciseEntry[] }
   cooldown?: { enabled: boolean; exercises: SessionExerciseEntry[] }
   notes?: string
   review?: PostWorkoutReview
@@ -165,6 +166,7 @@ export function workoutSetsCompleted(session: WorkoutSession): { done: number; t
   const all = [
     ...(session.warmup?.enabled ? session.warmup.exercises : []),
     ...session.main,
+    ...(session.finisher?.enabled ? session.finisher.exercises : []),
     ...(session.cooldown?.enabled ? session.cooldown.exercises : []),
   ]
   const total = all.reduce((sum, e) => sum + e.actualSets.length, 0)

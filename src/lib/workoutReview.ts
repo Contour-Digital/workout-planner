@@ -6,6 +6,7 @@ function allEntries(session: WorkoutSession): SessionExerciseEntry[] {
   return [
     ...(session.warmup?.enabled ? session.warmup.exercises : []),
     ...session.main,
+    ...(session.finisher?.enabled ? session.finisher.exercises : []),
     ...(session.cooldown?.enabled ? session.cooldown.exercises : []),
   ]
 }

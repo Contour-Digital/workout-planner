@@ -131,7 +131,7 @@ export interface LibraryExerciseNameOverride {
  *  summary, so both can be resolved/added the same way. */
 export interface ExerciseSuggestion {
   name: string
-  section: 'warmup' | 'main' | 'cooldown'
+  section: 'warmup' | 'main' | 'finisher' | 'cooldown'
   category: ExerciseCategory
   primaryMuscles: MuscleGroup[]
   equipment: Equipment[]

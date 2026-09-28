@@ -18,6 +18,11 @@ export async function addSuggestionToRoutine(routineTemplateId: string, suggesti
     await saveRoutine({ ...routine, warmup: { enabled: true, exercises: [...routine.warmup.exercises, config] } })
     return
   }
+  if (suggestion.section === 'finisher') {
+    const config = await createExerciseConfigWithHistory(exercise.id, routine.finisher.exercises.length)
+    await saveRoutine({ ...routine, finisher: { enabled: true, exercises: [...routine.finisher.exercises, config] } })
+    return
+  }
   if (suggestion.section === 'cooldown') {
     const config = await createExerciseConfigWithHistory(exercise.id, routine.cooldown.exercises.length)
     await saveRoutine({ ...routine, cooldown: { enabled: true, exercises: [...routine.cooldown.exercises, config] } })

@@ -1,7 +1,7 @@
 # Workout Planner
 
 A mobile-first workout planning and tracking app: build reusable routines (with
-optional warm-up/cool-down sections), schedule them on flexible recurring
+optional warm-up/finisher/cool-down sections), schedule them on flexible recurring
 cycles alongside recovery and rest days, run active workout sessions with
 persistent progress, review effort/feelings after each session, and track a
 configurable workout streak. Backed by Supabase for accounts and cross-device
@@ -237,6 +237,19 @@ app is unaffected.
 
 Exercise names from the parsed notes are fuzzy-matched against your existing
 library; anything unmatched becomes a new custom exercise automatically.
+
+## Routine sections
+
+A workout routine has four sections, in order: warm-up, main workout,
+finisher, and cool-down. Main is always on; the other three are each an
+optional, independently toggled `RoutineSection` (`{ enabled, exercises }`) —
+warm-up and cool-down default to off, finisher too. The finisher sits right
+after the main workout for core work or other finishing exercises, before
+cooling down. All three carry the same shape through the stack: the routine
+editor, the AI routine generator/Spot (an exercise suggestion's `section` can
+be `'warmup' | 'main' | 'finisher' | 'cooldown'`), the active workout session
+(`WorkoutSession.finisher`), and history detail all treat it exactly like
+warm-up/cool-down.
 
 ## Fixed footers and floating buttons on mobile
 

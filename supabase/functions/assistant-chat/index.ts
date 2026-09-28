@@ -60,7 +60,7 @@ const REPLY_TOOL = {
           type: "object",
           properties: {
             name: { type: "string", description: "Exercise name, cleaned up to standard title case (e.g. 'Barbell Bench Press')." },
-            section: { type: "string", enum: ["warmup", "main", "cooldown"], description: "Which part of the routine this belongs in." },
+            section: { type: "string", enum: ["warmup", "main", "finisher", "cooldown"], description: "Which part of the routine this belongs in. 'finisher' is for core work or other finishing exercises done right after the main workout, before cooling down." },
             category: { type: "string", enum: EXERCISE_CATEGORIES, description: "Best-guess exercise category." },
             primaryMuscles: { type: "array", items: { type: "string", enum: MUSCLE_GROUPS }, description: "Best-guess primary muscle groups worked, most relevant first." },
             equipment: { type: "array", items: { type: "string", enum: EQUIPMENT }, description: "Best-guess equipment used. Use ['none'] for pure bodyweight moves." },
@@ -92,7 +92,7 @@ const ROUTINE_EXERCISE_SCHEMA = {
   type: "object",
   properties: {
     name: { type: "string", description: "The exercise name, standard title case (e.g. 'Barbell Bench Press')." },
-    section: { type: "string", enum: ["warmup", "main", "cooldown"], description: "Which part of the routine this belongs in." },
+    section: { type: "string", enum: ["warmup", "main", "finisher", "cooldown"], description: "Which part of the routine this belongs in. 'finisher' is for core work or other finishing exercises done right after the main workout, before cooling down." },
     category: { type: "string", enum: EXERCISE_CATEGORIES, description: "Best-guess exercise category." },
     primaryMuscles: { type: "array", items: { type: "string", enum: MUSCLE_GROUPS }, description: "Best-guess primary muscle groups worked, most relevant first." },
     equipment: { type: "array", items: { type: "string", enum: EQUIPMENT }, description: "Best-guess equipment used. Use ['none'] for pure bodyweight moves." },
@@ -142,6 +142,7 @@ When the user asks for exercise suggestions, or when it's clearly useful (e.g. "
 The user is currently building a workout routine named "${context.routineName || "(untitled)"}" in the routine editor.
 Warm-up exercises so far: ${listOrNone(context.warmup ?? [])}
 Main workout exercises so far: ${listOrNone(context.main ?? [])}
+Finisher exercises so far: ${listOrNone(context.finisher ?? [])}
 Cool-down exercises so far: ${listOrNone(context.cooldown ?? [])}
 
 Suggest exercises that complement what's already there and avoid duplicating them, unless the user asks to replace something.`;
@@ -157,6 +158,7 @@ Suggest exercises that complement what's already there and avoid duplicating the
 The user is mid-workout, ${context.elapsedMinutes ?? 0} minutes in, doing a routine named "${context.routineName || "Workout"}".
 Warm-up: ${listOrNone(context.warmup ?? [])}
 Main workout: ${mainSummary}
+Finisher: ${listOrNone(context.finisher ?? [])}
 Cool-down: ${listOrNone(context.cooldown ?? [])}
 
 Any exercise you suggest gets added directly to their in-progress workout as a new main-workout exercise, so only suggest one when they ask for it or it's clearly what they want (e.g. "give me a finisher", "what's a good superset for this").`;
@@ -165,7 +167,7 @@ Any exercise you suggest gets added directly to their in-progress workout as a n
   if (context.kind === "routines-list") {
     return `${intro}
 
-The user is on their Workouts list (their saved routines). If they ask you to build/create/generate a whole routine or workout plan (e.g. "make me a push day", "create a 4-day split", "build me a full body workout"), call create_routine instead of record_reply — it saves the routine directly to their Workouts, so build something complete and sensible (a realistic number of exercises for what they asked, in a sensible warmup/main/cooldown order) rather than a token effort. For anything else — questions, tweaking a single exercise, general advice — call record_reply as usual.`;
+The user is on their Workouts list (their saved routines). If they ask you to build/create/generate a whole routine or workout plan (e.g. "make me a push day", "create a 4-day split", "build me a full body workout"), call create_routine instead of record_reply — it saves the routine directly to their Workouts, so build something complete and sensible (a realistic number of exercises for what they asked, in a sensible warmup/main/finisher/cooldown order) rather than a token effort. For anything else — questions, tweaking a single exercise, general advice — call record_reply as usual.`;
   }
 
   return intro;

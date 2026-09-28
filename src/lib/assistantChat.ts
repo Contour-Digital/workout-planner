@@ -24,13 +24,14 @@ export interface AssistantReply {
 }
 
 export type AssistantContext =
-  | { kind: 'routine'; routineName: string; warmup: string[]; main: string[]; cooldown: string[] }
+  | { kind: 'routine'; routineName: string; warmup: string[]; main: string[]; finisher: string[]; cooldown: string[] }
   | {
       kind: 'session'
       routineName: string
       elapsedMinutes: number
       warmup: string[]
       main: { name: string; setsDone: number; setsTotal: number }[]
+      finisher: string[]
       cooldown: string[]
     }
   | { kind: 'general' }

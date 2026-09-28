@@ -202,6 +202,7 @@ function WorkoutDetail({
       <div className="mt-4">
         {renderEntries('Warm-up', session.warmup?.enabled ? session.warmup.exercises : [])}
         {renderEntries('Workout', session.main)}
+        {renderEntries('Finisher', session.finisher?.enabled ? session.finisher.exercises : [])}
         {renderEntries('Cool-down', session.cooldown?.enabled ? session.cooldown.exercises : [])}
       </div>
 

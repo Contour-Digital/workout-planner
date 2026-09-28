@@ -61,7 +61,7 @@ const EXERCISE_SCHEMA = {
   type: "object",
   properties: {
     name: { type: "string", description: "The exercise name, cleaned up to standard title case (e.g. 'Barbell Bench Press')." },
-    section: { type: "string", enum: ["warmup", "main", "cooldown"], description: "Which part of the routine this exercise belongs to. Default to 'main' unless the notes clearly mark it as a warm-up or cool-down/stretch." },
+    section: { type: "string", enum: ["warmup", "main", "finisher", "cooldown"], description: "Which part of the routine this exercise belongs to. Default to 'main' unless the notes clearly mark it as a warm-up, a finisher (core work or other finishing exercises after the main workout), or cool-down/stretch." },
     category: { type: "string", enum: EXERCISE_CATEGORIES, description: "Best-guess exercise category." },
     primaryMuscles: { type: "array", items: { type: "string", enum: MUSCLE_GROUPS }, description: "Best-guess primary muscle groups worked, most relevant first." },
     equipment: { type: "array", items: { type: "string", enum: EQUIPMENT }, description: "Best-guess equipment used. Use ['none'] for pure bodyweight moves." },
@@ -97,7 +97,7 @@ Rules:
 - If a rep range is given (e.g. 8-12), use the lower number as targetReps.
 - If weight is in pounds (lb/lbs), convert to kilograms.
 - If no explicit set count is given for an exercise, produce 3 sets as a reasonable default.
-- Classify each exercise into a warmup/main/cooldown section based on context (headings like "Warm-up", "Stretch", "Cool down", or position in the notes). Default to "main".
+- Classify each exercise into a warmup/main/finisher/cooldown section based on context (headings like "Warm-up", "Finisher", "Core", "Stretch", "Cool down", or position in the notes). Default to "main".
 - Skip pure prose/commentary that isn't naming an exercise.
 - Always call the record_routine tool exactly once with your best extraction. Never respond with plain text.`;
 

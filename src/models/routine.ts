@@ -22,7 +22,7 @@ export interface ExerciseConfig {
   notes?: string
 }
 
-export type RoutineSectionKind = 'warmup' | 'main' | 'cooldown'
+export type RoutineSectionKind = 'warmup' | 'main' | 'finisher' | 'cooldown'
 
 export interface RoutineSection {
   enabled: boolean
@@ -37,6 +37,8 @@ export interface RoutineTemplate {
   notes?: string
   warmup: RoutineSection
   main: ExerciseConfig[]
+  /** Core/finishing exercises done right after the main workout, before cooling down. */
+  finisher: RoutineSection
   cooldown: RoutineSection
   defaultRestSeconds: number
   archived: boolean

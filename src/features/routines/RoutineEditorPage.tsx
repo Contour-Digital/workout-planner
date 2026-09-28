@@ -42,6 +42,7 @@ export function RoutineEditorPage() {
         notes: '',
         warmup: createEmptySection(),
         main: [],
+        finisher: createEmptySection(),
         cooldown: createEmptySection(),
         defaultRestSeconds: 60,
         archived: false,
@@ -73,7 +74,7 @@ export function RoutineEditorPage() {
   if (loading) return <div className="p-6 text-sm text-primary-muted">Loading…</div>
   if (!routine) return <div className="p-6 text-sm text-danger">Routine not found.</div>
 
-  function setSection(key: 'warmup' | 'cooldown', section: RoutineSection) {
+  function setSection(key: 'warmup' | 'finisher' | 'cooldown', section: RoutineSection) {
     setRoutine((r) => (r ? { ...r, [key]: section } : r))
   }
 
@@ -90,6 +91,7 @@ export function RoutineEditorPage() {
       routineName: routine!.name,
       warmup: routine!.warmup.exercises.map((c) => exerciseName(c.exerciseId)),
       main: routine!.main.map((c) => exerciseName(c.exerciseId)),
+      finisher: routine!.finisher.exercises.map((c) => exerciseName(c.exerciseId)),
       cooldown: routine!.cooldown.exercises.map((c) => exerciseName(c.exerciseId)),
     }
   }
@@ -106,14 +108,19 @@ export function RoutineEditorPage() {
     const orderIndex =
       suggestion.section === 'warmup'
         ? routine.warmup.exercises.length
-        : suggestion.section === 'cooldown'
-          ? routine.cooldown.exercises.length
-          : routine.main.length
+        : suggestion.section === 'finisher'
+          ? routine.finisher.exercises.length
+          : suggestion.section === 'cooldown'
+            ? routine.cooldown.exercises.length
+            : routine.main.length
     const config = await createExerciseConfigWithHistory(exercise.id, orderIndex)
     setRoutine((r) => {
       if (!r) return r
       if (suggestion.section === 'warmup') {
         return { ...r, warmup: { enabled: true, exercises: [...r.warmup.exercises, config] } }
+      }
+      if (suggestion.section === 'finisher') {
+        return { ...r, finisher: { enabled: true, exercises: [...r.finisher.exercises, config] } }
       }
       if (suggestion.section === 'cooldown') {
         return { ...r, cooldown: { enabled: true, exercises: [...r.cooldown.exercises, config] } }
@@ -199,6 +206,27 @@ export function RoutineEditorPage() {
           emptyHint="Add exercises to build your workout."
           groupByMuscle
         />
+
+        <div className="rounded-[var(--radius-card)] border border-primary-border p-3">
+          <label className="flex items-center gap-2 text-sm font-medium text-primary-strong">
+            <input
+              type="checkbox"
+              checked={routine.finisher.enabled}
+              onChange={(e) => setSection('finisher', { ...routine.finisher, enabled: e.target.checked })}
+            />
+            Include a finisher section
+          </label>
+          {routine.finisher.enabled && (
+            <div className="mt-3">
+              <RoutineSectionEditor
+                title="Finisher"
+                exercises={routine.finisher.exercises}
+                onChange={(exercises) => setSection('finisher', { ...routine.finisher, exercises })}
+                emptyHint="Add core work or other finishing exercises to close out the main workout."
+              />
+            </div>
+          )}
+        </div>
 
         <div className="rounded-[var(--radius-card)] border border-primary-border p-3">
           <label className="flex items-center gap-2 text-sm font-medium text-primary-strong">

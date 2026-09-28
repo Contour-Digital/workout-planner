@@ -1,6 +1,6 @@
 import { db } from './db'
 import { enqueueSync } from './sync/outbox'
-import type { ExerciseConfig, RoutineSection, RoutineTemplate, SetTarget } from '../models/routine'
+import { createEmptySection, type ExerciseConfig, type RoutineSection, type RoutineTemplate, type SetTarget } from '../models/routine'
 import type { RecoveryActivityConfig, RecoveryRoutineTemplate } from '../models/recovery'
 import type { RecurringSchedule } from '../models/schedule'
 import { toDateKey } from '../lib/recurrence'
@@ -84,6 +84,7 @@ function routine(
     description,
     warmup: generalWarmup(),
     main,
+    finisher: createEmptySection(),
     cooldown: generalCooldown(),
     defaultRestSeconds: 90,
     archived: false,

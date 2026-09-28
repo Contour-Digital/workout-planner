@@ -87,7 +87,7 @@ const SUMMARY_TOOL = {
           type: "object",
           properties: {
             name: { type: "string", description: "Exercise name, cleaned up to standard title case (e.g. 'Face Pull')." },
-            section: { type: "string", enum: ["warmup", "main", "cooldown"], description: "Which part of the routine this belongs in." },
+            section: { type: "string", enum: ["warmup", "main", "finisher", "cooldown"], description: "Which part of the routine this belongs in. 'finisher' is for core work or other finishing exercises done right after the main workout, before cooling down." },
             category: { type: "string", enum: EXERCISE_CATEGORIES, description: "Best-guess exercise category." },
             primaryMuscles: { type: "array", items: { type: "string", enum: MUSCLE_GROUPS }, description: "Best-guess primary muscle groups worked, most relevant first." },
             equipment: { type: "array", items: { type: "string", enum: EQUIPMENT }, description: "Best-guess equipment used. Use ['none'] for pure bodyweight moves." },

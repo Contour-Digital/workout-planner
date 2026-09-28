@@ -349,6 +349,7 @@ function WorkoutRoutineCard({
       <div className="mb-3 flex flex-wrap gap-1.5 text-xs text-primary-muted">
         <Badge tone="secondary">{routine.main.length} exercises</Badge>
         {routine.warmup.enabled && <Badge tone="neutral">Warm-up</Badge>}
+        {routine.finisher.enabled && <Badge tone="neutral">Finisher</Badge>}
         {routine.cooldown.enabled && <Badge tone="neutral">Cool-down</Badge>}
       </div>
       <RoutineActions

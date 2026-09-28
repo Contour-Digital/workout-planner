@@ -84,6 +84,9 @@ export async function startWorkoutSession(opts: {
       ? { enabled: true, exercises: await buildSectionEntries(opts.routine.warmup.exercises) }
       : { enabled: false, exercises: [] },
     main: await buildSectionEntries(opts.routine.main),
+    finisher: opts.routine.finisher.enabled
+      ? { enabled: true, exercises: await buildSectionEntries(opts.routine.finisher.exercises) }
+      : { enabled: false, exercises: [] },
     cooldown: opts.routine.cooldown.enabled
       ? { enabled: true, exercises: await buildSectionEntries(opts.routine.cooldown.exercises) }
       : { enabled: false, exercises: [] },
@@ -138,13 +141,15 @@ export async function addAdHocExercise(sessionId: string, exerciseId: string, ta
   await syncWorkout(sessionId)
 }
 
-export async function removeSessionExercise(sessionId: string, entryId: string, section: 'warmup' | 'main' | 'cooldown' = 'main'): Promise<void> {
+export async function removeSessionExercise(sessionId: string, entryId: string, section: 'warmup' | 'main' | 'finisher' | 'cooldown' = 'main'): Promise<void> {
   const session = await db.workoutSessions.get(sessionId)
   if (!session) return
   if (section === 'main') {
     await db.workoutSessions.update(sessionId, { main: session.main.filter((e) => e.id !== entryId) })
   } else if (section === 'warmup' && session.warmup) {
     await db.workoutSessions.update(sessionId, { warmup: { ...session.warmup, exercises: session.warmup.exercises.filter((e) => e.id !== entryId) } })
+  } else if (section === 'finisher' && session.finisher) {
+    await db.workoutSessions.update(sessionId, { finisher: { ...session.finisher, exercises: session.finisher.exercises.filter((e) => e.id !== entryId) } })
   } else if (section === 'cooldown' && session.cooldown) {
     await db.workoutSessions.update(sessionId, { cooldown: { ...session.cooldown, exercises: session.cooldown.exercises.filter((e) => e.id !== entryId) } })
   }
@@ -160,6 +165,7 @@ async function mapEntryAcrossSections(
   return {
     main: apply(session.main),
     warmup: session.warmup ? { ...session.warmup, exercises: apply(session.warmup.exercises) } : session.warmup,
+    finisher: session.finisher ? { ...session.finisher, exercises: apply(session.finisher.exercises) } : session.finisher,
     cooldown: session.cooldown ? { ...session.cooldown, exercises: apply(session.cooldown.exercises) } : session.cooldown,
   }
 }
@@ -229,6 +235,7 @@ export async function updateSetResult(sessionId: string, entryId: string, setId:
   await db.workoutSessions.update(sessionId, {
     main: patchEntries(session.main),
     warmup: session.warmup ? { ...session.warmup, exercises: patchEntries(session.warmup.exercises) } : session.warmup,
+    finisher: session.finisher ? { ...session.finisher, exercises: patchEntries(session.finisher.exercises) } : session.finisher,
     cooldown: session.cooldown ? { ...session.cooldown, exercises: patchEntries(session.cooldown.exercises) } : session.cooldown,
     updatedAt: new Date().toISOString(),
   })
@@ -263,6 +270,7 @@ export async function updateSetResultWithCascade(
   await db.workoutSessions.update(sessionId, {
     main: patchEntries(session.main),
     warmup: session.warmup ? { ...session.warmup, exercises: patchEntries(session.warmup.exercises) } : session.warmup,
+    finisher: session.finisher ? { ...session.finisher, exercises: patchEntries(session.finisher.exercises) } : session.finisher,
     cooldown: session.cooldown ? { ...session.cooldown, exercises: patchEntries(session.cooldown.exercises) } : session.cooldown,
     updatedAt: new Date().toISOString(),
   })
@@ -304,7 +312,12 @@ export async function clearRestTimer(sessionId: string): Promise<void> {
 export async function finishWorkoutSession(sessionId: string): Promise<void> {
   const session = await db.workoutSessions.get(sessionId)
   if (!session) return
-  const allEntries = [...(session.warmup?.exercises ?? []), ...session.main, ...(session.cooldown?.exercises ?? [])]
+  const allEntries = [
+    ...(session.warmup?.exercises ?? []),
+    ...session.main,
+    ...(session.finisher?.exercises ?? []),
+    ...(session.cooldown?.exercises ?? []),
+  ]
   const totalSets = allEntries.reduce((sum, e) => sum + e.actualSets.length, 0)
   const doneSets = allEntries.reduce((sum, e) => sum + e.actualSets.filter((s) => s.completed).length, 0)
   const now = new Date().toISOString()
@@ -329,6 +342,7 @@ export async function saveSessionAsRoutine(sessionId: string, name: string): Pro
     type: 'workout',
     name,
     warmup: createEmptySection(),
+    finisher: createEmptySection(),
     cooldown: createEmptySection(),
     main: session.main.map((entry, i) => ({
       id: crypto.randomUUID(),
@@ -372,6 +386,7 @@ export async function repeatWorkoutSession(sourceSessionId: string): Promise<Wor
     pauseIntervals: [],
     warmup: source.warmup ? { enabled: source.warmup.enabled, exercises: rebuildEntries(source.warmup.exercises) } : undefined,
     main: rebuildEntries(source.main),
+    finisher: source.finisher ? { enabled: source.finisher.enabled, exercises: rebuildEntries(source.finisher.exercises) } : undefined,
     cooldown: source.cooldown ? { enabled: source.cooldown.enabled, exercises: rebuildEntries(source.cooldown.exercises) } : undefined,
     createdAt: now,
     updatedAt: now,
