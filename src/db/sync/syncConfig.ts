@@ -108,7 +108,10 @@ export const SYNC_TABLE_CONFIGS: SyncTableConfig[] = [
       notes: r.notes ?? undefined,
       warmup: r.warmup,
       main: r.main,
-      finisher: r.finisher,
+      // Existing rows from before this column existed have it NULL — fall back to
+      // a disabled empty section rather than writing `null` into the local copy
+      // (consumers all normalize on read too, but this keeps stored data honest).
+      finisher: r.finisher ?? { enabled: false, exercises: [] },
       cooldown: r.cooldown,
       defaultRestSeconds: r.default_rest_seconds,
       archived: r.archived,

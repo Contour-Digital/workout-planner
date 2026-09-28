@@ -36,7 +36,7 @@ import {
 } from '../../db/routinesRepo'
 import { deleteSchedule, getAllSchedules } from '../../db/scheduleRepo'
 import { describeSchedule } from '../../lib/scheduleDescribe'
-import type { RoutineTemplate } from '../../models/routine'
+import { normalizeRoutine, type RoutineTemplate } from '../../models/routine'
 import type { RecoveryRoutineTemplate } from '../../models/recovery'
 import type { RecurringSchedule } from '../../models/schedule'
 
@@ -52,7 +52,7 @@ export function RoutinesListPage() {
   const [deletingSchedule, setDeletingSchedule] = useState<RecurringSchedule | null>(null)
   const [generateOpen, setGenerateOpen] = useState(false)
 
-  const routines = useLiveQuery(() => db.routines.toArray(), [], []) ?? []
+  const routines = useLiveQuery(() => db.routines.toArray().then((rs) => rs.map(normalizeRoutine)), [], []) ?? []
   const recoveryRoutines = useLiveQuery(() => db.recoveryRoutines.toArray(), [], []) ?? []
   const schedules = useLiveQuery(getAllSchedules, [], []) ?? []
 

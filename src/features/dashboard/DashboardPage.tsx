@@ -10,6 +10,7 @@ import { ProgressBar, ProgressRing } from '../../components/ui/ProgressBar'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { IconDumbbell, IconFlame, IconMoon, IconPlay, IconPlus, IconWalking } from '../../components/ui/icons'
 import { db } from '../../db/db'
+import { normalizeRoutine } from '../../models/routine'
 import { getOccurrencesInRange } from '../../db/scheduleRepo'
 import { getActiveRecoverySession, getActiveWorkoutSession, getCompletedWorkoutDayKeys, getHistorySessions } from '../../db/sessionsRepo'
 import { nextOccurrenceAfter, toDateKey } from '../../lib/recurrence'
@@ -44,7 +45,7 @@ export function DashboardPage() {
     async () => ({ schedules: await db.schedules.toArray(), overrides: await db.occurrenceOverrides.toArray() }),
     [],
   )
-  const routines = useLiveQuery(() => db.routines.toArray(), [], []) ?? []
+  const routines = useLiveQuery(() => db.routines.toArray().then((rs) => rs.map(normalizeRoutine)), [], []) ?? []
   const recoveryRoutines = useLiveQuery(() => db.recoveryRoutines.toArray(), [], []) ?? []
   const activeWorkout = useLiveQuery(getActiveWorkoutSession, [], undefined)
   const activeRecovery = useLiveQuery(getActiveRecoverySession, [], undefined)

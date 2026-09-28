@@ -1,18 +1,19 @@
 import { db } from './db'
 import { enqueueSync } from './sync/outbox'
-import type { RoutineTemplate } from '../models/routine'
+import { normalizeRoutine, type RoutineTemplate } from '../models/routine'
 import type { RecoveryRoutineTemplate } from '../models/recovery'
 
 export async function getActiveRoutines(): Promise<RoutineTemplate[]> {
-  return (await db.routines.toArray()).filter((r) => !r.archived).sort((a, b) => a.name.localeCompare(b.name))
+  return (await db.routines.toArray()).filter((r) => !r.archived).sort((a, b) => a.name.localeCompare(b.name)).map(normalizeRoutine)
 }
 
 export async function getAllRoutines(): Promise<RoutineTemplate[]> {
-  return db.routines.toArray()
+  return (await db.routines.toArray()).map(normalizeRoutine)
 }
 
 export async function getRoutine(id: string): Promise<RoutineTemplate | undefined> {
-  return db.routines.get(id)
+  const routine = await db.routines.get(id)
+  return routine ? normalizeRoutine(routine) : undefined
 }
 
 export async function saveRoutine(routine: RoutineTemplate): Promise<void> {
@@ -25,7 +26,7 @@ export async function duplicateRoutine(id: string): Promise<RoutineTemplate | un
   if (!original) return undefined
   const now = new Date().toISOString()
   const copy: RoutineTemplate = {
-    ...original,
+    ...normalizeRoutine(original),
     id: crypto.randomUUID(),
     name: `${original.name} (copy)`,
     archived: false,

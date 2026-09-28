@@ -8,6 +8,7 @@ import { IconHistory } from '../../components/ui/icons'
 import { getHistorySessions } from '../../db/sessionsRepo'
 import { getAllCardioActivities } from '../../db/cardioActivityRepo'
 import { db } from '../../db/db'
+import { normalizeRoutine } from '../../models/routine'
 import { formatPace, paceSplitMetersFor } from '../../models/units'
 import { CARDIO_ACTIVITY_TYPE_LABELS } from '../../models/cardioActivity'
 import type { SessionStatus } from '../../models/session'
@@ -24,7 +25,7 @@ const STATUS_TONE: Record<SessionStatus, BadgeTone> = {
 export function HistoryPage() {
   const navigate = useNavigate()
   const sessions = useLiveQuery(() => getHistorySessions(), [], []) ?? []
-  const routines = useLiveQuery(() => db.routines.toArray(), [], []) ?? []
+  const routines = useLiveQuery(() => db.routines.toArray().then((rs) => rs.map(normalizeRoutine)), [], []) ?? []
   const cardioActivities = useLiveQuery(() => getAllCardioActivities(), [], []) ?? []
 
   const [statusFilter, setStatusFilter] = useState<'all' | SessionStatus>('all')

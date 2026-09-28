@@ -50,6 +50,17 @@ export function createEmptySection(): RoutineSection {
   return { enabled: false, exercises: [] }
 }
 
+/** Routines saved before the finisher section existed (in Dexie and/or Supabase)
+ *  don't just have it disabled — the field is entirely absent, unlike the type
+ *  above promises. Apply this to anything read from storage (repo functions,
+ *  or any `db.routines` query that bypasses them) before treating it as a
+ *  fully-formed RoutineTemplate, so `routine.finisher.enabled` etc. never throws. */
+export function normalizeRoutine(
+  routine: Omit<RoutineTemplate, 'finisher'> & { finisher?: RoutineSection },
+): RoutineTemplate {
+  return routine.finisher ? (routine as RoutineTemplate) : { ...routine, finisher: createEmptySection() }
+}
+
 /** Cardio is tracked by time/distance rather than reps — leave that default off
  *  entirely rather than presetting a meaningless "10 reps" for a run or a row. */
 export function createEmptySetTarget(setNumber: number, category?: ExerciseCategory): SetTarget {

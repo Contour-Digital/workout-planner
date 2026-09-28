@@ -10,6 +10,7 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { IconChevronLeft, IconChevronRight, IconMoon, IconPlay, IconPlus } from '../../components/ui/icons'
 import { db } from '../../db/db'
+import { normalizeRoutine } from '../../models/routine'
 import { getOccurrencesInRange } from '../../db/scheduleRepo'
 import { getAllPersonalEvents } from '../../db/personalEventsRepo'
 import { toDateKey } from '../../lib/recurrence'
@@ -49,7 +50,7 @@ export function CalendarPage() {
 
   const occurrences = useLiveQuery(() => getOccurrencesInRange(fromKey, toKey), [fromKey, toKey], []) ?? []
   const personalEvents = useLiveQuery(getAllPersonalEvents, [], []) ?? []
-  const routines = useLiveQuery(() => db.routines.toArray(), [], []) ?? []
+  const routines = useLiveQuery(() => db.routines.toArray().then((rs) => rs.map(normalizeRoutine)), [], []) ?? []
   const recoveryRoutines = useLiveQuery(() => db.recoveryRoutines.toArray(), [], []) ?? []
   const routineName = useMemo(() => makeRoutineNameResolver(routines, recoveryRoutines), [routines, recoveryRoutines])
 
