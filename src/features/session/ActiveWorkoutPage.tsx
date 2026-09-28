@@ -200,10 +200,10 @@ export function ActiveWorkoutPage() {
   ) {
     if (sectionExercises.length === 0) return null
     const doneCount = sectionExercises.filter(isEntryComplete).length
-    // A faint semantic tint (already used elsewhere for warnings/rest) so the two
-    // collapsible cards read apart from each other and from the plain sections
-    // at a glance, not just by their title text.
-    const tint = section === 'warmup' ? 'bg-warning-bg' : 'bg-rest-bg'
+    // A faint tint (reusing the recovery/rest palette already used elsewhere) so
+    // the two collapsible cards read apart from each other and from the plain
+    // sections at a glance, not just by their title text.
+    const tint = section === 'warmup' ? 'bg-recovery-bg' : 'bg-rest-bg'
 
     return (
       <section className={`my-3 overflow-hidden rounded-[var(--radius-card)] border border-primary-border ${tint}`}>
