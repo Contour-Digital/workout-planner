@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { ExerciseMediaThumb } from '../../components/ui/ExerciseMedia'
 import { IconCheck, IconChevronDown, IconTrash } from '../../components/ui/icons'
@@ -6,6 +6,7 @@ import { getExercise } from '../../db/exercisesRepo'
 import { getPreviousExercisePerformance } from '../../db/sessionsRepo'
 import { formatSetResult } from '../../lib/formatPerformance'
 import { formatPace, paceSplitMetersFor } from '../../models/units'
+import { useNow } from '../../lib/useNow'
 import { useSettingsStore } from '../../store/settingsStore'
 import type { Exercise } from '../../models/exercise'
 import type { SessionExerciseEntry, SetResult } from '../../models/session'
@@ -123,6 +124,10 @@ export function SessionExerciseCard({
             {entry.actualSets.map((set, i) => {
               const target = entry.targetSets[i]
               const livePace = isCardio ? formatPace(set.actualDistanceMeters, set.actualDurationSeconds, paceSplitMetersFor(entry.exerciseName)) : null
+              // A non-cardio set configured with a target hold time (set in the routine
+              // editor's Duration field) is a timed hold — a stretch or plank, not reps —
+              // so it gets a tap-to-start countdown instead of a reps/weight input.
+              const isHold = !isCardio && target?.targetDurationSeconds != null
               return (
                 <div key={set.id} className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
@@ -137,6 +142,8 @@ export function SessionExerciseCard({
                             return pace ? ` (${pace})` : ''
                           })()}
                         </>
+                      ) : isHold ? (
+                        <>Hold: {target!.targetDurationSeconds}s</>
                       ) : (
                         <>
                           Target: {target?.targetReps ?? '–'}
@@ -163,6 +170,14 @@ export function SessionExerciseCard({
                           onChange={(e) => onFieldChange(set.id, { actualDistanceMeters: e.target.value === '' ? undefined : Number(e.target.value) })}
                         />
                       </>
+                    ) : isHold ? (
+                      <HoldTimerControl
+                        targetSeconds={target!.targetDurationSeconds!}
+                        actualSeconds={set.actualDurationSeconds}
+                        completed={set.completed}
+                        vibrationEnabled={vibrationEnabled}
+                        onFinish={() => handleQuickComplete(set, i)}
+                      />
                     ) : (
                       <>
                         <input
@@ -229,5 +244,69 @@ export function SessionExerciseCard({
         </div>
       )}
     </div>
+  )
+}
+
+/** Tap-to-start countdown for a timed hold (a stretch, plank, etc.) instead of typing
+ *  in a number — starts from the set's target duration and counts down to 0, then
+ *  completes the set automatically (same path as tapping the checkmark), so you know
+ *  exactly when to stop holding without watching a separate clock. Tapping again while
+ *  it's running cancels it. Derives remaining time from an absolute end timestamp
+ *  (rather than decrementing a counter) so it stays correct even if the tab is
+ *  backgrounded mid-hold — same approach as the between-sets RestTimerBar. */
+function HoldTimerControl({
+  targetSeconds,
+  actualSeconds,
+  completed,
+  vibrationEnabled,
+  onFinish,
+}: {
+  targetSeconds: number
+  actualSeconds?: number
+  completed: boolean
+  vibrationEnabled: boolean
+  onFinish: () => void
+}) {
+  const [endsAt, setEndsAt] = useState<number | null>(null)
+  const now = useNow(1000)
+  const firedRef = useRef(false)
+  const remainingMs = endsAt !== null ? Math.max(0, endsAt - now) : null
+  const remainingSeconds = remainingMs !== null ? Math.ceil(remainingMs / 1000) : null
+
+  useEffect(() => {
+    if (remainingMs !== 0 || firedRef.current) return
+    firedRef.current = true
+    if (vibrationEnabled && 'vibrate' in navigator) navigator.vibrate?.(200)
+    onFinish()
+    setEndsAt(null)
+  }, [remainingMs, onFinish, vibrationEnabled])
+
+  if (completed) {
+    return <span className="w-16 shrink-0 text-center text-sm text-primary-muted">{actualSeconds ?? targetSeconds}s</span>
+  }
+
+  if (remainingSeconds !== null) {
+    return (
+      <button
+        onClick={() => setEndsAt(null)}
+        aria-label="Cancel hold timer"
+        className="w-16 shrink-0 rounded-[var(--radius-control)] border border-secondary bg-secondary-tint px-2 py-1.5 text-center text-sm font-semibold tabular-nums text-secondary"
+      >
+        {remainingSeconds}s
+      </button>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => {
+        firedRef.current = false
+        setEndsAt(Date.now() + targetSeconds * 1000)
+      }}
+      aria-label={`Start ${targetSeconds} second hold timer`}
+      className="w-16 shrink-0 rounded-[var(--radius-control)] border border-primary-border px-2 py-1.5 text-center text-sm text-primary hover:border-secondary"
+    >
+      {targetSeconds}s ▶
+    </button>
   )
 }

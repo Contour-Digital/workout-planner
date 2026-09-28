@@ -251,6 +251,28 @@ be `'warmup' | 'main' | 'finisher' | 'cooldown'`), the active workout session
 (`WorkoutSession.finisher`), and history detail all treat it exactly like
 warm-up/cool-down.
 
+## Timed holds (stretches, planks, …)
+
+A set is treated as a timed hold — instead of reps — purely based on whether
+its `SetTarget.targetDurationSeconds` is filled in (the routine editor's
+Duration field, always shown alongside Reps for non-cardio exercises, just
+usually left blank). There's no separate "is this exercise a hold" flag on
+the exercise itself — category alone isn't reliable, since some `mobility`
+library exercises are genuinely rep-counted (Cat-Cow, Band Pull-Apart) while
+others are holds (Hamstring Stretch, Hip Flexor Stretch); the seed data and
+the AI routine generator both already set a duration only on the ones that
+are actual holds.
+
+In the active session (`SessionExerciseCard`), a hold set replaces the reps
+input with a tap-to-start countdown (`HoldTimerControl`) instead of a manual
+number field: tapping it starts a countdown from the target duration, and
+reaching zero completes the set automatically — vibrating and triggering the
+rest timer the same way tapping the checkmark does, since it calls the exact
+same completion path. Tapping the running countdown again cancels it. Like
+the rest timer, it derives remaining time from an absolute end timestamp
+rather than decrementing a counter, so it stays correct if the tab is
+backgrounded mid-hold.
+
 ## Fixed footers and floating buttons on mobile
 
 Several screens have their own fixed bottom bar (Cancel/Save, Finish
