@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import clsx from 'clsx'
 import { ExerciseMediaThumb } from '../../components/ui/ExerciseMedia'
 import { IconCheck, IconChevronDown, IconTrash } from '../../components/ui/icons'
 import { getExercise } from '../../db/exercisesRepo'
@@ -23,6 +24,10 @@ interface SessionExerciseCardProps {
   onSetCompleted: (restSeconds: number | undefined) => void
   onViewDetail: (exercise: Exercise) => void
   defaultExpanded?: boolean
+  /** Marks this as the single "up next" exercise — the first one in the workout
+   *  that isn't fully done yet — with a subtle accent edge, so it's obvious what
+   *  to do next without having to scan every group. */
+  highlight?: boolean
 }
 
 export function SessionExerciseCard({
@@ -36,6 +41,7 @@ export function SessionExerciseCard({
   onSetCompleted,
   onViewDetail,
   defaultExpanded,
+  highlight,
 }: SessionExerciseCardProps) {
   const [expanded, setExpanded] = useState(!!defaultExpanded)
   const [exercise, setExercise] = useState<Exercise | null>(null)
@@ -76,7 +82,12 @@ export function SessionExerciseCard({
   }
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-primary-border bg-surface">
+    <div
+      className={clsx(
+        'rounded-[var(--radius-card)] border bg-surface',
+        highlight ? 'border-primary-border border-l-4 border-l-secondary' : 'border-primary-border',
+      )}
+    >
       <div className="flex items-center gap-3 p-3">
         <button
           className="flex flex-1 items-center gap-3 text-left"

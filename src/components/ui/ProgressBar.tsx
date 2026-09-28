@@ -35,6 +35,42 @@ export function ProgressBar({ value, className, color = 'secondary', label }: Pr
   )
 }
 
+export interface ProgressSegment {
+  key: string
+  /** Fraction complete, 0-1. */
+  value: number
+  /** Relative width of this segment against the others (e.g. its set count) —
+   *  larger sections read as a proportionally wider slice of the bar. */
+  weight: number
+}
+
+/** A single progress bar split into side-by-side segments (e.g. one per workout
+ *  section) instead of one flat fill, so you can see which part of a multi-stage
+ *  session is done at a glance without duplicating the overall done/total text. */
+export function SegmentedProgressBar({ segments, className }: { segments: ProgressSegment[]; className?: string }) {
+  return (
+    <div className={clsx('flex w-full gap-1', className)}>
+      {segments.map((s) => (
+        <div
+          key={s.key}
+          className="h-2.5 overflow-hidden rounded-full bg-primary-tint"
+          style={{ flexGrow: Math.max(s.weight, 0.001), flexBasis: 0 }}
+          role="progressbar"
+          aria-valuenow={Math.round(Math.max(0, Math.min(1, s.value)) * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={s.key}
+        >
+          <div
+            className="h-full rounded-full bg-secondary transition-[width] duration-300"
+            style={{ width: `${Math.max(0, Math.min(1, s.value)) * 100}%` }}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function ProgressRing({ value, size = 56, strokeWidth = 6 }: { value: number; size?: number; strokeWidth?: number }) {
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius

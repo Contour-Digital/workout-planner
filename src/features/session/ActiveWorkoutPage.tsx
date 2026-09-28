@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Button } from '../../components/ui/Button'
-import { ProgressBar } from '../../components/ui/ProgressBar'
+import { SegmentedProgressBar, type ProgressSegment } from '../../components/ui/ProgressBar'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Sheet } from '../../components/ui/Sheet'
 import { IconChevronDown, IconClock, IconPause, IconPlay, IconPlus, IconX } from '../../components/ui/icons'
@@ -77,6 +77,16 @@ export function ActiveWorkoutPage() {
   const mainAllDone = session.main.length > 0 && session.main.every(isEntryComplete)
   const warmupOpen = warmupOverride ?? !warmupAllDone
   const cooldownOpen = cooldownOverride ?? mainAllDone
+  const finisherExercises = session.finisher?.enabled ? session.finisher.exercises : []
+  // The first not-yet-done exercise in the main workout, across all muscle groups —
+  // highlighted as "up next" so it's obvious what to do without scanning every group.
+  const nextMainEntry = session.main.find((e) => !isEntryComplete(e))
+  const progressSegments: ProgressSegment[] = [
+    warmupExercises.length > 0 && { key: 'warmup', weight: warmupExercises.length, value: sectionFraction(warmupExercises) },
+    { key: 'main', weight: Math.max(session.main.length, 1), value: sectionFraction(session.main) },
+    finisherExercises.length > 0 && { key: 'finisher', weight: finisherExercises.length, value: sectionFraction(finisherExercises) },
+    cooldownExercises.length > 0 && { key: 'cooldown', weight: cooldownExercises.length, value: sectionFraction(cooldownExercises) },
+  ].filter((s): s is ProgressSegment => !!s)
   const hh = Math.floor(elapsed / 3600)
   const mm = Math.floor((elapsed % 3600) / 60)
   const ss = elapsed % 60
@@ -113,12 +123,20 @@ export function ActiveWorkoutPage() {
     return entry.actualSets.length > 0 && entry.actualSets.every((s) => s.completed)
   }
 
-  function renderEntry(entry: SessionExerciseEntry, section: 'warmup' | 'main' | 'finisher' | 'cooldown') {
+  function sectionFraction(entries: SessionExerciseEntry[]): number {
+    const totalSets = entries.reduce((sum, e) => sum + e.actualSets.length, 0)
+    if (totalSets === 0) return 0
+    const doneSets = entries.reduce((sum, e) => sum + e.actualSets.filter((s) => s.completed).length, 0)
+    return doneSets / totalSets
+  }
+
+  function renderEntry(entry: SessionExerciseEntry, section: 'warmup' | 'main' | 'finisher' | 'cooldown', highlight = false) {
     return (
       <SessionExerciseCard
         key={entry.id}
         entry={entry}
         sessionId={session!.id}
+        highlight={highlight}
         onToggleSet={(setId, patch) => updateSetResult(session!.id, entry.id, setId, patch)}
         onFieldChange={(setId, patch) => updateSetResultWithCascade(session!.id, entry.id, setId, patch)}
         onAddSet={() => addSetToEntry(session!.id, entry.id)}
@@ -152,7 +170,7 @@ export function ActiveWorkoutPage() {
             return (
               <div key={group.muscle} className="flex flex-col gap-2">
                 <h3 className="text-sm font-bold uppercase tracking-wide text-primary-muted/70">{group.label}</h3>
-                {ordered.map((entry) => renderEntry(entry, section))}
+                {ordered.map((entry) => renderEntry(entry, section, entry.id === nextMainEntry?.id))}
               </div>
             )
           })}
@@ -182,9 +200,13 @@ export function ActiveWorkoutPage() {
   ) {
     if (sectionExercises.length === 0) return null
     const doneCount = sectionExercises.filter(isEntryComplete).length
+    // A faint semantic tint (already used elsewhere for warnings/rest) so the two
+    // collapsible cards read apart from each other and from the plain sections
+    // at a glance, not just by their title text.
+    const tint = section === 'warmup' ? 'bg-warning-bg' : 'bg-rest-bg'
 
     return (
-      <section className="my-3 overflow-hidden rounded-[var(--radius-card)] border border-primary-border">
+      <section className={`my-3 overflow-hidden rounded-[var(--radius-card)] border border-primary-border ${tint}`}>
         <button
           onClick={onToggle}
           aria-expanded={open}
@@ -260,7 +282,7 @@ export function ActiveWorkoutPage() {
           </span>
           <span>{total > 0 ? Math.round((done / total) * 100) : 0}%</span>
         </div>
-        <ProgressBar value={total > 0 ? done / total : 0} />
+        <SegmentedProgressBar segments={progressSegments} />
       </div>
 
       {session.restTimerEndsAt && (
