@@ -346,7 +346,11 @@ greeting also surfaces a "Generate a routine from notes" quick-action chip
 same notes-parsing sheet described above. When Spot suggests a specific
 exercise, an "Add" button on that suggestion adds it straight to the
 routine (or, mid-workout, to the session) using the same
-fuzzy-match/auto-create-custom-exercise logic as "From notes".
+fuzzy-match/auto-create-custom-exercise logic as "From notes". That button
+tracks its own per-suggestion loading state and disables the rest of the
+list while an add is in flight, and any failure (e.g. the routine/session
+having disappeared out from under the chat) surfaces as an inline error
+message instead of leaving the button looking permanently stuck.
 
 Conversation history is kept per routine/session in `sessionStorage`, so it
 survives navigating around the app but clears when the browser tab/app is

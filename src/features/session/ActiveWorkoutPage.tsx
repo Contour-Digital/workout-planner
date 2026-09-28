@@ -160,9 +160,10 @@ export function ActiveWorkoutPage() {
   }
 
   async function handleAddSuggestion(suggestion: AssistantSuggestion) {
+    if (!session) throw new Error('This session is no longer available — try reopening it.')
     const { exercise } = await resolveSuggestedExercise(suggestion, exercises)
-    const config = await createExerciseConfigWithHistory(exercise.id, session!.main.length)
-    await addAdHocExercise(session!.id, exercise.id, config.sets, config.restSeconds)
+    const config = await createExerciseConfigWithHistory(exercise.id, session.main.length)
+    await addAdHocExercise(session.id, exercise.id, config.sets, config.restSeconds)
   }
 
   return (

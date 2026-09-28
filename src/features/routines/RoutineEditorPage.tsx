@@ -101,13 +101,14 @@ export function RoutineEditorPage() {
   }
 
   async function handleAddSuggestion(suggestion: AssistantSuggestion) {
+    if (!routine) throw new Error('This routine is no longer available — try reopening it.')
     const { exercise } = await resolveSuggestedExercise(suggestion, library)
     const orderIndex =
       suggestion.section === 'warmup'
-        ? routine!.warmup.exercises.length
+        ? routine.warmup.exercises.length
         : suggestion.section === 'cooldown'
-          ? routine!.cooldown.exercises.length
-          : routine!.main.length
+          ? routine.cooldown.exercises.length
+          : routine.main.length
     const config = await createExerciseConfigWithHistory(exercise.id, orderIndex)
     setRoutine((r) => {
       if (!r) return r

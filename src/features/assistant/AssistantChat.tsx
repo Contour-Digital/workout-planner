@@ -85,6 +85,7 @@ export function AssistantChat({
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [addingKey, setAddingKey] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -137,11 +138,20 @@ export function AssistantChat({
   }
 
   async function handleAdd(messageId: string, suggestion: AssistantSuggestion) {
-    if (!onAddSuggestion) return
-    await onAddSuggestion(suggestion)
-    setMessages((prev) =>
-      prev.map((m) => (m.id === messageId ? { ...m, addedNames: [...(m.addedNames ?? []), suggestion.name] } : m)),
-    )
+    if (!onAddSuggestion || addingKey) return
+    const key = `${messageId}:${suggestion.name}`
+    setAddingKey(key)
+    setError(null)
+    try {
+      await onAddSuggestion(suggestion)
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, addedNames: [...(m.addedNames ?? []), suggestion.name] } : m)),
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not add that exercise. Try again.')
+    } finally {
+      setAddingKey(null)
+    }
   }
 
   return (
@@ -224,6 +234,7 @@ export function AssistantChat({
                         <div className="flex w-full max-w-[85%] flex-col gap-2">
                           {m.suggestions.map((s) => {
                             const added = m.addedNames?.includes(s.name)
+                            const isAdding = addingKey === `${m.id}:${s.name}`
                             return (
                               <div
                                 key={s.name}
@@ -234,7 +245,13 @@ export function AssistantChat({
                                   <p className="truncate text-xs text-primary-muted">{s.reason}</p>
                                 </div>
                                 {onAddSuggestion && (
-                                  <Button size="sm" variant={added ? 'ghost' : 'secondary'} disabled={added} onClick={() => handleAdd(m.id, s)}>
+                                  <Button
+                                    size="sm"
+                                    variant={added ? 'ghost' : 'secondary'}
+                                    disabled={added || !!addingKey}
+                                    loading={isAdding}
+                                    onClick={() => handleAdd(m.id, s)}
+                                  >
                                     {added ? 'Added' : 'Add'}
                                   </Button>
                                 )}
