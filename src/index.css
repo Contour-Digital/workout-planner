@@ -164,6 +164,17 @@ button {
   font-family: inherit;
 }
 
+/* iOS Safari (and some Android browsers) auto-zoom the page when a focused
+ * text input's font-size is under 16px — most of the app's fields use
+ * Tailwind's text-sm/text-xs (14px/12px). Forcing 16px here stops that zoom;
+ * written outside any @layer so it wins over those utility classes regardless
+ * of source order (unlayered CSS always beats layered CSS in the cascade). */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
 /* Minimum comfortable touch target for interactive controls */
 button,
 [role='button'],
