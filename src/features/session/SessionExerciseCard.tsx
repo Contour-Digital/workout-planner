@@ -11,6 +11,13 @@ import { useSettingsStore } from '../../store/settingsStore'
 import type { Exercise } from '../../models/exercise'
 import type { SessionExerciseEntry, SetResult } from '../../models/session'
 
+/** Cycles a set's side tag: untagged -> left -> right -> untagged. */
+function nextSetSide(side: SetResult['side']): SetResult['side'] {
+  if (side === 'left') return 'right'
+  if (side === 'right') return undefined
+  return 'left'
+}
+
 interface SessionExerciseCardProps {
   entry: SessionExerciseEntry
   sessionId: string
@@ -131,7 +138,21 @@ export function SessionExerciseCard({
               return (
                 <div key={set.id} className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 shrink-0 text-xs font-semibold text-primary-muted">{i + 1}</span>
+                    <button
+                      onClick={() => onToggleSet(set.id, { side: nextSetSide(set.side) })}
+                      aria-label={
+                        set.side
+                          ? `Set ${i + 1}, ${set.side} side — tap to ${set.side === 'left' ? 'switch to right side' : 'clear side'}`
+                          : `Set ${i + 1} — tap to mark as left or right side, for single-arm/single-leg exercises`
+                      }
+                      className={clsx(
+                        'w-7 shrink-0 rounded-[var(--radius-control)] py-1 text-center text-xs font-semibold tabular-nums',
+                        set.side ? 'text-secondary' : 'text-primary-muted hover:text-primary',
+                      )}
+                    >
+                      {i + 1}
+                      {set.side === 'left' ? 'L' : set.side === 'right' ? 'R' : ''}
+                    </button>
                     <span className="w-24 shrink-0 text-xs text-primary-muted">
                       {isCardio ? (
                         <>

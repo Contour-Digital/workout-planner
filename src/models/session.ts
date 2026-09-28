@@ -11,6 +11,10 @@ export interface SetResult {
   actualWeightKg?: number
   actualDurationSeconds?: number
   actualDistanceMeters?: number
+  /** Which side this set was done on, for single-arm/single-leg exercises — tagged
+   *  live by tapping the set's index in the active session, not planned ahead of
+   *  time, since which side goes first/how many sets per side varies by routine. */
+  side?: 'left' | 'right'
 }
 
 export interface SessionExerciseEntry {

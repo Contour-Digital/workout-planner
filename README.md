@@ -273,6 +273,21 @@ the rest timer, it derives remaining time from an absolute end timestamp
 rather than decrementing a counter, so it stays correct if the tab is
 backgrounded mid-hold.
 
+### Tracking left/right side
+
+For single-arm/single-leg exercises (a one-leg stretch, single-arm row, …),
+each set's index badge in the active session doubles as a tap-to-cycle
+side tag: untagged -> "1 L" -> "1 R" -> untagged (`SetResult.side`,
+`nextSetSide` in `SessionExerciseCard.tsx`). It's tagged live, per set,
+rather than planned ahead of time in the routine editor — how many sets go
+to each side varies by routine (alternating vs. all-left-then-all-right),
+so there's nothing to get "wrong" upfront. It shows on every exercise's
+sets rather than only ones flagged as unilateral, since there's no reliable
+per-exercise signal for that (same reasoning as timed holds above) — just
+left untapped for exercises where it doesn't apply. `formatSetResult`
+appends "(Left)"/"(Right)" when set, so the "Previous:" comparison text
+also reflects which side it's comparing against.
+
 ## Fixed footers and floating buttons on mobile
 
 Several screens have their own fixed bottom bar (Cancel/Save, Finish
