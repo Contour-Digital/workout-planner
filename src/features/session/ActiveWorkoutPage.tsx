@@ -184,7 +184,7 @@ export function ActiveWorkoutPage() {
     const doneCount = sectionExercises.filter(isEntryComplete).length
 
     return (
-      <section className="overflow-hidden rounded-[var(--radius-card)] border border-primary-border">
+      <section className="my-3 overflow-hidden rounded-[var(--radius-card)] border border-primary-border">
         <button
           onClick={onToggle}
           aria-expanded={open}
