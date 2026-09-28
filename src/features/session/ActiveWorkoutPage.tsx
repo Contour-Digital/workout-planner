@@ -98,6 +98,10 @@ export function ActiveWorkoutPage() {
     navigate('/', { replace: true })
   }
 
+  function isEntryComplete(entry: SessionExerciseEntry): boolean {
+    return entry.actualSets.length > 0 && entry.actualSets.every((s) => s.completed)
+  }
+
   function renderEntry(entry: SessionExerciseEntry, section: 'warmup' | 'main' | 'cooldown') {
     return (
       <SessionExerciseCard
@@ -128,14 +132,19 @@ export function ActiveWorkoutPage() {
     if (section === 'main') {
       const groups = groupByPrimaryMuscle(sectionExercises, exerciseById)
       return (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-6">
           <h2 className="text-xs font-bold uppercase tracking-wide text-primary-muted">{title}</h2>
-          {groups.map((group) => (
-            <div key={group.muscle} className="flex flex-col gap-2">
-              <h3 className="text-xs font-bold uppercase tracking-wide text-primary-muted/70">{group.label}</h3>
-              {group.items.map((entry) => renderEntry(entry, section))}
-            </div>
-          ))}
+          {groups.map((group) => {
+            // Finished exercises sink to the bottom of their muscle group, so what's
+            // still left to do stays at the top as you work through the workout.
+            const ordered = [...group.items].sort((a, b) => Number(isEntryComplete(a)) - Number(isEntryComplete(b)))
+            return (
+              <div key={group.muscle} className="flex flex-col gap-2">
+                <h3 className="text-sm font-bold uppercase tracking-wide text-primary-muted/70">{group.label}</h3>
+                {ordered.map((entry) => renderEntry(entry, section))}
+              </div>
+            )
+          })}
         </section>
       )
     }
