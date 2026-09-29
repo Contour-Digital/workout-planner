@@ -63,6 +63,10 @@ export function ActiveWorkoutPage() {
    *  user taps a section's header, their choice wins from then on. */
   const [warmupOverride, setWarmupOverride] = useState<boolean | null>(null)
   const [cooldownOverride, setCooldownOverride] = useState<boolean | null>(null)
+  /** The main-workout exercise last opened (expanded) by the user — sticks as the
+   *  highlighted one until all its sets are done, even across collapsing it again,
+   *  a rest, or opening a different exercise without finishing this one first. */
+  const [activeEntryId, setActiveEntryId] = useState<string | null>(null)
 
   if (!session) return <div className="p-6 text-sm text-primary-muted">Loading…</div>
 
@@ -80,14 +84,12 @@ export function ActiveWorkoutPage() {
   const finisherExercises = session.finisher?.enabled ? session.finisher.exercises : []
   // Highlighted as the one to focus on right now, across all muscle groups, so it's
   // obvious what to do without scanning every group. Defaults to the first not-yet-
-  // started exercise in list order, same as before — but if you jump ahead and start
-  // logging sets on a later exercise out of order, that one (whichever in-progress
-  // exercise was touched most recently) takes over as the highlight instead.
-  const inProgressMainEntries = session.main.filter((e) => isEntryStarted(e) && !isEntryComplete(e))
+  // started exercise in list order — but opening (expanding) a different exercise's
+  // sets takes over the highlight instead, and it stays there (even if you collapse
+  // it again) until every one of its sets is done.
   const activeMainEntry =
-    inProgressMainEntries.length > 0
-      ? inProgressMainEntries.reduce((latest, e) => (lastSetCompletedAt(e) > lastSetCompletedAt(latest) ? e : latest))
-      : session.main.find((e) => !isEntryComplete(e))
+    (activeEntryId && session.main.find((e) => e.id === activeEntryId && !isEntryComplete(e))) ||
+    session.main.find((e) => !isEntryComplete(e))
   const progressSegments: ProgressSegment[] = [
     warmupExercises.length > 0 && { key: 'warmup', weight: warmupExercises.length, value: sectionFraction(warmupExercises) },
     { key: 'main', weight: Math.max(session.main.length, 1), value: sectionFraction(session.main) },
@@ -130,16 +132,6 @@ export function ActiveWorkoutPage() {
     return entry.actualSets.length > 0 && entry.actualSets.every((s) => s.completed)
   }
 
-  function isEntryStarted(entry: SessionExerciseEntry): boolean {
-    return entry.actualSets.some((s) => s.completed)
-  }
-
-  /** Most recent completedAt among an entry's completed sets, or '' if none —
-   *  used to tell which of several in-progress exercises was touched last. */
-  function lastSetCompletedAt(entry: SessionExerciseEntry): string {
-    return entry.actualSets.reduce((latest, s) => (s.completed && s.completedAt && s.completedAt > latest ? s.completedAt : latest), '')
-  }
-
   function sectionFraction(entries: SessionExerciseEntry[]): number {
     const totalSets = entries.reduce((sum, e) => sum + e.actualSets.length, 0)
     if (totalSets === 0) return 0
@@ -154,6 +146,7 @@ export function ActiveWorkoutPage() {
         entry={entry}
         sessionId={session!.id}
         highlight={highlight}
+        onExpand={section === 'main' ? () => setActiveEntryId(entry.id) : undefined}
         onToggleSet={(setId, patch) => updateSetResult(session!.id, entry.id, setId, patch)}
         onFieldChange={(setId, patch) => updateSetResultWithCascade(session!.id, entry.id, setId, patch)}
         onAddSet={() => addSetToEntry(session!.id, entry.id)}

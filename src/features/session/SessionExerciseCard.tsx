@@ -36,6 +36,10 @@ interface SessionExerciseCardProps {
    *  that isn't fully done yet — with a subtle accent edge, so it's obvious what
    *  to do next without having to scan every group. */
   highlight?: boolean
+  /** Fires when the user opens (not closes) this card's sets — the parent uses this
+   *  to move the highlight above onto whatever the user actually opened, even before
+   *  a set's logged, rather than only reacting once a set is completed. */
+  onExpand?: () => void
 }
 
 export function SessionExerciseCard({
@@ -50,6 +54,7 @@ export function SessionExerciseCard({
   onViewDetail,
   defaultExpanded,
   highlight,
+  onExpand,
 }: SessionExerciseCardProps) {
   const [expanded, setExpanded] = useState(!!defaultExpanded)
   const [exercise, setExercise] = useState<Exercise | null>(null)
@@ -110,7 +115,13 @@ export function SessionExerciseCard({
           </div>
         </button>
         <button
-          onClick={() => setExpanded((v) => !v)}
+          onClick={() => {
+            setExpanded((v) => {
+              const next = !v
+              if (next) onExpand?.()
+              return next
+            })
+          }}
           aria-expanded={expanded}
           aria-label={expanded ? 'Collapse' : 'Expand'}
           className="rounded-full p-2 text-primary hover:bg-primary-tint"
