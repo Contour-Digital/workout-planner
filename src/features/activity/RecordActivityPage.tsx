@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { PageHeader } from '../../components/ui/PageHeader'
-import { IconMapPin, IconPause, IconPlay, IconStop, IconX } from '../../components/ui/icons'
+import { IconLock, IconMapPin, IconPause, IconPlay, IconStop, IconX } from '../../components/ui/icons'
 import { saveCardioActivity } from '../../db/cardioActivityRepo'
 import { applyCardioActivityToTarget, findLoggableTargets, type LoggableTarget } from '../../lib/cardioActivityMatch'
 import { haversineDistance } from '../../lib/geo'
@@ -33,6 +33,9 @@ const ACCURACY_THRESHOLD_METERS = 100
 // Rejects a fix only when the implied speed to it is physically implausible for a
 // walk/run (faster than an ~29km/h sprint) — a GPS jump artifact, not real movement.
 const MAX_PLAUSIBLE_SPEED_MPS = 8
+// Long enough that a phone jostling in a pocket won't complete it by accident,
+// short enough that it doesn't feel like a chore when you actually mean to unlock.
+const UNLOCK_HOLD_MS = 1200
 
 interface WakeLockSentinelLike {
   release: () => Promise<void>
@@ -69,6 +72,8 @@ export function RecordActivityPage() {
   const [selectedTargetIndex, setSelectedTargetIndex] = useState<number | null>(null)
   const [finishedActivity, setFinishedActivity] = useState<CardioActivity | null>(null)
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
+  const [screenLocked, setScreenLocked] = useState(false)
+  const [unlockProgress, setUnlockProgress] = useState(0)
 
   const mapRef = useRef<L.Map | null>(null)
   const mapElRef = useRef<HTMLDivElement | null>(null)
@@ -81,6 +86,8 @@ export function RecordActivityPage() {
   const pausedMsRef = useRef(0)
   const pauseStartMsRef = useRef<number | null>(null)
   const tickRef = useRef<number | null>(null)
+  const unlockTimerRef = useRef<number | null>(null)
+  const unlockStartMsRef = useRef(0)
 
   // Map is created once and kept for the whole idle → recording → summary flow.
   useEffect(() => {
@@ -167,6 +174,7 @@ export function RecordActivityPage() {
     return () => {
       stopWatch()
       releaseWakeLock()
+      cancelUnlockHold()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -252,6 +260,8 @@ export function RecordActivityPage() {
   async function handleStop() {
     stopWatch()
     releaseWakeLock()
+    setScreenLocked(false)
+    cancelUnlockHold()
     const finishedAt = new Date().toISOString()
     const activity: CardioActivity = {
       id: crypto.randomUUID(),
@@ -278,10 +288,29 @@ export function RecordActivityPage() {
     }
   }
 
+  function startUnlockHold() {
+    unlockStartMsRef.current = Date.now()
+    unlockTimerRef.current = window.setInterval(() => {
+      const progress = Math.min(1, (Date.now() - unlockStartMsRef.current) / UNLOCK_HOLD_MS)
+      setUnlockProgress(progress)
+      if (progress >= 1) {
+        cancelUnlockHold()
+        setScreenLocked(false)
+      }
+    }, 30)
+  }
+  function cancelUnlockHold() {
+    if (unlockTimerRef.current) window.clearInterval(unlockTimerRef.current)
+    unlockTimerRef.current = null
+    setUnlockProgress(0)
+  }
+
   function confirmAbandon() {
     setCancelConfirmOpen(false)
     stopWatch()
     releaseWakeLock()
+    setScreenLocked(false)
+    cancelUnlockHold()
     navigate('/', { replace: true })
   }
 
@@ -367,6 +396,9 @@ export function RecordActivityPage() {
               Finish
             </Button>
           </div>
+          <Button fullWidth variant="ghost" icon={<IconLock width={16} height={16} />} onClick={() => setScreenLocked(true)}>
+            Lock screen
+          </Button>
           <Button fullWidth variant="ghost" icon={<IconX width={16} height={16} />} onClick={() => setCancelConfirmOpen(true)} className="text-danger">
             Cancel
           </Button>
@@ -383,6 +415,9 @@ export function RecordActivityPage() {
               Finish
             </Button>
           </div>
+          <Button fullWidth variant="ghost" icon={<IconLock width={16} height={16} />} onClick={() => setScreenLocked(true)}>
+            Lock screen
+          </Button>
           <Button fullWidth variant="ghost" icon={<IconX width={16} height={16} />} onClick={() => setCancelConfirmOpen(true)} className="text-danger">
             Cancel
           </Button>
@@ -431,6 +466,49 @@ export function RecordActivityPage() {
           <Button fullWidth variant="ghost" className="text-danger" onClick={() => setCancelConfirmOpen(true)}>
             Discard
           </Button>
+        </div>
+      )}
+
+      {screenLocked && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-[#0b0b0f] px-6 py-12 text-white">
+          <div className="flex w-full max-w-xs flex-col items-center gap-1 pt-8 text-center">
+            <IconLock width={22} height={22} className="mb-3 opacity-70" />
+            <p className="text-sm font-medium tracking-wide opacity-70">Screen locked</p>
+            <p className="text-xs opacity-50">Recording continues — hold the button below to unlock</p>
+          </div>
+
+          <div className="grid w-full max-w-xs grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-2xl font-bold">{formatDuration(elapsedSeconds)}</p>
+              <p className="text-xs opacity-60">Time</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{(distanceMeters / 1000).toFixed(2)}</p>
+              <p className="text-xs opacity-60">Distance (km)</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{pace ?? '–'}</p>
+              <p className="text-xs opacity-60">Avg pace</p>
+            </div>
+          </div>
+
+          <button
+            onPointerDown={startUnlockHold}
+            onPointerUp={cancelUnlockHold}
+            onPointerLeave={cancelUnlockHold}
+            onPointerCancel={cancelUnlockHold}
+            onContextMenu={(e) => e.preventDefault()}
+            aria-label="Hold to unlock screen"
+            className="relative flex h-24 w-24 select-none items-center justify-center rounded-full"
+            style={{
+              backgroundImage: `conic-gradient(#8b5cf6 ${unlockProgress * 360}deg, rgba(255,255,255,0.15) 0deg)`,
+              touchAction: 'none',
+            }}
+          >
+            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#0b0b0f]">
+              <IconLock width={26} height={26} />
+            </span>
+          </button>
         </div>
       )}
 
