@@ -77,6 +77,19 @@ export function SessionExerciseCard({
   const doneCount = entry.actualSets.filter((s) => s.completed).length
   const isComplete = entry.actualSets.length > 0 && doneCount === entry.actualSets.length
 
+  // Auto-collapse the moment the *last* set is checked off, not every time an
+  // already-complete exercise happens to be (re)expanded — e.g. reopening one
+  // afterwards to double-check or edit a value shouldn't immediately snap shut
+  // again. A brief pause first so the checkmark is actually visible before it closes.
+  const wasCompleteRef = useRef(isComplete)
+  useEffect(() => {
+    const justCompleted = isComplete && !wasCompleteRef.current
+    wasCompleteRef.current = isComplete
+    if (!justCompleted) return
+    const timer = setTimeout(() => setExpanded(false), 700)
+    return () => clearTimeout(timer)
+  }, [isComplete])
+
   function handleQuickComplete(set: SetResult, targetIndex: number) {
     const target = entry.targetSets[targetIndex]
     if (set.completed) {
