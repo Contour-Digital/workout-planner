@@ -16,8 +16,10 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['quads', 'glutes'],
     secondaryMuscles: ['hamstrings', 'core', 'lower_back'],
-    primarySpecificMuscles: ['gluteus_maximus'],
+    primarySpecificMuscles: ['gluteus_maximus', 'adductors'],
     equipment: ['barbell'],
+    notes:
+      'Bar position shifts the emphasis: a higher, more upright bar placement is more quad-dominant, while a lower bar position loads the hips and posterior chain more.',
     instructions: [
       'Set the bar on a rack at upper-chest height and step under it, resting it across your upper back.',
       'Unrack the bar, step back, and set feet shoulder-width apart with toes slightly turned out.',
@@ -38,7 +40,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['hamstrings', 'glutes', 'lower_back'],
     secondaryMuscles: ['back', 'forearms', 'core'],
     primarySpecificMuscles: ['gluteus_maximus'],
+    secondarySpecificMuscles: ['traps', 'forearm_flexors'],
     equipment: ['barbell'],
+    notes: 'A conventional stance emphasizes the hips and hamstrings most; a wider sumo stance shifts more of the load onto the quads and adductors.',
     instructions: [
       'Stand with mid-foot under the bar, feet hip-width apart.',
       'Hinge at the hips to grip the bar just outside your shins, back flat.',
@@ -56,7 +60,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['chest'],
     secondaryMuscles: ['triceps', 'shoulders'],
     primarySpecificMuscles: ['chest_lower'],
+    secondarySpecificMuscles: ['triceps_lateral_head', 'front_delts'],
     equipment: ['barbell', 'bench'],
+    notes: 'Grip width shifts the balance of the lift — a wider grip emphasizes the chest more, a narrower grip shifts more work onto the triceps.',
     instructions: [
       'Lie on the bench with eyes under the bar, feet flat on the floor.',
       'Grip the bar slightly wider than shoulder-width and unrack it over your chest.',
@@ -76,6 +82,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primarySpecificMuscles: ['front_delts'],
     secondarySpecificMuscles: ['triceps_lateral_head'],
     equipment: ['barbell'],
+    notes: 'Standing (rather than seated) demands significant core bracing to keep the lower back from hyperextending as the bar passes overhead.',
     instructions: [
       'Hold the bar at shoulder height with an overhand grip, elbows slightly in front.',
       'Brace your core and press the bar straight up, moving your head back slightly to let it pass.',
@@ -95,6 +102,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primarySpecificMuscles: ['lats'],
     secondarySpecificMuscles: ['rear_delts'],
     equipment: ['barbell'],
+    notes: 'An underhand (supinated) grip brings the biceps and lower lats more into play; an overhand grip emphasizes the upper back.',
     instructions: [
       'Hinge forward from the hips to roughly 45 degrees, knees slightly bent, back flat.',
       'Grip the bar just outside your legs and let it hang at arm’s length.',
@@ -112,7 +120,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps', 'forearms'],
     primarySpecificMuscles: ['lats'],
+    secondarySpecificMuscles: ['forearm_flexors'],
     equipment: ['pull_up_bar'],
+    notes: 'A wider grip emphasizes the lats more; a closer, underhand grip (a chin-up) shifts more of the work onto the biceps.',
     instructions: [
       'Hang from the bar with an overhand grip, slightly wider than shoulders.',
       'Pull your chest toward the bar by driving your elbows down and back.',
@@ -130,8 +140,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['chest'],
     secondaryMuscles: ['triceps', 'shoulders', 'core'],
     primarySpecificMuscles: ['chest_lower'],
-    secondarySpecificMuscles: ['triceps_lateral_head'],
+    secondarySpecificMuscles: ['triceps_lateral_head', 'front_delts'],
     equipment: ['none'],
+    notes: 'Hand position changes the emphasis — wider hands lean on the chest more, hands brought in close (a diamond push-up) shift more work onto the triceps.',
     instructions: [
       'Start in a plank with hands slightly wider than shoulders.',
       'Keep your body in a straight line as you bend the elbows and lower your chest to the floor.',
@@ -149,6 +160,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     secondaryMuscles: ['hamstrings', 'core'],
     primarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['dumbbell'],
+    notes: 'A longer stride emphasizes the glutes and hamstrings more; a shorter stride keeps more of the work on the quads.',
     instructions: [
       'Hold a dumbbell in each hand at your sides.',
       'Step forward into a lunge, lowering the back knee toward the floor.',
@@ -165,7 +177,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['shoulders'],
     secondaryMuscles: ['triceps'],
     primarySpecificMuscles: ['front_delts'],
+    secondarySpecificMuscles: ['triceps_lateral_head'],
     equipment: ['dumbbell', 'bench'],
+    notes: 'Because each arm moves independently, dumbbells allow a more natural pressing arc and slightly more side-delt involvement than a fixed barbell path.',
     instructions: [
       'Sit or stand holding a dumbbell at each shoulder, palms facing forward.',
       'Press both dumbbells overhead until arms are fully extended.',
@@ -181,9 +195,10 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'bodyweight',
     primaryMuscles: ['core'],
     secondaryMuscles: ['shoulders', 'glutes'],
-    primarySpecificMuscles: ['lower_abs'],
-    secondarySpecificMuscles: ['obliques'],
+    primarySpecificMuscles: ['lower_abs', 'obliques'],
     equipment: ['mat'],
+    notes:
+      'Holding time matters less than quality — a shorter, well-braced hold with a neutral spine is more valuable than a longer one with the hips sagging or piking.',
     instructions: [
       'Rest on your forearms and toes, elbows under shoulders.',
       'Keep your body in a straight line from head to heels.',
@@ -201,6 +216,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     secondaryMuscles: ['core', 'back'],
     primarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['kettlebell'],
+    notes: 'This is a ballistic hip-hinge, not a squat — power comes from an explosive hip snap, with the arms doing very little active lifting.',
     instructions: [
       'Stand with feet shoulder-width apart, kettlebell on the floor in front of you.',
       'Hinge at the hips to grip the bell, then hike it back between your legs.',
@@ -220,6 +236,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primarySpecificMuscles: ['gluteus_maximus'],
     secondarySpecificMuscles: ['gastrocnemius'],
     equipment: ['other'],
+    notes: 'Step back down rather than jumping down — landing from a jump on top of a jump adds impact stress with little training benefit.',
     instructions: [
       'Stand facing a sturdy box, feet shoulder-width apart.',
       'Swing your arms back, bend the knees, then explode upward and forward onto the box.',
@@ -235,7 +252,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'cardio',
     primaryMuscles: ['cardiovascular'],
     secondaryMuscles: ['quads', 'calves'],
+    secondarySpecificMuscles: ['gastrocnemius'],
     equipment: ['treadmill'],
+    notes: 'A slight incline (1-2%) better approximates the effort of running outdoors, since a flat treadmill belt removes some of the natural air resistance.',
     instructions: [
       'Start at an easy walking pace to warm up.',
       'Gradually increase speed to your target pace.',
@@ -252,6 +271,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['cardiovascular'],
     secondaryMuscles: ['quads', 'hamstrings', 'calves'],
     equipment: ['bike'],
+    notes: 'A higher cadence at lower resistance is generally easier on the knees than a low cadence grinding against high resistance.',
     instructions: [
       'Adjust the seat so your knee has a slight bend at the bottom of the pedal stroke.',
       'Pedal at a steady cadence for your target duration or distance.',
@@ -266,8 +286,10 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'cardio',
     primaryMuscles: ['back', 'cardiovascular'],
     secondaryMuscles: ['hamstrings', 'biceps'],
-    primarySpecificMuscles: ['lats'],
+    primarySpecificMuscles: ['lats', 'traps'],
     equipment: ['rower'],
+    notes:
+      'The power for each stroke should come mostly from the legs — a common mistake is over-relying on the arms and back, which fatigues them well before the legs.',
     instructions: [
       'Drive with the legs first, then lean back slightly, then pull the handle to your ribcage.',
       'Reverse the sequence to return to the catch: arms out, lean forward, then bend the knees.',
@@ -282,7 +304,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'cardio',
     primaryMuscles: ['cardiovascular'],
     secondaryMuscles: ['calves'],
+    secondarySpecificMuscles: ['gastrocnemius'],
     equipment: ['other'],
+    notes: 'Keeping jumps small and quick is easier on the calves and joints over a long session than jumping high on every rep.',
     instructions: ['Hold the rope handles at hip height and swing it using your wrists.', 'Jump just high enough to clear the rope with a soft landing.'],
     techniqueTips: ['Keep jumps small and stay light on the balls of your feet.'],
     commonMistakes: ['Jumping too high on each rep', 'Swinging the rope from the shoulders instead of the wrists'],
@@ -295,6 +319,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['hip_flexors'],
     secondaryMuscles: ['quads'],
     equipment: ['mat'],
+    notes: 'Squeezing the glute of the kneeling leg (rather than just leaning forward) is what actually lengthens the hip flexor — leaning alone mostly extends the lower back instead.',
     instructions: [
       'Kneel on one knee with the other foot planted in front, both at 90 degrees.',
       'Squeeze the glute of the kneeling leg and shift your hips forward slightly.',
@@ -310,7 +335,10 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'mobility',
     primaryMuscles: ['shoulders'],
     secondaryMuscles: ['chest', 'back'],
+    primarySpecificMuscles: ['front_delts', 'rear_delts'],
     equipment: ['resistance_band'],
+    notes:
+      'Start with a wide grip and gradually narrow it over time as shoulder mobility improves — too narrow a grip too soon will force the elbows to bend to compensate.',
     instructions: [
       'Hold a light band or dowel with a wide, overhand grip.',
       'Keeping your arms straight, raise it overhead and continue behind your back.',
@@ -328,6 +356,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     secondaryMuscles: [],
     primarySpecificMuscles: ['rear_delts', 'traps'],
     equipment: ['resistance_band'],
+    notes: 'A lighter band that allows a full, controlled range of motion is more effective here than a heavier one that turns into a short, jerky pull.',
     instructions: [
       'Hold a light resistance band with arms extended in front at shoulder height.',
       'Pull the band apart by driving the shoulder blades together.',
@@ -344,6 +373,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['lower_back'],
     secondaryMuscles: ['core'],
     equipment: ['mat'],
+    notes: 'A good warm-up mobilizer for the spine before loaded work like squats or deadlifts, since it takes the spine through both flexion and extension under control.',
     instructions: [
       'Start on hands and knees, wrists under shoulders, knees under hips.',
       'Inhale, drop the belly, and lift the chest and tailbone (cow).',
@@ -360,6 +390,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['hamstrings'],
     secondaryMuscles: ['lower_back'],
     equipment: ['none'],
+    notes: 'Keep a flat back and hinge from the hips — rounding the spine to reach further shifts the stretch away from the hamstrings and onto the lower back.',
     instructions: [
       'Place one heel on a low surface with the leg straight.',
       'Hinge forward from the hips, keeping your back flat, until you feel a stretch.',
@@ -376,6 +407,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['quads'],
     secondaryMuscles: [],
     equipment: ['foam_roller'],
+    notes: 'Spend extra time on tender spots, but avoid rolling directly over the kneecap or straight down the center of the front of the thigh over the bone.',
     instructions: [
       'Lie face down with the roller under your thighs, supporting yourself on your forearms.',
       'Slowly roll from just above the knee to just below the hip.',
@@ -392,6 +424,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['full_body'],
     secondaryMuscles: [],
     equipment: ['none'],
+    notes: "Commonly used before or after a workout, or any time, to help down-regulate the nervous system — there's no need to force a deep breath, just keep the four counts even.",
     instructions: [
       'Sit comfortably and inhale slowly through the nose for 4 counts.',
       'Hold for 4 counts.',
@@ -409,6 +442,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['cardiovascular'],
     secondaryMuscles: ['calves'],
     equipment: ['none'],
+    notes: "The goal is active recovery, not conditioning — if it's hard to hold a conversation, the pace is too fast for this session.",
     instructions: ['Walk at a comfortable, conversational pace.', 'Focus on relaxed posture and steady breathing.'],
     techniqueTips: ['Keep the effort easy enough to hold a conversation throughout.'],
     commonMistakes: ['Walking fast enough that it becomes a conditioning session'],
@@ -420,8 +454,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'functional',
     primaryMuscles: ['quads', 'glutes'],
     secondaryMuscles: ['core'],
-    primarySpecificMuscles: ['gluteus_maximus'],
+    primarySpecificMuscles: ['gluteus_maximus', 'adductors'],
     equipment: ['dumbbell', 'kettlebell'],
+    notes: 'A good regression from a barbell back squat, since holding the load in front naturally helps keep the torso upright and encourages depth.',
     instructions: [
       'Hold a dumbbell or kettlebell vertically against your chest.',
       'Squat down between your knees, keeping your chest up.',
@@ -440,6 +475,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primarySpecificMuscles: ['obliques'],
     secondarySpecificMuscles: ['front_delts'],
     equipment: ['mat'],
+    notes: 'Widening the stance of the feet is the easiest way to reduce hip rock if the movement feels unstable.',
     instructions: [
       'Start in a high plank with hands under shoulders and feet wide.',
       'Tap one hand to the opposite shoulder while keeping the hips as still as possible.',
@@ -457,7 +493,11 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['chest'],
     secondaryMuscles: ['shoulders'],
+    primarySpecificMuscles: ['chest_lower'],
+    secondarySpecificMuscles: ['front_delts'],
     equipment: ['cable'],
+    notes:
+      'Pulley height changes the angle of emphasis: shoulder height (as described here) targets the mid/lower chest, a low-to-high path emphasizes the upper chest, and a high-to-low path emphasizes the lower chest more.',
     instructions: [
       'Set both pulleys to chest height and grab a handle in each hand, stepping forward into a slight split stance.',
       'Start with arms out wide, a soft bend in the elbows.',
@@ -476,6 +516,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     secondaryMuscles: [],
     primarySpecificMuscles: ['triceps_lateral_head'],
     equipment: ['cable'],
+    notes: 'Switching from a straight bar to a rope attachment lets the hands rotate outward at the bottom, adding a bit more contraction at the finish.',
     instructions: [
       'Attach a bar or rope to a high pulley and grip with palms down (or facing in for a rope).',
       'Pin your elbows to your sides and start with forearms roughly parallel to the floor.',
@@ -493,7 +534,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['biceps'],
     secondaryMuscles: ['forearms'],
     primarySpecificMuscles: ['biceps_short_head', 'biceps_long_head'],
+    secondarySpecificMuscles: ['forearm_flexors'],
     equipment: ['cable'],
+    notes: "The constant cable tension (unlike a dumbbell or barbell, which unloads near the top) keeps the biceps working through the whole range of motion.",
     instructions: [
       'Attach a straight or EZ bar to a low pulley and grip with palms facing up.',
       'Stand tall with elbows pinned to your sides.',
@@ -510,8 +553,10 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps', 'shoulders'],
-    primarySpecificMuscles: ['lats'],
+    primarySpecificMuscles: ['lats', 'traps'],
+    secondarySpecificMuscles: ['rear_delts'],
     equipment: ['cable'],
+    notes: 'A close, neutral-grip handle is the most common and shoulder-friendly attachment; a wide bar shifts more emphasis onto the upper back and rear delts.',
     instructions: [
       'Sit at the row station with knees slightly bent and feet on the platform, grip the handle with arms extended.',
       'Sit up tall with a neutral spine.',
@@ -529,7 +574,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['shoulders'],
     secondaryMuscles: ['back'],
     primarySpecificMuscles: ['rear_delts'],
+    secondarySpecificMuscles: ['traps'],
     equipment: ['cable'],
+    notes: "A great counterbalance to heavy pressing work — it's often programmed for shoulder health rather than pure size or strength.",
     instructions: [
       'Attach a rope to a high pulley, set roughly at face height.',
       'Grip the rope with palms facing in and step back to create tension.',
@@ -548,6 +595,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     secondaryMuscles: [],
     primarySpecificMuscles: ['side_delts'],
     equipment: ['cable'],
+    notes: "The cable keeps constant tension on the side delt through the whole range, including the bottom, which a dumbbell loses once the arm is close to the body.",
     instructions: [
       'Set a pulley to its lowest position and stand side-on to the machine, gripping the handle with the far hand.',
       'Start with the arm across your body, a slight bend in the elbow.',
@@ -566,6 +614,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     secondaryMuscles: ['shoulders', 'glutes'],
     primarySpecificMuscles: ['obliques'],
     equipment: ['cable'],
+    notes: 'This is a rotational, anti-extension core exercise — the power should come from rotating the torso and hips, not from pulling with the arms.',
     instructions: [
       'Set a pulley to the top position and stand side-on, gripping the handle with both hands.',
       'Pull the handle diagonally down and across your body, rotating your torso and hips as you go.',
@@ -583,7 +632,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps', 'shoulders'],
     primarySpecificMuscles: ['lats'],
+    secondarySpecificMuscles: ['rear_delts'],
     equipment: ['cable'],
+    notes: "A useful pull-up regression for anyone not yet able to do bodyweight pull-ups, since the resistance can be scaled down.",
     instructions: [
       'Sit at the pulldown station and secure your thighs under the pad, gripping the bar wider than shoulder-width.',
       'Lean back very slightly and pull the bar down to your upper chest.',
@@ -602,6 +653,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     secondaryMuscles: ['lower_back'],
     primarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['cable'],
+    notes: 'A useful way to practice the hip-hinge pattern with a light, forgiving resistance before loading a barbell deadlift.',
     instructions: [
       'Attach a rope to a low pulley and stand facing away from the machine, straddling the cable with the rope between your legs.',
       'Hinge forward at the hips with soft knees, letting the rope pull your arms back between your legs.',
@@ -619,6 +671,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['chest'],
     secondaryMuscles: ['shoulders', 'triceps'],
     primarySpecificMuscles: ['chest_lower'],
+    secondarySpecificMuscles: ['front_delts', 'triceps_lateral_head'],
     equipment: ['machine'],
     notes: 'Plate-loaded, independent (iso-lateral) arms — each side moves on its own path.',
     instructions: [
@@ -638,6 +691,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['chest'],
     secondaryMuscles: ['triceps'],
     primarySpecificMuscles: ['chest_lower'],
+    secondarySpecificMuscles: ['triceps_lateral_head'],
     equipment: ['machine'],
     notes: 'Plate-loaded machine; targets the lower chest with a downward pressing angle.',
     instructions: [
@@ -657,6 +711,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['shoulders'],
     secondaryMuscles: ['triceps'],
     primarySpecificMuscles: ['front_delts'],
+    secondarySpecificMuscles: ['triceps_lateral_head'],
     equipment: ['machine'],
     notes: 'Plate-loaded, independent arms.',
     instructions: [
@@ -714,6 +769,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['quads'],
     secondaryMuscles: ['glutes', 'hamstrings'],
+    secondarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['machine'],
     notes: 'Plate-loaded, independent (iso-lateral) leg press.',
     instructions: [
@@ -733,7 +789,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['hamstrings'],
     secondaryMuscles: ['calves'],
     primarySpecificMuscles: ['hamstrings_medial', 'hamstrings_lateral'],
+    secondarySpecificMuscles: ['gastrocnemius'],
     equipment: ['machine'],
+    notes: 'Turning the toes in or out slightly can shift emphasis between the inner and outer hamstring, though most people train it with a neutral foot position.',
     instructions: [
       'Sit in the machine with the back pad adjusted and the lever pad resting just above your heels.',
       'Grip the handles and brace your thighs against the leg pad.',
@@ -751,6 +809,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['quads'],
     secondaryMuscles: [],
     equipment: ['machine'],
+    notes: 'An isolation exercise with no hip involvement — useful for building quad size/strength directly, or for targeted rehab work.',
     instructions: [
       'Sit in the machine with the back pad adjusted and the lever pad resting on the front of your shins.',
       'Grip the handles and sit tall.',
@@ -769,6 +828,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     secondaryMuscles: ['glutes'],
     secondarySpecificMuscles: ['gluteus_maximus'],
     equipment: ['machine'],
+    notes: 'Because the bar path is fixed vertically, let the hips travel back naturally as you descend rather than forcing a straight up-and-down path — fighting the fixed path is what strains the knees.',
     instructions: [
       'Set the bar at upper-back height and step under it, unracking by rotating it out of the hooks.',
       'Set your feet slightly in front of your hips since the bar path is fixed vertically.',
@@ -786,6 +846,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['hamstrings'],
     secondaryMuscles: ['calves', 'lower_back'],
     equipment: ['resistance_band'],
+    notes: 'Keep the hips squared to the ceiling rather than letting the raised leg rotate outward, which can shift the stretch away from the hamstring.',
     instructions: [
       'Lie on your back and loop a light band around the ball of one foot.',
       'Keeping that leg straight, pull gently with the band to draw it toward your chest.',
@@ -802,6 +863,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['chest'],
     secondaryMuscles: ['shoulders'],
     equipment: ['resistance_band'],
+    notes: 'A gentle, sustained stretch is more effective here than pushing into pain — ease into the tension and let it build gradually.',
     instructions: [
       'Anchor a light band at chest height behind you and hold an end in each hand.',
       'Step forward until you feel tension, then let your arms drift slightly back and open across your chest.',
@@ -817,7 +879,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'mobility',
     primaryMuscles: ['triceps'],
     secondaryMuscles: ['shoulders'],
+    primarySpecificMuscles: ['triceps_long_head'],
     equipment: ['resistance_band'],
+    notes: "The overhead arm position stretches the long head of the triceps the most, since it's the only head that crosses the shoulder joint as well as the elbow.",
     instructions: [
       'Hold one end of a light band overhead with one hand and let the other end hang down your back.',
       'Reach behind your lower back with the opposite hand and grip the band.',
@@ -834,6 +898,7 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     primaryMuscles: ['quads'],
     secondaryMuscles: ['hip_flexors'],
     equipment: ['resistance_band'],
+    notes: 'Keeping the knees together and hips level isolates the stretch to the front of the thigh — letting the hip open up shifts it toward the hip flexor instead.',
     instructions: [
       'Loop a light band around one ankle and anchor or hold the other end behind you at hip height.',
       'Standing tall, let the band gently draw the heel toward your glute.',
@@ -849,7 +914,9 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'mobility',
     primaryMuscles: ['back'],
     secondaryMuscles: ['shoulders'],
+    primarySpecificMuscles: ['lats'],
     equipment: ['resistance_band'],
+    notes: 'Sinking the hips away from the anchor point (rather than just reaching with the arm) is what actually lengthens the lat through its full range.',
     instructions: [
       'Anchor a light band at head height and grip it with one hand, arm extended overhead.',
       'Step back and sink your hips away from the anchor, letting the band pull your arm and side into a stretch.',
@@ -865,7 +932,10 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'mobility',
     primaryMuscles: ['calves'],
     secondaryMuscles: [],
+    primarySpecificMuscles: ['gastrocnemius'],
     equipment: ['resistance_band'],
+    notes:
+      'Keeping the knee straight (as described) emphasizes the gastrocnemius; bending the knee slightly and repeating shifts more of the stretch onto the soleus underneath.',
     instructions: [
       'Sit with the target leg extended and loop a light band around the ball of that foot.',
       'Holding an end in each hand, gently pull the toes back toward your shin.',
