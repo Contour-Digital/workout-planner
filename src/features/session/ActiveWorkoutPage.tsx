@@ -24,6 +24,7 @@ import {
   saveSessionAsRoutine,
   saveWorkoutReview,
   startRestTimer,
+  swapSessionExercise,
   updateEntryNotes,
   updateSessionNotes,
   updateSetResult,
@@ -33,6 +34,7 @@ import { elapsedSeconds, workoutSetsCompleted, type Achievement, type MissedExer
 import { useNow } from '../../lib/useNow'
 import { getAllExercises } from '../../db/exercisesRepo'
 import { groupByPrimaryMuscle } from '../../lib/exerciseGrouping'
+import { findMostSimilarExercise } from '../../lib/exerciseSimilarity'
 import { computeMissedExercises, computeSessionAchievements } from '../../lib/workoutReview'
 import { generateWorkoutSummary } from '../../lib/workoutAiSummary'
 import { addSuggestionToRoutine } from '../../lib/addSuggestionToRoutine'
@@ -50,7 +52,7 @@ export function ActiveWorkoutPage() {
   const restTimerEnabled = session?.restTimerEnabled ?? globalRestTimerEnabled
   const now = useNow(1000)
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [detailExercise, setDetailExercise] = useState<Exercise | null>(null)
+  const [detailEntryId, setDetailEntryId] = useState<string | null>(null)
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false)
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
@@ -71,6 +73,22 @@ export function ActiveWorkoutPage() {
   if (!session) return <div className="p-6 text-sm text-primary-muted">Loading…</div>
 
   const exerciseById = new Map(exercises.map((e) => [e.id, e]))
+  const allEntries = [
+    ...(session.warmup?.exercises ?? []),
+    ...session.main,
+    ...(session.finisher?.exercises ?? []),
+    ...(session.cooldown?.exercises ?? []),
+  ]
+  const detailEntry = allEntries.find((e) => e.id === detailEntryId) ?? null
+  const detailExercise = detailEntry ? (exerciseById.get(detailEntry.exerciseId) ?? null) : null
+  // Never suggest swapping in something already sitting elsewhere in this session.
+  const usedElsewhere = new Set(allEntries.filter((e) => e.id !== detailEntryId).map((e) => e.exerciseId))
+  const similarExercise = detailExercise
+    ? findMostSimilarExercise(
+        detailExercise,
+        exercises.filter((e) => !usedElsewhere.has(e.id)),
+      )
+    : null
   const isPaused = session.pauseIntervals.some((p) => !p.end)
   const elapsed = elapsedSeconds(session.startedAt, session.finishedAt, session.pauseIntervals)
   void now // force re-render each tick while active
@@ -157,7 +175,7 @@ export function ActiveWorkoutPage() {
           const effectiveRestSeconds = session!.restTimerSeconds ?? restSeconds
           if (restTimerEnabled && effectiveRestSeconds && effectiveRestSeconds > 0) startRestTimer(session!.id, effectiveRestSeconds)
         }}
-        onViewDetail={setDetailExercise}
+        onViewDetail={() => setDetailEntryId(entry.id)}
       />
     )
   }
@@ -250,6 +268,12 @@ export function ActiveWorkoutPage() {
       finisher: (session!.finisher?.enabled ? session!.finisher.exercises : []).map((e) => e.exerciseName),
       cooldown: (session!.cooldown?.enabled ? session!.cooldown.exercises : []).map((e) => e.exerciseName),
     }
+  }
+
+  async function handleSwap(replacement: Exercise) {
+    if (!detailEntry) return
+    await swapSessionExercise(session!.id, detailEntry.id, replacement.id)
+    setDetailEntryId(null)
   }
 
   async function handleAddSuggestion(suggestion: AssistantSuggestion) {
@@ -353,7 +377,12 @@ export function ActiveWorkoutPage() {
           setPickerOpen(false)
         }}
       />
-      <ExerciseDetailSheet exercise={detailExercise} onClose={() => setDetailExercise(null)} />
+      <ExerciseDetailSheet
+        exercise={detailExercise}
+        onClose={() => setDetailEntryId(null)}
+        similarExercise={similarExercise}
+        onSwap={handleSwap}
+      />
 
       <ConfirmDialog
         open={finishConfirmOpen}

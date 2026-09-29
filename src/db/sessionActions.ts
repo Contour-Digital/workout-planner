@@ -210,6 +210,18 @@ export async function updateEntryNotes(sessionId: string, entryId: string, notes
   await syncWorkout(sessionId)
 }
 
+/** Swaps which exercise an in-progress entry points to (e.g. its machine is taken),
+ *  keeping the sets/targets/rest/notes already set up for that slot untouched —
+ *  only the exercise identity and its logged name change. */
+export async function swapSessionExercise(sessionId: string, entryId: string, replacementExerciseId: string): Promise<void> {
+  const session = await db.workoutSessions.get(sessionId)
+  if (!session) return
+  const newName = await exerciseName(replacementExerciseId)
+  const patch = await mapEntryAcrossSections(session, entryId, (entry) => ({ ...entry, exerciseId: replacementExerciseId, exerciseName: newName }))
+  await db.workoutSessions.update(sessionId, patch)
+  await syncWorkout(sessionId)
+}
+
 export async function updateSessionNotes(sessionId: string, notes: string): Promise<void> {
   await db.workoutSessions.update(sessionId, { notes })
   await syncWorkout(sessionId)
