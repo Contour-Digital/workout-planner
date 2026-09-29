@@ -97,10 +97,7 @@ export function SessionExerciseCard({
 
   return (
     <div
-      className={clsx(
-        'rounded-[var(--radius-card)] border bg-surface',
-        highlight ? 'border-primary-border border-l-4 border-l-secondary' : 'border-primary-border',
-      )}
+      className={clsx('rounded-[var(--radius-card)] bg-surface', highlight ? 'border-2 border-secondary' : 'border border-primary-border')}
     >
       <div className="flex items-center gap-3 p-3">
         <button
