@@ -514,9 +514,10 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['triceps'],
     secondaryMuscles: [],
-    primarySpecificMuscles: ['triceps_lateral_head'],
+    primarySpecificMuscles: ['triceps_lateral_head', 'triceps_medial_head', 'triceps_long_head'],
     equipment: ['cable'],
-    notes: 'Switching from a straight bar to a rope attachment lets the hands rotate outward at the bottom, adding a bit more contraction at the finish.',
+    notes:
+      "Switching from a straight bar to a rope attachment lets the hands rotate outward at the bottom, adding a bit more contraction at the finish. With the elbows pinned at your sides, the lateral and medial heads do most of the work; the long head crosses the shoulder too, so it's more fully engaged by an overhead extension than by a pushdown.",
     instructions: [
       'Attach a bar or rope to a high pulley and grip with palms down (or facing in for a rope).',
       'Pin your elbows to your sides and start with forearms roughly parallel to the floor.',
@@ -533,10 +534,11 @@ export const SEED_LIBRARY_EXERCISES: LibraryExercise[] = [
     category: 'strength',
     primaryMuscles: ['biceps'],
     secondaryMuscles: ['forearms'],
-    primarySpecificMuscles: ['biceps_short_head', 'biceps_long_head'],
-    secondarySpecificMuscles: ['forearm_flexors'],
+    primarySpecificMuscles: ['biceps_short_head', 'biceps_long_head', 'brachialis'],
+    secondarySpecificMuscles: ['forearm_flexors', 'brachioradialis'],
     equipment: ['cable'],
-    notes: "The constant cable tension (unlike a dumbbell or barbell, which unloads near the top) keeps the biceps working through the whole range of motion.",
+    notes:
+      "The constant cable tension (unlike a dumbbell or barbell, which unloads near the top) keeps the biceps working through the whole range of motion. The brachialis and brachioradialis assist on every curl as synergist elbow flexors — a neutral, hammer-style grip (not this cable/bar version) shifts even more emphasis onto them.",
     instructions: [
       'Attach a straight or EZ bar to a low pulley and grip with palms facing up.',
       'Stand tall with elbows pinned to your sides.',

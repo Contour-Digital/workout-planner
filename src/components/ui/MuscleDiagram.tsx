@@ -79,7 +79,11 @@ const MUSCLE_ID_TO_GROUP: Record<string, MuscleGroup> = {
  *  brachialis have no distinct shape in the artwork, so they fall back to the
  *  general biceps region — still a real highlight, just not a more precise one.
  *  forearm_flexors/extensors additionally include the front view's single
- *  undivided forearm shape, since only the back view has that split. */
+ *  undivided forearm shape, since only the back view has that split. Likewise,
+ *  the triceps' medial head has no shape of its own (it sits underneath/between
+ *  the long and lateral heads), so it falls back to both existing triceps shapes;
+ *  brachioradialis has no shape either — it runs along the forearm's radial
+ *  (extensor) side, so it falls back there rather than to the flexor side. */
 const SPECIFIC_MUSCLE_TO_SHAPE_IDS: Record<SpecificMuscle, string[]> = {
   chest_upper: ['chest-upper-left', 'chest-upper-right'],
   chest_lower: ['chest-lower-left', 'chest-lower-right'],
@@ -89,8 +93,10 @@ const SPECIFIC_MUSCLE_TO_SHAPE_IDS: Record<SpecificMuscle, string[]> = {
   biceps_long_head: ['biceps-left', 'biceps-right'],
   biceps_short_head: ['biceps-left', 'biceps-right'],
   brachialis: ['biceps-left', 'biceps-right'],
+  brachioradialis: ['forearm-extensors-left', 'forearm-extensors-right', 'forearm-left', 'forearm-right'],
   triceps_long_head: ['triceps-long-left', 'triceps-long-right'],
   triceps_lateral_head: ['triceps-lateral-left', 'triceps-lateral-right'],
+  triceps_medial_head: ['triceps-long-left', 'triceps-lateral-left', 'triceps-long-right', 'triceps-lateral-right'],
   forearm_flexors: ['forearm-flexors-left', 'forearm-flexors-right', 'forearm-left', 'forearm-right'],
   forearm_extensors: ['forearm-extensors-left', 'forearm-extensors-right', 'forearm-left', 'forearm-right'],
   lats: ['lats-upper-left', 'lats-mid-left', 'lats-lower-left', 'lats-upper-right', 'lats-mid-right', 'lats-lower-right'],

@@ -40,8 +40,10 @@ export type SpecificMuscle =
   | 'biceps_long_head'
   | 'biceps_short_head'
   | 'brachialis'
+  | 'brachioradialis'
   | 'triceps_long_head'
   | 'triceps_lateral_head'
+  | 'triceps_medial_head'
   | 'forearm_flexors'
   | 'forearm_extensors'
   | 'lats'
@@ -174,8 +176,10 @@ export const SPECIFIC_MUSCLE_LABELS: Record<SpecificMuscle, string> = {
   biceps_long_head: 'Biceps (long head)',
   biceps_short_head: 'Biceps (short head)',
   brachialis: 'Brachialis',
+  brachioradialis: 'Brachioradialis',
   triceps_long_head: 'Triceps (long head)',
   triceps_lateral_head: 'Triceps (lateral head)',
+  triceps_medial_head: 'Triceps (medial head)',
   forearm_flexors: 'Forearm flexors',
   forearm_extensors: 'Forearm extensors',
   lats: 'Lats',
@@ -206,8 +210,10 @@ export const SPECIFIC_MUSCLE_GROUP: Record<SpecificMuscle, MuscleGroup> = {
   biceps_long_head: 'biceps',
   biceps_short_head: 'biceps',
   brachialis: 'biceps',
+  brachioradialis: 'forearms',
   triceps_long_head: 'triceps',
   triceps_lateral_head: 'triceps',
+  triceps_medial_head: 'triceps',
   forearm_flexors: 'forearms',
   forearm_extensors: 'forearms',
   lats: 'back',
