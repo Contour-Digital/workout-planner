@@ -24,11 +24,18 @@ export function muscleSimilarityScore(exercise: Exercise, candidate: Exercise): 
 }
 
 /** The best available swap-in for `exercise` from `pool`, ranked by how much its muscle
- *  targeting overlaps. Returns null if nothing in the pool shares a muscle with it. */
+ *  targeting overlaps. Returns null if nothing in the pool shares a muscle with it.
+ *
+ *  Mobility exercises (stretches and other mobility drills) only ever match against other
+ *  mobility exercises, and never against anything else, in either direction — a static
+ *  stretch isn't a reasonable substitute for a cable row just because they happen to share
+ *  a muscle, and a cable row is just as poor a substitute for a stretch. */
 export function findMostSimilarExercise(exercise: Exercise, pool: Exercise[]): Exercise | null {
+  const wantsMobility = exercise.category === 'mobility'
+  const candidates = pool.filter((c) => (c.category === 'mobility') === wantsMobility)
   let best: Exercise | null = null
   let bestScore = 0
-  for (const candidate of pool) {
+  for (const candidate of candidates) {
     if (candidate.id === exercise.id) continue
     const score = muscleSimilarityScore(exercise, candidate)
     if (score > bestScore) {

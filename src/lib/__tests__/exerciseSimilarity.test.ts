@@ -54,4 +54,31 @@ describe('findMostSimilarExercise', () => {
     const result = findMostSimilarExercise(isolatedBench, [unrelated])
     expect(result).toBeNull()
   })
+
+  it('only matches a mobility exercise against other mobility exercises, even with a worse muscle overlap', () => {
+    const hamstringStretch = ex({
+      id: 'stretch',
+      name: 'Standing Hamstring Stretch',
+      category: 'mobility',
+      primaryMuscles: ['hamstrings'],
+      secondaryMuscles: ['lower_back'],
+    })
+    const legCurl = ex({ id: 'curl', name: 'Seated Leg Curl', category: 'strength', primaryMuscles: ['hamstrings'], secondaryMuscles: ['calves'] })
+    const calfStretch = ex({ id: 'calf-stretch', name: 'Calf Stretch', category: 'mobility', primaryMuscles: ['lower_back'], secondaryMuscles: [] })
+    const result = findMostSimilarExercise(hamstringStretch, [legCurl, calfStretch])
+    expect(result?.id).toBe('calf-stretch')
+  })
+
+  it('never suggests a mobility exercise as a swap for a non-mobility exercise', () => {
+    const legCurl = ex({ id: 'curl', name: 'Seated Leg Curl', category: 'strength', primaryMuscles: ['hamstrings'], secondaryMuscles: [] })
+    const hamstringStretch = ex({
+      id: 'stretch',
+      name: 'Standing Hamstring Stretch',
+      category: 'mobility',
+      primaryMuscles: ['hamstrings'],
+      secondaryMuscles: [],
+    })
+    const result = findMostSimilarExercise(legCurl, [hamstringStretch])
+    expect(result).toBeNull()
+  })
 })
