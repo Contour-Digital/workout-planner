@@ -75,6 +75,7 @@ export function SessionExerciseCard({
   }, [entry.exerciseId, entry.exerciseName])
 
   const doneCount = entry.actualSets.filter((s) => s.completed).length
+  const isComplete = entry.actualSets.length > 0 && doneCount === entry.actualSets.length
 
   function handleQuickComplete(set: SetResult, targetIndex: number) {
     const target = entry.targetSets[targetIndex]
@@ -123,10 +124,14 @@ export function SessionExerciseCard({
             })
           }}
           aria-expanded={expanded}
-          aria-label={expanded ? 'Collapse' : 'Expand'}
-          className="rounded-full p-2 text-primary hover:bg-primary-tint"
+          aria-label={expanded ? 'Collapse' : isComplete ? 'Completed — expand to view sets' : 'Expand'}
+          className={clsx('rounded-full p-2 hover:bg-primary-tint', isComplete ? 'text-success' : 'text-primary')}
         >
-          <IconChevronDown width={18} height={18} className={expanded ? 'rotate-180 transition-transform' : 'transition-transform'} />
+          {isComplete ? (
+            <IconCheck width={18} height={18} />
+          ) : (
+            <IconChevronDown width={18} height={18} className={expanded ? 'rotate-180 transition-transform' : 'transition-transform'} />
+          )}
         </button>
       </div>
 
