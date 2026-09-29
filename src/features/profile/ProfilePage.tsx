@@ -227,6 +227,7 @@ export function ProfilePage() {
       </Card>
 
       <AccountCard />
+      <DiagnosticsCard />
 
       <AiExerciseForm open={addExerciseOpen} onClose={() => setAddExerciseOpen(false)} onSaved={() => setAddExerciseOpen(false)} />
     </div>
@@ -254,6 +255,75 @@ function AccountCard() {
       <Button variant="ghost" onClick={() => supabase.auth.signOut()}>
         Sign out
       </Button>
+    </Card>
+  )
+}
+
+interface DiagnosticErrorEntry {
+  kind: string
+  message: string
+  stack?: string
+  at: string
+}
+
+function loadDiagnosticErrors(): DiagnosticErrorEntry[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem('debug:lastErrors') ?? '[]')
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+/** Surfaces the last few JS errors caught by main.tsx's global error/unhandledrejection
+ *  listeners — for reports like "the app just freezes, no error shown" where there's
+ *  otherwise no way to see what actually happened, since the browser console is gone
+ *  by the time anyone looks and these errors don't hit React's own error boundary. */
+function DiagnosticsCard() {
+  const [errors, setErrors] = useState<DiagnosticErrorEntry[]>(() => loadDiagnosticErrors())
+  const [copied, setCopied] = useState(false)
+
+  if (errors.length === 0) return null
+
+  async function copyErrors() {
+    const text = errors.map((e) => `[${e.at}] ${e.kind}: ${e.message}${e.stack ? `\n${e.stack}` : ''}`).join('\n\n')
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // clipboard API unavailable — the text is still visible below to copy manually
+    }
+  }
+
+  function clearErrors() {
+    localStorage.removeItem('debug:lastErrors')
+    setErrors([])
+  }
+
+  return (
+    <Card className="mb-4 flex flex-col gap-3">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-primary-muted">Recent errors</h2>
+      <p className="text-xs text-primary-muted">
+        Background errors the app caught but couldn't show you at the time — useful to copy and share if something
+        seemed to freeze or misbehave.
+      </p>
+      <div className="flex flex-col gap-2">
+        {[...errors].reverse().map((e, i) => (
+          <div key={i} className="rounded-[var(--radius-control)] border border-primary-border bg-primary-tint p-2">
+            <p className="text-xs text-primary-muted">{new Date(e.at).toLocaleString()} · {e.kind}</p>
+            <p className="break-words text-xs font-medium text-danger">{e.message}</p>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Button variant="secondary" size="sm" onClick={copyErrors}>
+          {copied ? 'Copied' : 'Copy all'}
+        </Button>
+        <Button variant="ghost" size="sm" onClick={clearErrors}>
+          Clear
+        </Button>
+      </div>
     </Card>
   )
 }

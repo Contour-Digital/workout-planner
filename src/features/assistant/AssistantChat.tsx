@@ -143,12 +143,23 @@ export function AssistantChat({
     setAddingKey(key)
     setError(null)
     try {
-      await onAddSuggestion(suggestion)
+      // onAddSuggestion touches IndexedDB (and, on a first-time custom exercise,
+      // creates a new row) — none of that should ever take more than a couple of
+      // seconds, but if it somehow hangs (a stuck browser storage transaction,
+      // reported as the whole app freezing after tapping Add), this stops the
+      // button from being stuck disabled forever with no feedback: it gives up
+      // and surfaces an error instead of hanging indefinitely.
+      await Promise.race([
+        onAddSuggestion(suggestion),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 10000)),
+      ])
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, addedNames: [...(m.addedNames ?? []), suggestion.name] } : m)),
       )
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not add that exercise. Try again.')
+      const timedOut = err instanceof Error && err.message === 'TIMEOUT'
+      setError(timedOut ? 'Adding that exercise is taking too long — try again.' : err instanceof Error ? err.message : 'Could not add that exercise. Try again.')
+      if (timedOut) console.error('[AssistantChat] onAddSuggestion timed out after 10s for suggestion:', suggestion)
     } finally {
       setAddingKey(null)
     }
