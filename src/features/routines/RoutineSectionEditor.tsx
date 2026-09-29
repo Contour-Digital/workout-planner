@@ -9,6 +9,7 @@ import { getAllExercises } from '../../db/exercisesRepo'
 import { createExerciseConfigWithHistory } from '../../db/sessionsRepo'
 import type { ExerciseConfig } from '../../models/routine'
 import { flattenMuscleGroupConfigSections, groupExerciseConfigsByMuscle } from '../../lib/exerciseGrouping'
+import { findMostSimilarExercise } from '../../lib/exerciseSimilarity'
 import type { Exercise } from '../../models/exercise'
 
 interface RoutineSectionEditorProps {
@@ -36,9 +37,20 @@ export function RoutineSectionEditor({
   onAddToOtherSection,
 }: RoutineSectionEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [detailExercise, setDetailExercise] = useState<Exercise | null>(null)
+  const [detailConfigId, setDetailConfigId] = useState<string | null>(null)
   const library = useLiveQuery(getAllExercises, [], []) ?? []
   const byId = new Map(library.map((e) => [e.id, e]))
+
+  const detailConfig = exercises.find((c) => c.id === detailConfigId) ?? null
+  const detailExercise = detailConfig ? (byId.get(detailConfig.exerciseId) ?? null) : null
+  // Never suggest swapping in something already sitting elsewhere in this section.
+  const usedElsewhere = new Set(exercises.filter((c) => c.id !== detailConfigId).map((c) => c.exerciseId))
+  const similarExercise = detailExercise
+    ? findMostSimilarExercise(
+        detailExercise,
+        library.filter((e) => !usedElsewhere.has(e.id)),
+      )
+    : null
 
   function reindex(list: ExerciseConfig[]): ExerciseConfig[] {
     if (!groupByMuscle) return list.map((c, i) => ({ ...c, orderIndex: i }))
@@ -65,6 +77,18 @@ export function RoutineSectionEditor({
 
   function remove(id: string) {
     onChange(reindex(exercises.filter((c) => c.id !== id)))
+  }
+
+  function swap(replacement: Exercise) {
+    if (!detailConfig) return
+    const withReplacement = new Map(byId).set(replacement.id, replacement)
+    const swapped = exercises.map((c) => (c.id === detailConfig.id ? { ...c, exerciseId: replacement.id } : c))
+    onChange(
+      groupByMuscle
+        ? flattenMuscleGroupConfigSections(groupExerciseConfigsByMuscle(swapped, withReplacement))
+        : swapped.map((c, i) => ({ ...c, orderIndex: i })),
+    )
+    setDetailConfigId(null)
   }
 
   function move(id: string, dir: -1 | 1) {
@@ -102,10 +126,7 @@ export function RoutineSectionEditor({
         onRemove={() => remove(config.id)}
         onMoveUp={canMoveUp ? () => move(config.id, -1) : undefined}
         onMoveDown={canMoveDown ? () => move(config.id, 1) : undefined}
-        onViewDetail={() => {
-          const ex = byId.get(config.exerciseId)
-          if (ex) setDetailExercise(ex)
-        }}
+        onViewDetail={() => setDetailConfigId(config.id)}
       />
     )
   }
@@ -156,7 +177,12 @@ export function RoutineSectionEditor({
             : undefined
         }
       />
-      <ExerciseDetailSheet exercise={detailExercise} onClose={() => setDetailExercise(null)} />
+      <ExerciseDetailSheet
+        exercise={detailExercise}
+        onClose={() => setDetailConfigId(null)}
+        similarExercise={similarExercise}
+        onSwap={swap}
+      />
     </div>
   )
 }

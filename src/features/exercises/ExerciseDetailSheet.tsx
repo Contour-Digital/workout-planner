@@ -2,7 +2,8 @@ import { Sheet } from '../../components/ui/Sheet'
 import { Badge } from '../../components/ui/Badge'
 import { MuscleDiagram } from '../../components/ui/MuscleDiagram'
 import { Button } from '../../components/ui/Button'
-import { IconEdit, IconTrash } from '../../components/ui/icons'
+import { ExerciseMediaThumb } from '../../components/ui/ExerciseMedia'
+import { IconEdit, IconRepeat, IconTrash } from '../../components/ui/icons'
 import {
   EQUIPMENT_LABELS,
   EXERCISE_CATEGORY_LABELS,
@@ -26,11 +27,17 @@ interface ExerciseDetailSheetProps {
   onClose: () => void
   onEdit?: (exercise: Exercise) => void
   onDelete?: (exercise: Exercise) => void
+  /** The best-matching swap-in for `exercise`, by shared muscles — pass alongside
+   *  `onSwap` to show a "Swap for a similar exercise" prompt at the bottom of the
+   *  sheet. Omit (or pass null/undefined) where a swap doesn't make sense, e.g.
+   *  browsing the library outside of a routine. */
+  similarExercise?: Exercise | null
+  onSwap?: (replacement: Exercise) => void
 }
 
 /** Reusable exercise detail view — used both from the routine builder and mid-active-workout,
  *  as a sheet layered over whatever screen is open so in-progress state is never lost. */
-export function ExerciseDetailSheet({ exercise, onClose, onEdit, onDelete }: ExerciseDetailSheetProps) {
+export function ExerciseDetailSheet({ exercise, onClose, onEdit, onDelete, similarExercise, onSwap }: ExerciseDetailSheetProps) {
   return (
     <Sheet open={!!exercise} onClose={onClose} title={exercise?.name ?? ''}>
       {exercise && (
@@ -103,6 +110,30 @@ export function ExerciseDetailSheet({ exercise, onClose, onEdit, onDelete }: Exe
             <section>
               <h3 className="mb-1 text-sm font-semibold text-primary-strong">Notes</h3>
               <p className="text-sm text-primary-muted">{exercise.notes}</p>
+            </section>
+          )}
+
+          {similarExercise && onSwap && (
+            <section className="rounded-[var(--radius-card)] border border-primary-border bg-surface-muted p-3">
+              <h3 className="mb-2 text-sm font-semibold text-primary-strong">Swap for a similar exercise</h3>
+              <div className="flex items-center gap-3">
+                <ExerciseMediaThumb media={similarExercise.media} size={40} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-primary-strong">{similarExercise.name}</p>
+                  <p className="truncate text-xs text-secondary">
+                    {formatMuscles(similarExercise.primaryMuscles, similarExercise.primarySpecificMuscles)}
+                  </p>
+                </div>
+              </div>
+              <Button
+                fullWidth
+                variant="secondary"
+                className="mt-3"
+                icon={<IconRepeat width={16} height={16} />}
+                onClick={() => onSwap(similarExercise)}
+              >
+                Swap in {similarExercise.name}
+              </Button>
             </section>
           )}
 

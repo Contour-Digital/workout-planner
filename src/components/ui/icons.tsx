@@ -188,3 +188,9 @@ export const IconLock = (p: SVGProps<SVGSVGElement>) => (
     <path d="M8 11V7a4 4 0 0 1 8 0v4" />
   </Svg>
 )
+export const IconRepeat = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <path d="M4 12a8 8 0 0 1 14-5.2M20 5v5h-5" />
+    <path d="M20 12a8 8 0 0 1-14 5.2M4 19v-5h5" />
+  </Svg>
+)
