@@ -257,8 +257,8 @@ function WorkoutDetail({
               <div className="flex flex-col gap-2">
                 {session.review.aiExerciseSuggestions.map((s) => (
                   <div key={s.name} className="rounded-[var(--radius-control)] border border-primary-border bg-surface-muted px-3 py-2">
-                    <p className="truncate text-sm font-medium text-primary-strong">{s.name}</p>
-                    <p className="truncate text-xs text-primary-muted">{s.reason}</p>
+                    <p className="text-sm font-medium text-primary-strong">{s.name}</p>
+                    <p className="text-xs text-primary-muted">{s.reason}</p>
                   </div>
                 ))}
               </div>
