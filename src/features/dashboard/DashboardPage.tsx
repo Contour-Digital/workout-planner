@@ -191,7 +191,7 @@ export function DashboardPage() {
           <div className="flex flex-col gap-2">
             {recentSessions
               .filter((s) => s.kind !== 'rest' && (s.status === 'completed' || s.status === 'partial'))
-              .slice(0, 5)
+              .slice(0, 2)
               .map((s) => (
                 <button
                   key={s.id}
