@@ -4,7 +4,6 @@ import { IconChevronDown, IconRepeat, IconTrash } from '../../components/ui/icon
 import { getPreviousExercisePerformance } from '../../db/sessionsRepo'
 import { formatSetResult } from '../../lib/formatPerformance'
 import { formatPace, paceSplitMetersFor } from '../../models/units'
-import { nextSetSide } from '../../lib/setSide'
 import { MUSCLE_GROUP_LABELS, type Exercise } from '../../models/exercise'
 import type { ExerciseConfig, SetTarget } from '../../models/routine'
 
@@ -18,6 +17,12 @@ interface ExerciseConfigRowProps {
   onViewDetail: () => void
   /** Finisher only — shows the "part of a round" toggle. See ExerciseConfig.inRound. */
   allowRounds?: boolean
+}
+
+/** Left, right, left, right, ... — the simplest even split across however many sets
+ *  are configured, so turning on "split left/right" never needs per-set tapping. */
+function alternatingSides(count: number): ('left' | 'right')[] {
+  return Array.from({ length: count }, (_, i) => (i % 2 === 0 ? 'left' : 'right'))
 }
 
 function summarize(config: ExerciseConfig, isCardio: boolean, isStretch: boolean, exerciseName: string): string {
@@ -62,6 +67,10 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
     })
   }, [config.exerciseId, exercise?.name])
 
+  // Split mode isn't its own field — it's just "does this exercise currently have any
+  // side tags", so there's nothing to keep in sync when sets are added/removed/reset.
+  const isSplit = config.sets.some((s) => s.side)
+
   function updateSet(index: number, patch: Partial<SetTarget>) {
     const sets = config.sets.map((s, i) => (i === index ? { ...s, ...patch } : s))
     onChange({ ...config, sets })
@@ -75,6 +84,7 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
     const clamped = Math.max(1, Math.min(20, count))
     const current = config.sets
     if (clamped === current.length) return
+    let sets: SetTarget[]
     if (clamped > current.length) {
       const template = current[current.length - 1]
       const added: SetTarget[] = Array.from({ length: clamped - current.length }, (_, i) => ({
@@ -82,10 +92,23 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
         id: crypto.randomUUID(),
         setNumber: current.length + i + 1,
       }))
-      onChange({ ...config, sets: [...current, ...added] })
+      sets = [...current, ...added]
     } else {
-      onChange({ ...config, sets: current.slice(0, clamped) })
+      sets = current.slice(0, clamped)
     }
+    // Re-spread left/right across the new count so a resize never leaves a run of
+    // duplicate sides at the end (e.g. growing from 3 sets ending on "right" would
+    // otherwise just repeat "right" for every set added).
+    if (isSplit) {
+      const sides = alternatingSides(sets.length)
+      sets = sets.map((s, i) => ({ ...s, side: sides[i] }))
+    }
+    onChange({ ...config, sets })
+  }
+
+  function setSplitMode(split: boolean) {
+    const sides = split ? alternatingSides(config.sets.length) : undefined
+    onChange({ ...config, sets: config.sets.map((s, i) => ({ ...s, side: sides?.[i] })) })
   }
 
   return (
@@ -169,28 +192,36 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
           )}
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-primary-muted">Sides (optional — for a single-arm/single-leg exercise)</span>
-            <div className="flex flex-wrap gap-1.5">
-              {config.sets.map((set, i) => (
-                <button
-                  key={set.id}
-                  type="button"
-                  onClick={() => updateSet(i, { side: nextSetSide(set.side) })}
-                  aria-label={
-                    set.side
-                      ? `Set ${i + 1}, ${set.side} side — tap to ${set.side === 'left' ? 'switch to right side' : 'clear side'}`
-                      : `Set ${i + 1} — tap to mark as left or right side`
-                  }
-                  className={
-                    'min-w-9 rounded-[var(--radius-control)] border px-2 py-1 text-center text-xs font-semibold tabular-nums ' +
-                    (set.side ? 'border-secondary text-secondary' : 'border-primary-border text-primary-muted hover:text-primary')
-                  }
-                >
-                  {i + 1}
-                  {set.side === 'left' ? 'L' : set.side === 'right' ? 'R' : ''}
-                </button>
-              ))}
+            <span className="text-xs font-medium text-primary-muted">Movement</span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSplitMode(false)}
+                aria-pressed={!isSplit}
+                className={
+                  'flex-1 rounded-[var(--radius-control)] border px-3 py-2 text-sm font-medium ' +
+                  (!isSplit ? 'border-secondary bg-secondary-tint text-secondary' : 'border-primary-border text-primary-muted')
+                }
+              >
+                One movement
+              </button>
+              <button
+                type="button"
+                onClick={() => setSplitMode(true)}
+                aria-pressed={isSplit}
+                className={
+                  'flex-1 rounded-[var(--radius-control)] border px-3 py-2 text-sm font-medium ' +
+                  (isSplit ? 'border-secondary bg-secondary-tint text-secondary' : 'border-primary-border text-primary-muted')
+                }
+              >
+                Split left / right
+              </button>
             </div>
+            {isSplit && (
+              <p className="text-xs text-primary-muted">
+                Sets alternate sides — {config.sets.map((s) => (s.side === 'left' ? 'L' : 'R')).join(', ')}.
+              </p>
+            )}
           </div>
 
           {config.uniformSets ? (
