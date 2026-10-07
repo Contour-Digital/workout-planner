@@ -24,6 +24,12 @@ export interface ExerciseConfig {
   sets: SetTarget[]
   restSeconds?: number
   notes?: string
+  /** Finisher only: when true for 2+ exercises in the same section, they're done as a
+   *  round/circuit — one set from each exercise in turn, then rest once every exercise
+   *  has done that round's set, repeating for as many rounds as the shortest exercise's
+   *  set count. An exercise left unchecked in a finisher with a round is just done
+   *  normally (all its own sets back to back), unaffected by the round around it. */
+  inRound?: boolean
 }
 
 export type RoutineSectionKind = 'warmup' | 'main' | 'finisher' | 'cooldown'

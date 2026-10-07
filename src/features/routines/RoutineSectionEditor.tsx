@@ -25,6 +25,8 @@ interface RoutineSectionEditorProps {
    *  instead, via a second button in the picker. Pass both or neither. */
   otherSectionLabel?: string
   onAddToOtherSection?: (exercise: Exercise) => void
+  /** Finisher only: lets 2+ exercises be marked as a round/circuit. See ExerciseConfig.inRound. */
+  allowRounds?: boolean
 }
 
 export function RoutineSectionEditor({
@@ -35,6 +37,7 @@ export function RoutineSectionEditor({
   groupByMuscle,
   otherSectionLabel,
   onAddToOtherSection,
+  allowRounds,
 }: RoutineSectionEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [detailConfigId, setDetailConfigId] = useState<string | null>(null)
@@ -127,9 +130,13 @@ export function RoutineSectionEditor({
         onMoveUp={canMoveUp ? () => move(config.id, -1) : undefined}
         onMoveDown={canMoveDown ? () => move(config.id, 1) : undefined}
         onViewDetail={() => setDetailConfigId(config.id)}
+        allowRounds={allowRounds}
       />
     )
   }
+
+  const roundConfigs = allowRounds ? exercises.filter((c) => c.inRound) : []
+  const roundSetCounts = new Set(roundConfigs.map((c) => c.sets.length))
 
   return (
     <div className="flex flex-col gap-3">
@@ -159,6 +166,14 @@ export function RoutineSectionEditor({
         <div className="flex flex-col gap-2">
           {exercises.map((config, i) => renderRow(config, i > 0, i < exercises.length - 1))}
         </div>
+      )}
+
+      {roundConfigs.length >= 2 && (
+        <p className="text-xs text-primary-muted">
+          {roundConfigs.length} exercises set as a round — {Math.min(...roundConfigs.map((c) => c.sets.length))} rounds, one set from each
+          exercise per round.
+          {roundSetCounts.size > 1 && ' They have different set counts, so the extra sets on the longer ones sit outside the round.'}
+        </p>
       )}
 
       <ExercisePicker

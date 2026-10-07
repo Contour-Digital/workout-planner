@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { SegmentedProgressBar, type ProgressSegment } from '../../components/ui/ProgressBar'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Sheet } from '../../components/ui/Sheet'
-import { IconChevronDown, IconClock, IconPause, IconPlay, IconPlus, IconX } from '../../components/ui/icons'
+import { IconChevronDown, IconClock, IconPause, IconPlay, IconPlus, IconRepeat, IconX } from '../../components/ui/icons'
 import { SessionExerciseCard } from './SessionExerciseCard'
 import { RestTimerBar } from './RestTimerBar'
 import { PostWorkoutReviewSheet } from './PostWorkoutReviewSheet'
@@ -35,6 +35,7 @@ import { useNow } from '../../lib/useNow'
 import { getAllExercises } from '../../db/exercisesRepo'
 import { groupByPrimaryMuscle } from '../../lib/exerciseGrouping'
 import { findMostSimilarExercise } from '../../lib/exerciseSimilarity'
+import { computeCurrentRound, computeRoundCount, roundFinishesWith } from '../../lib/finisherRound'
 import { computeMissedExercises, computeSessionAchievements } from '../../lib/workoutReview'
 import { generateWorkoutSummary } from '../../lib/workoutAiSummary'
 import { addSuggestionToRoutine } from '../../lib/addSuggestionToRoutine'
@@ -100,6 +101,16 @@ export function ActiveWorkoutPage() {
   const warmupOpen = warmupOverride ?? !warmupAllDone
   const cooldownOpen = cooldownOverride ?? mainAllDone
   const finisherExercises = session.finisher?.enabled ? session.finisher.exercises : []
+  // 2+ finisher exercises flagged inRound (set in the routine editor) are done as a
+  // circuit: one set from each in turn, then rest only once every exercise has done
+  // that round's set. Rounds run for as many rounds as the shortest one's set count —
+  // any extra sets on a longer exercise just sit outside the round, done separately.
+  const finisherRoundEntries = finisherExercises.filter((e) => e.inRound)
+  const finisherRestEntries = finisherExercises.filter((e) => !e.inRound)
+  const isFinisherRoundActive = finisherRoundEntries.length >= 2
+  const finisherRoundCount = computeRoundCount(finisherRoundEntries)
+  const finisherCurrentRound = computeCurrentRound(finisherRoundEntries, finisherRoundCount)
+  const finisherRoundEntryIds = new Set(finisherRoundEntries.map((e) => e.id))
   // Highlighted as the one to focus on right now, across all muscle groups, so it's
   // obvious what to do without scanning every group. Defaults to the first not-yet-
   // started exercise in list order — but opening (expanding) a different exercise's
@@ -172,6 +183,12 @@ export function ActiveWorkoutPage() {
         onNotesChange={(notes) => updateEntryNotes(session!.id, entry.id, notes)}
         onRemoveExercise={() => removeSessionExercise(session!.id, entry.id, section)}
         onSetCompleted={(restSeconds) => {
+          // Inside an active round, only start the rest once this completion finishes the
+          // whole round (every round exercise, this one included, done for the current
+          // round) — not after each individual exercise's set within it.
+          if (finisherRoundEntryIds.has(entry.id) && finisherCurrentRound < finisherRoundCount) {
+            if (!roundFinishesWith(finisherRoundEntries, entry.id, finisherCurrentRound)) return
+          }
           const effectiveRestSeconds = session!.restTimerSeconds ?? restSeconds
           if (restTimerEnabled && effectiveRestSeconds && effectiveRestSeconds > 0) startRestTimer(session!.id, effectiveRestSeconds)
         }}
@@ -202,6 +219,31 @@ export function ActiveWorkoutPage() {
               </div>
             )
           })}
+        </section>
+      )
+    }
+
+    if (section === 'finisher' && isFinisherRoundActive) {
+      return (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-base font-bold uppercase tracking-wide text-primary-strong">{title}</h2>
+          {finisherRestEntries.map((entry) => renderEntry(entry, section))}
+          <div className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-primary-border bg-surface-muted p-3">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-primary-strong">
+                <IconRepeat width={16} height={16} />
+                {finisherCurrentRound >= finisherRoundCount ? 'Round complete' : `Round ${finisherCurrentRound + 1} of ${finisherRoundCount}`}
+              </span>
+              <span className="text-xs font-medium tabular-nums text-primary-muted">
+                {Math.min(finisherCurrentRound, finisherRoundCount)} of {finisherRoundCount} rounds done
+              </span>
+            </div>
+            <div className="flex flex-col gap-2">
+              {finisherRoundEntries.map((entry) =>
+                renderEntry(entry, section, finisherCurrentRound < finisherRoundCount && !entry.actualSets[finisherCurrentRound]?.completed),
+              )}
+            </div>
+          </div>
         </section>
       )
     }

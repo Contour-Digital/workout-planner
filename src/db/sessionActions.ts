@@ -13,7 +13,10 @@ import type {
 } from '../models/session'
 import { toDateKey } from '../lib/recurrence'
 
-function toSessionEntry(exerciseConfig: { id: string; exerciseId: string; orderIndex: number; sets: SetTarget[]; restSeconds?: number; notes?: string }, exerciseName: string): SessionExerciseEntry {
+function toSessionEntry(
+  exerciseConfig: { id: string; exerciseId: string; orderIndex: number; sets: SetTarget[]; restSeconds?: number; notes?: string; inRound?: boolean },
+  exerciseName: string,
+): SessionExerciseEntry {
   return {
     id: crypto.randomUUID(),
     exerciseId: exerciseConfig.exerciseId,
@@ -23,6 +26,7 @@ function toSessionEntry(exerciseConfig: { id: string; exerciseId: string; orderI
     actualSets: exerciseConfig.sets.map((target, i) => ({ id: crypto.randomUUID(), setNumber: i + 1, completed: false, side: target.side })),
     restSeconds: exerciseConfig.restSeconds,
     notes: exerciseConfig.notes,
+    inRound: exerciseConfig.inRound,
   }
 }
 
@@ -38,7 +42,9 @@ async function exerciseName(exerciseId: string): Promise<string> {
   return ex?.name ?? 'Exercise'
 }
 
-async function buildSectionEntries(exercises: { id: string; exerciseId: string; orderIndex: number; sets: SetTarget[]; restSeconds?: number; notes?: string }[]) {
+async function buildSectionEntries(
+  exercises: { id: string; exerciseId: string; orderIndex: number; sets: SetTarget[]; restSeconds?: number; notes?: string; inRound?: boolean }[],
+) {
   const entries: SessionExerciseEntry[] = []
   for (const config of exercises) {
     entries.push(toSessionEntry(config, await exerciseName(config.exerciseId)))

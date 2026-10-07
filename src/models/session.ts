@@ -30,6 +30,10 @@ export interface SessionExerciseEntry {
   notes?: string
   addedAdHoc?: boolean
   removedAdHoc?: boolean
+  /** Carried over from the routine's ExerciseConfig.inRound — see there for what a
+   *  round means. Session-side logic (ActiveWorkoutPage) uses this to group 2+
+   *  finisher entries into a round instead of running each fully in sequence. */
+  inRound?: boolean
 }
 
 export interface RecoveryActivityResult {

@@ -223,6 +223,7 @@ export function RoutineEditorPage() {
                 exercises={routine.finisher.exercises}
                 onChange={(exercises) => setSection('finisher', { ...routine.finisher, exercises })}
                 emptyHint="Add core work or other finishing exercises to close out the main workout."
+                allowRounds
               />
             </div>
           )}

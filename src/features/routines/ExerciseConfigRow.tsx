@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ExerciseMediaThumb } from '../../components/ui/ExerciseMedia'
-import { IconChevronDown, IconTrash } from '../../components/ui/icons'
+import { IconChevronDown, IconRepeat, IconTrash } from '../../components/ui/icons'
 import { getPreviousExercisePerformance } from '../../db/sessionsRepo'
 import { formatSetResult } from '../../lib/formatPerformance'
 import { formatPace, paceSplitMetersFor } from '../../models/units'
@@ -16,6 +16,8 @@ interface ExerciseConfigRowProps {
   onMoveUp?: () => void
   onMoveDown?: () => void
   onViewDetail: () => void
+  /** Finisher only — shows the "part of a round" toggle. See ExerciseConfig.inRound. */
+  allowRounds?: boolean
 }
 
 function summarize(config: ExerciseConfig, isCardio: boolean, isStretch: boolean, exerciseName: string): string {
@@ -43,7 +45,7 @@ function summarize(config: ExerciseConfig, isCardio: boolean, isStretch: boolean
   return parts.join(' · ')
 }
 
-export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMoveUp, onMoveDown, onViewDetail }: ExerciseConfigRowProps) {
+export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMoveUp, onMoveDown, onViewDetail, allowRounds }: ExerciseConfigRowProps) {
   const [expanded, setExpanded] = useState(false)
   const [previous, setPrevious] = useState<string | null>(null)
   const isCardio = exercise?.category === 'cardio'
@@ -117,6 +119,11 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
               <p className="truncate text-xs text-secondary">{exercise.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ')}</p>
             )}
             <p className="truncate text-xs text-primary-muted">{summarize(config, isCardio, isStretch, exercise?.name ?? '')}</p>
+            {config.inRound && (
+              <p className="flex items-center gap-1 text-xs font-medium text-secondary">
+                <IconRepeat width={12} height={12} /> In a round
+              </p>
+            )}
             {previous && <p className="truncate text-xs text-primary-subtle">Previous: {previous}</p>}
           </div>
         </button>
@@ -153,6 +160,13 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
               />
             </label>
           </div>
+
+          {allowRounds && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={config.inRound ?? false} onChange={(e) => onChange({ ...config, inRound: e.target.checked })} />
+              Part of a round — do one set, then move to the next round exercise, repeating until all of them finish together
+            </label>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-primary-muted">Sides (optional — for a single-arm/single-leg exercise)</span>
