@@ -211,8 +211,8 @@ export function ProfilePage() {
 
       <Card className="mb-4 flex flex-col gap-3">
         <h2 className="text-sm font-bold uppercase tracking-wide text-primary-muted">Library</h2>
-        <Button variant="secondary" onClick={() => navigate('/settings/exercise-names')}>
-          Rename exercises
+        <Button variant="secondary" onClick={() => navigate('/settings/exercises')}>
+          Manage exercises
         </Button>
         <Button variant="secondary" onClick={() => setAddExerciseOpen(true)}>
           Add exercise
