@@ -9,6 +9,10 @@ export interface SetTarget {
   targetWeightKg?: number
   targetDurationSeconds?: number
   targetDistanceMeters?: number
+  /** For a single-arm/single-leg exercise — which side this planned set is for.
+   *  Carried forward as the starting tag on the session's logged set, but still
+   *  freely re-taggable there as you actually work through it. */
+  side?: 'left' | 'right'
 }
 
 export interface ExerciseConfig {

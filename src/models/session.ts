@@ -11,9 +11,10 @@ export interface SetResult {
   actualWeightKg?: number
   actualDurationSeconds?: number
   actualDistanceMeters?: number
-  /** Which side this set was done on, for single-arm/single-leg exercises — tagged
-   *  live by tapping the set's index in the active session, not planned ahead of
-   *  time, since which side goes first/how many sets per side varies by routine. */
+  /** Which side this set was done on, for single-arm/single-leg exercises — carried
+   *  over from the routine's planned SetTarget.side when the exercise has one, but
+   *  always freely re-taggable here too by tapping the set's index in the active
+   *  session (e.g. an ad-hoc exercise with no plan, or the plan turned out wrong). */
   side?: 'left' | 'right'
 }
 

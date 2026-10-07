@@ -4,6 +4,7 @@ import { IconChevronDown, IconTrash } from '../../components/ui/icons'
 import { getPreviousExercisePerformance } from '../../db/sessionsRepo'
 import { formatSetResult } from '../../lib/formatPerformance'
 import { formatPace, paceSplitMetersFor } from '../../models/units'
+import { nextSetSide } from '../../lib/setSide'
 import { MUSCLE_GROUP_LABELS, type Exercise } from '../../models/exercise'
 import type { ExerciseConfig, SetTarget } from '../../models/routine'
 
@@ -151,6 +152,31 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
                 onChange={(e) => setSetCount(Number(e.target.value))}
               />
             </label>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-primary-muted">Sides (optional — for a single-arm/single-leg exercise)</span>
+            <div className="flex flex-wrap gap-1.5">
+              {config.sets.map((set, i) => (
+                <button
+                  key={set.id}
+                  type="button"
+                  onClick={() => updateSet(i, { side: nextSetSide(set.side) })}
+                  aria-label={
+                    set.side
+                      ? `Set ${i + 1}, ${set.side} side — tap to ${set.side === 'left' ? 'switch to right side' : 'clear side'}`
+                      : `Set ${i + 1} — tap to mark as left or right side`
+                  }
+                  className={
+                    'min-w-9 rounded-[var(--radius-control)] border px-2 py-1 text-center text-xs font-semibold tabular-nums ' +
+                    (set.side ? 'border-secondary text-secondary' : 'border-primary-border text-primary-muted hover:text-primary')
+                  }
+                >
+                  {i + 1}
+                  {set.side === 'left' ? 'L' : set.side === 'right' ? 'R' : ''}
+                </button>
+              ))}
+            </div>
           </div>
 
           {config.uniformSets ? (

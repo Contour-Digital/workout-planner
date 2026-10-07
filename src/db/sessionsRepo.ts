@@ -116,6 +116,7 @@ export async function createExerciseConfigWithHistory(exerciseId: string, orderI
     targetWeightKg: s.actualWeightKg,
     targetDurationSeconds: s.actualDurationSeconds,
     targetDistanceMeters: s.actualDistanceMeters,
+    side: s.side,
   }))
   const first = lastCompletedSets[0]
   const uniformSets = lastCompletedSets.every(

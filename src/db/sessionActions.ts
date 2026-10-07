@@ -20,7 +20,7 @@ function toSessionEntry(exerciseConfig: { id: string; exerciseId: string; orderI
     exerciseName,
     orderIndex: exerciseConfig.orderIndex,
     targetSets: exerciseConfig.sets,
-    actualSets: exerciseConfig.sets.map((_, i) => ({ id: crypto.randomUUID(), setNumber: i + 1, completed: false })),
+    actualSets: exerciseConfig.sets.map((target, i) => ({ id: crypto.randomUUID(), setNumber: i + 1, completed: false, side: target.side })),
     restSeconds: exerciseConfig.restSeconds,
     notes: exerciseConfig.notes,
   }
@@ -179,7 +179,7 @@ export async function addSetToEntry(sessionId: string, entryId: string): Promise
     return {
       ...entry,
       targetSets: [...entry.targetSets, { ...lastTarget, id: crypto.randomUUID(), setNumber }],
-      actualSets: [...entry.actualSets, { id: crypto.randomUUID(), setNumber, completed: false }],
+      actualSets: [...entry.actualSets, { id: crypto.randomUUID(), setNumber, completed: false, side: lastTarget.side }],
     }
   })
   await db.workoutSessions.update(sessionId, patch)
@@ -384,7 +384,7 @@ export async function repeatWorkoutSession(sourceSessionId: string): Promise<Wor
     entries.map((entry) => ({
       ...entry,
       id: crypto.randomUUID(),
-      actualSets: entry.targetSets.map((_, i) => ({ id: crypto.randomUUID(), setNumber: i + 1, completed: false })),
+      actualSets: entry.targetSets.map((target, i) => ({ id: crypto.randomUUID(), setNumber: i + 1, completed: false, side: target.side })),
     }))
   const session: WorkoutSession = {
     id: crypto.randomUUID(),

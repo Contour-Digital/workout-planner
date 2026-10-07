@@ -7,16 +7,10 @@ import { getPreviousExercisePerformance } from '../../db/sessionsRepo'
 import { formatSetResult } from '../../lib/formatPerformance'
 import { formatPace, paceSplitMetersFor } from '../../models/units'
 import { useNow } from '../../lib/useNow'
+import { nextSetSide } from '../../lib/setSide'
 import { useSettingsStore } from '../../store/settingsStore'
 import type { Exercise } from '../../models/exercise'
 import type { SessionExerciseEntry, SetResult } from '../../models/session'
-
-/** Cycles a set's side tag: untagged -> left -> right -> untagged. */
-function nextSetSide(side: SetResult['side']): SetResult['side'] {
-  if (side === 'left') return 'right'
-  if (side === 'right') return undefined
-  return 'left'
-}
 
 interface SessionExerciseCardProps {
   entry: SessionExerciseEntry
