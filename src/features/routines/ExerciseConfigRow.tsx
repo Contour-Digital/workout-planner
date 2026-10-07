@@ -19,6 +19,8 @@ interface ExerciseConfigRowProps {
   allowRounds?: boolean
 }
 
+const REST_PRESETS = [0, 30, 60]
+
 /** Builds `perSide` left/right pairs (left, right, left, right, ...) from `template`'s
  *  reps/weight/duration/distance — so "1 set" + split means one set each side (2 total),
  *  "3 sets" + split means 3 each side (6 total), and so on. */
@@ -59,6 +61,10 @@ function summarize(config: ExerciseConfig, isCardio: boolean, isStretch: boolean
 export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMoveUp, onMoveDown, onViewDetail, allowRounds }: ExerciseConfigRowProps) {
   const [expanded, setExpanded] = useState(false)
   const [previous, setPrevious] = useState<string | null>(null)
+  // "Custom" stays sticky once explicitly picked, so the text field doesn't vanish
+  // out from under someone mid-type just because what they've typed so far happens
+  // to match a preset (e.g. typing "30" on the way to "300").
+  const [customRestSelected, setCustomRestSelected] = useState(false)
   const isCardio = exercise?.category === 'cardio'
   const isStretch = exercise?.category === 'mobility'
 
@@ -76,6 +82,7 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
   // Split mode isn't its own field — it's just "does this exercise currently have any
   // side tags", so there's nothing to keep in sync when sets are added/removed/reset.
   const isSplit = config.sets.some((s) => s.side)
+  const showCustomRest = customRestSelected || (config.restSeconds !== undefined && !REST_PRESETS.includes(config.restSeconds))
 
   function updateSet(index: number, patch: Partial<SetTarget>) {
     const sets = config.sets.map((s, i) => (i === index ? { ...s, ...patch } : s))
@@ -290,8 +297,43 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
-            <NumberField label="Rest (s)" value={config.restSeconds} onChange={(v) => onChange({ ...config, restSeconds: v })} />
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-primary-muted">Rest between sets</span>
+            <div className="flex flex-wrap gap-2">
+              {REST_PRESETS.map((seconds) => (
+                <button
+                  key={seconds}
+                  type="button"
+                  onClick={() => {
+                    setCustomRestSelected(false)
+                    onChange({ ...config, restSeconds: seconds })
+                  }}
+                  aria-pressed={!showCustomRest && config.restSeconds === seconds}
+                  className={
+                    'rounded-full border px-3 py-1.5 text-sm font-medium ' +
+                    (!showCustomRest && config.restSeconds === seconds
+                      ? 'border-secondary bg-secondary-tint text-secondary'
+                      : 'border-primary-border text-primary-muted hover:bg-primary-tint')
+                  }
+                >
+                  {seconds === 0 ? 'No rest' : `${seconds}s`}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setCustomRestSelected(true)}
+                aria-pressed={showCustomRest}
+                className={
+                  'rounded-full border px-3 py-1.5 text-sm font-medium ' +
+                  (showCustomRest ? 'border-secondary bg-secondary-tint text-secondary' : 'border-primary-border text-primary-muted hover:bg-primary-tint')
+                }
+              >
+                Custom
+              </button>
+            </div>
+            {showCustomRest && (
+              <NumberField label="Rest (seconds)" value={config.restSeconds} onChange={(v) => onChange({ ...config, restSeconds: v })} />
+            )}
           </div>
 
           <label className="flex flex-col gap-1">
