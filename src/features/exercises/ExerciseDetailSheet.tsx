@@ -42,76 +42,7 @@ export function ExerciseDetailSheet({ exercise, onClose, onEdit, onDelete, simil
     <Sheet open={!!exercise} onClose={onClose} title={exercise?.name ?? ''}>
       {exercise && (
         <div className="flex flex-col gap-5">
-          <div className="flex flex-wrap gap-1.5">
-            <Badge tone="secondary">{EXERCISE_CATEGORY_LABELS[exercise.category]}</Badge>
-            {exercise.source === 'custom' && <Badge tone="neutral">Custom</Badge>}
-          </div>
-
-          <MuscleDiagram
-            primaryMuscles={exercise.primaryMuscles}
-            secondaryMuscles={exercise.secondaryMuscles}
-            primarySpecificMuscles={exercise.primarySpecificMuscles}
-            secondarySpecificMuscles={exercise.secondarySpecificMuscles}
-          />
-
-          <section>
-            <h3 className="mb-1 text-sm font-semibold text-primary-strong">Muscles worked</h3>
-            <p className="text-sm text-primary-muted">
-              Primary: {formatMuscles(exercise.primaryMuscles, exercise.primarySpecificMuscles)}
-            </p>
-            {exercise.secondaryMuscles.length > 0 && (
-              <p className="text-sm text-primary-muted">
-                Secondary: {formatMuscles(exercise.secondaryMuscles, exercise.secondarySpecificMuscles)}
-              </p>
-            )}
-          </section>
-
-          <section>
-            <h3 className="mb-1 text-sm font-semibold text-primary-strong">Equipment</h3>
-            <p className="text-sm text-primary-muted">
-              {exercise.equipment.map((e) => EQUIPMENT_LABELS[e]).join(', ') || 'None'}
-            </p>
-          </section>
-
-          {exercise.instructions.length > 0 && (
-            <section>
-              <h3 className="mb-1 text-sm font-semibold text-primary-strong">How to perform</h3>
-              <ol className="list-decimal space-y-1 pl-5 text-sm text-primary">
-                {exercise.instructions.map((step, i) => (
-                  <li key={i}>{step}</li>
-                ))}
-              </ol>
-            </section>
-          )}
-
-          {exercise.techniqueTips.length > 0 && (
-            <section>
-              <h3 className="mb-1 text-sm font-semibold text-primary-strong">Technique tips</h3>
-              <ul className="list-disc space-y-1 pl-5 text-sm text-primary">
-                {exercise.techniqueTips.map((tip, i) => (
-                  <li key={i}>{tip}</li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {exercise.commonMistakes.length > 0 && (
-            <section>
-              <h3 className="mb-1 text-sm font-semibold text-primary-strong">Common mistakes</h3>
-              <ul className="list-disc space-y-1 pl-5 text-sm text-primary">
-                {exercise.commonMistakes.map((m, i) => (
-                  <li key={i}>{m}</li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {exercise.notes && (
-            <section>
-              <h3 className="mb-1 text-sm font-semibold text-primary-strong">Notes</h3>
-              <p className="text-sm text-primary-muted">{exercise.notes}</p>
-            </section>
-          )}
+          <ExerciseDetails exercise={exercise} />
 
           {similarExercise && onSwap && (
             <section className="rounded-[var(--radius-card)] border border-primary-border bg-surface-muted p-3">
@@ -154,5 +85,85 @@ export function ExerciseDetailSheet({ exercise, onClose, onEdit, onDelete, simil
         </div>
       )}
     </Sheet>
+  )
+}
+
+/** The read-only body of an exercise — category, muscle diagram, muscles, equipment,
+ *  instructions, tips, mistakes and notes. Shared by the detail sheet and the
+ *  Manage exercises sheet. */
+export function ExerciseDetails({ exercise }: { exercise: Exercise }) {
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap gap-1.5">
+        <Badge tone="secondary">{EXERCISE_CATEGORY_LABELS[exercise.category]}</Badge>
+        {exercise.source === 'custom' && <Badge tone="neutral">Custom</Badge>}
+      </div>
+
+      <MuscleDiagram
+        primaryMuscles={exercise.primaryMuscles}
+        secondaryMuscles={exercise.secondaryMuscles}
+        primarySpecificMuscles={exercise.primarySpecificMuscles}
+        secondarySpecificMuscles={exercise.secondarySpecificMuscles}
+      />
+
+      <section>
+        <h3 className="mb-1 text-sm font-semibold text-primary-strong">Muscles worked</h3>
+        <p className="text-sm text-primary-muted">
+          Primary: {formatMuscles(exercise.primaryMuscles, exercise.primarySpecificMuscles)}
+        </p>
+        {exercise.secondaryMuscles.length > 0 && (
+          <p className="text-sm text-primary-muted">
+            Secondary: {formatMuscles(exercise.secondaryMuscles, exercise.secondarySpecificMuscles)}
+          </p>
+        )}
+      </section>
+
+      <section>
+        <h3 className="mb-1 text-sm font-semibold text-primary-strong">Equipment</h3>
+        <p className="text-sm text-primary-muted">
+          {exercise.equipment.map((e) => EQUIPMENT_LABELS[e]).join(', ') || 'None'}
+        </p>
+      </section>
+
+      {exercise.instructions.length > 0 && (
+        <section>
+          <h3 className="mb-1 text-sm font-semibold text-primary-strong">How to perform</h3>
+          <ol className="list-decimal space-y-1 pl-5 text-sm text-primary">
+            {exercise.instructions.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {exercise.techniqueTips.length > 0 && (
+        <section>
+          <h3 className="mb-1 text-sm font-semibold text-primary-strong">Technique tips</h3>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-primary">
+            {exercise.techniqueTips.map((tip, i) => (
+              <li key={i}>{tip}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {exercise.commonMistakes.length > 0 && (
+        <section>
+          <h3 className="mb-1 text-sm font-semibold text-primary-strong">Common mistakes</h3>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-primary">
+            {exercise.commonMistakes.map((m, i) => (
+              <li key={i}>{m}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {exercise.notes && (
+        <section>
+          <h3 className="mb-1 text-sm font-semibold text-primary-strong">Notes</h3>
+          <p className="text-sm text-primary-muted">{exercise.notes}</p>
+        </section>
+      )}
+    </div>
   )
 }
