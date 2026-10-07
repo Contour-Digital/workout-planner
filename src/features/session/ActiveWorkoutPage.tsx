@@ -106,7 +106,6 @@ export function ActiveWorkoutPage() {
   // that round's set. Rounds run for as many rounds as the shortest one's set count —
   // any extra sets on a longer exercise just sit outside the round, done separately.
   const finisherRoundEntries = finisherExercises.filter((e) => e.inRound)
-  const finisherRestEntries = finisherExercises.filter((e) => !e.inRound)
   const isFinisherRoundActive = finisherRoundEntries.length >= 2
   const finisherRoundCount = computeRoundCount(finisherRoundEntries)
   const finisherCurrentRound = computeCurrentRound(finisherRoundEntries, finisherRoundCount)
@@ -224,26 +223,38 @@ export function ActiveWorkoutPage() {
     }
 
     if (section === 'finisher' && isFinisherRoundActive) {
+      // Non-round exercises keep their own place in the list (e.g. a treadmill walk
+      // added after the round exercises stays after them) — the round's exercises
+      // always render together as one block, at the position of the first of them.
+      const roundCard = (
+        <div key="finisher-round" className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-primary-border bg-surface-muted p-3">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-primary-strong">
+              <IconRepeat width={16} height={16} />
+              {finisherCurrentRound >= finisherRoundCount ? 'Round complete' : `Round ${finisherCurrentRound + 1} of ${finisherRoundCount}`}
+            </span>
+            <span className="text-xs font-medium tabular-nums text-primary-muted">
+              {Math.min(finisherCurrentRound, finisherRoundCount)} of {finisherRoundCount} rounds done
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {finisherRoundEntries.map((entry) =>
+              renderEntry(entry, section, finisherCurrentRound < finisherRoundCount && !entry.actualSets[finisherCurrentRound]?.completed),
+            )}
+          </div>
+        </div>
+      )
+      let roundPlaced = false
+      const items = sectionExercises.map((entry) => {
+        if (!entry.inRound) return renderEntry(entry, section)
+        if (roundPlaced) return null
+        roundPlaced = true
+        return roundCard
+      })
       return (
         <section className="flex flex-col gap-2">
           <h2 className="text-base font-bold uppercase tracking-wide text-primary-strong">{title}</h2>
-          {finisherRestEntries.map((entry) => renderEntry(entry, section))}
-          <div className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-primary-border bg-surface-muted p-3">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-primary-strong">
-                <IconRepeat width={16} height={16} />
-                {finisherCurrentRound >= finisherRoundCount ? 'Round complete' : `Round ${finisherCurrentRound + 1} of ${finisherRoundCount}`}
-              </span>
-              <span className="text-xs font-medium tabular-nums text-primary-muted">
-                {Math.min(finisherCurrentRound, finisherRoundCount)} of {finisherRoundCount} rounds done
-              </span>
-            </div>
-            <div className="flex flex-col gap-2">
-              {finisherRoundEntries.map((entry) =>
-                renderEntry(entry, section, finisherCurrentRound < finisherRoundCount && !entry.actualSets[finisherCurrentRound]?.completed),
-              )}
-            </div>
-          </div>
+          {items}
         </section>
       )
     }
