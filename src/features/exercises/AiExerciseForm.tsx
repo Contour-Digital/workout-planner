@@ -3,13 +3,14 @@ import { Sheet } from '../../components/ui/Sheet'
 import { Button } from '../../components/ui/Button'
 import { IconSparkle } from '../../components/ui/icons'
 import { generateExerciseDetails } from '../../lib/aiExerciseGenerator'
-import { createCustomExercise } from '../../db/exercisesRepo'
+import { createCustomExercise, getAllExercises, updateCustomExercise } from '../../db/exercisesRepo'
+import { findBestMatch } from '../../lib/exerciseMatching'
 import {
   EQUIPMENT_LABELS,
   EXERCISE_CATEGORY_LABELS,
   MUSCLE_GROUP_LABELS,
-  type CustomExercise,
   type Equipment,
+  type Exercise,
   type ExerciseCategory,
   type MuscleGroup,
 } from '../../models/exercise'
@@ -17,7 +18,7 @@ import {
 interface AiExerciseFormProps {
   open: boolean
   onClose: () => void
-  onSaved: (exercise: CustomExercise) => void
+  onSaved: (exercise: Exercise) => void
 }
 
 type Step = 'input' | 'review'
@@ -38,7 +39,12 @@ function linesToList(value: string): string[] {
  *  name + optional equipment/brand hints go to generateExerciseDetails(), and the
  *  result comes back as an ordinary editable draft — the same fields a manual form
  *  would have, just pre-filled — for the user to adjust and approve before it's
- *  actually saved to the library. */
+ *  actually saved to the library.
+ *
+ *  If the exercise is already in the library (matched on the typed name or Spot's
+ *  cleaned-up one), approving updates that existing exercise with the reviewed
+ *  details instead of adding a duplicate — so routines that use it keep working.
+ *  A built-in exercise can't be edited, so a match there offers to use it as-is. */
 export function AiExerciseForm({ open, onClose, onSaved }: AiExerciseFormProps) {
   const [step, setStep] = useState<Step>('input')
   const [name, setName] = useState('')
@@ -58,6 +64,8 @@ export function AiExerciseForm({ open, onClose, onSaved }: AiExerciseFormProps) 
   const [notes, setNotes] = useState('')
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [existing, setExisting] = useState<Exercise | null>(null)
+  const [addAsNew, setAddAsNew] = useState(false)
 
   function resetAndClose() {
     setStep('input')
@@ -66,6 +74,8 @@ export function AiExerciseForm({ open, onClose, onSaved }: AiExerciseFormProps) 
     setBrand('')
     setGenerateError(null)
     setSaveError(null)
+    setExisting(null)
+    setAddAsNew(false)
     onClose()
   }
 
@@ -91,6 +101,9 @@ export function AiExerciseForm({ open, onClose, onSaved }: AiExerciseFormProps) 
       setTechniqueTips(result.techniqueTips.join('\n'))
       setCommonMistakes(result.commonMistakes.join('\n'))
       setNotes(result.notes ?? '')
+      const all = await getAllExercises()
+      setExisting(findBestMatch(name.trim(), all) ?? findBestMatch(result.name, all) ?? null)
+      setAddAsNew(false)
       setSaveError(null)
       setStep('review')
     } catch (err) {
@@ -112,7 +125,7 @@ export function AiExerciseForm({ open, onClose, onSaved }: AiExerciseFormProps) 
     setSaving(true)
     setSaveError(null)
     try {
-      const created = await createCustomExercise({
+      const details = {
         name: reviewName.trim(),
         category,
         primaryMuscles: primary,
@@ -122,9 +135,16 @@ export function AiExerciseForm({ open, onClose, onSaved }: AiExerciseFormProps) 
         techniqueTips: linesToList(techniqueTips),
         commonMistakes: linesToList(commonMistakes),
         notes: notes.trim() || undefined,
-        media: { kind: 'placeholder', placeholderToken: category },
-      })
-      onSaved(created)
+      }
+      if (existing?.source === 'custom' && !addAsNew) {
+        // Keep real media if it has some; a placeholder follows the (maybe new) category.
+        const media = existing.media.kind === 'placeholder' ? { kind: 'placeholder' as const, placeholderToken: category } : existing.media
+        await updateCustomExercise(existing.id, { ...details, media })
+        onSaved({ ...existing, ...details, media })
+      } else {
+        const created = await createCustomExercise({ ...details, media: { kind: 'placeholder', placeholderToken: category } })
+        onSaved(created)
+      }
       resetAndClose()
     } finally {
       setSaving(false)
@@ -179,6 +199,27 @@ export function AiExerciseForm({ open, onClose, onSaved }: AiExerciseFormProps) 
       ) : (
         <div className="flex flex-col gap-4">
           <p className="text-sm text-primary-muted">Spot's best guess — review and adjust anything before adding it to your library.</p>
+
+          {existing && (
+            <div className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-secondary bg-secondary-tint p-3 text-sm">
+              {existing.source === 'custom' ? (
+                <p className="text-primary-strong">
+                  {addAsNew
+                    ? `This will be added as a separate exercise alongside "${existing.name}".`
+                    : `"${existing.name}" is already in your library. Saving updates it with these details instead of adding a duplicate.`}
+                </p>
+              ) : (
+                <p className="text-primary-strong">
+                  {addAsNew
+                    ? `This will be added as a separate exercise alongside the built-in "${existing.name}".`
+                    : `"${existing.name}" is already a built-in exercise. You can use it as it is, or add this as a separate exercise.`}
+                </p>
+              )}
+              <button type="button" className="self-start text-xs font-medium text-secondary underline" onClick={() => setAddAsNew(!addAsNew)}>
+                {addAsNew ? `Use "${existing.name}" instead` : "It's a different exercise, add it separately"}
+              </button>
+            </div>
+          )}
 
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-primary-strong">Name</span>
@@ -279,9 +320,21 @@ export function AiExerciseForm({ open, onClose, onSaved }: AiExerciseFormProps) 
             <Button variant="ghost" fullWidth onClick={() => setStep('input')}>
               Back
             </Button>
-            <Button fullWidth loading={saving} onClick={handleApprove}>
-              Add to library
-            </Button>
+            {existing?.source === 'library' && !addAsNew ? (
+              <Button
+                fullWidth
+                onClick={() => {
+                  onSaved(existing)
+                  resetAndClose()
+                }}
+              >
+                Use existing
+              </Button>
+            ) : (
+              <Button fullWidth loading={saving} onClick={handleApprove}>
+                {existing && !addAsNew ? 'Update exercise' : 'Add to library'}
+              </Button>
+            )}
           </div>
         </div>
       )}

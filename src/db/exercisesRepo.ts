@@ -1,6 +1,8 @@
 import { db } from './db'
 import { enqueueSync } from './sync/outbox'
 import type { CustomExercise, Exercise, LibraryExerciseNameOverride } from '../models/exercise'
+import { normalizeRoutine } from '../models/routine'
+import { replaceExerciseInRecoveryRoutine, replaceExerciseInRoutine } from '../lib/exerciseReplacement'
 
 async function applyNameOverrides(exercises: Exercise[]): Promise<Exercise[]> {
   const overrides = await db.libraryExerciseNameOverrides.toArray()
@@ -65,7 +67,47 @@ export async function updateCustomExercise(id: string, patch: Partial<CustomExer
   await enqueueSync('customExercises', id, 'upsert')
 }
 
-export async function deleteCustomExercise(id: string): Promise<void> {
+/** Renames any exercise: a custom one is edited directly, a built-in library one
+ *  gets a personal name override (see setLibraryExerciseName). */
+export async function renameExercise(exercise: Exercise, name: string): Promise<void> {
+  const trimmed = name.trim()
+  if (!trimmed) return
+  if (exercise.source === 'custom') {
+    await updateCustomExercise(exercise.id, { name: trimmed })
+    return
+  }
+  await setLibraryExerciseName(exercise.id, trimmed)
+}
+
+/** How many workout/recovery routines still reference an exercise — shown before a
+ *  delete so the user can choose what those routine entries become. */
+export async function countRoutinesUsingExercise(exerciseId: string): Promise<number> {
+  const [routines, recoveryRoutines] = await Promise.all([db.routines.toArray(), db.recoveryRoutines.toArray()])
+  return (
+    routines.filter((r) => replaceExerciseInRoutine(normalizeRoutine(r), exerciseId, null)).length +
+    recoveryRoutines.filter((r) => replaceExerciseInRecoveryRoutine(r, exerciseId, null)).length
+  )
+}
+
+/** Deletes a custom exercise. Routines that use it are pointed at `replacementId`
+ *  when given (e.g. merging a duplicate into the copy you're keeping), otherwise
+ *  the exercise is removed from them. Past session history keeps its own name
+ *  snapshot, so it reads the same either way. */
+export async function deleteCustomExercise(id: string, replacementId: string | null = null): Promise<void> {
+  const [routines, recoveryRoutines] = await Promise.all([db.routines.toArray(), db.recoveryRoutines.toArray()])
+  const now = new Date().toISOString()
+  for (const routine of routines) {
+    const updated = replaceExerciseInRoutine(normalizeRoutine(routine), id, replacementId)
+    if (!updated) continue
+    await db.routines.put({ ...updated, updatedAt: now })
+    await enqueueSync('routines', routine.id, 'upsert')
+  }
+  for (const routine of recoveryRoutines) {
+    const updated = replaceExerciseInRecoveryRoutine(routine, id, replacementId)
+    if (!updated) continue
+    await db.recoveryRoutines.put({ ...updated, updatedAt: now })
+    await enqueueSync('recoveryRoutines', routine.id, 'upsert')
+  }
   await db.customExercises.delete(id)
   await enqueueSync('customExercises', id, 'delete')
 }

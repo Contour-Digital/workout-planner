@@ -5,16 +5,16 @@ const MATCH_THRESHOLD = 0.72
 /** Finds the closest library/custom exercise to a free-text name (exact match first,
  *  then substring/Levenshtein similarity), or undefined if nothing is close enough. */
 export function findBestMatch(name: string, exercises: Exercise[]): Exercise | undefined {
-  const target = normalize(name)
+  const target = normalizeExerciseName(name)
   if (!target) return undefined
 
-  const exact = exercises.find((e) => normalize(e.name) === target)
+  const exact = exercises.find((e) => normalizeExerciseName(e.name) === target)
   if (exact) return exact
 
   let best: Exercise | undefined
   let bestScore = 0
   for (const exercise of exercises) {
-    const score = similarity(target, normalize(exercise.name))
+    const score = similarity(target, normalizeExerciseName(exercise.name))
     if (score > bestScore) {
       bestScore = score
       best = exercise
@@ -23,7 +23,7 @@ export function findBestMatch(name: string, exercises: Exercise[]): Exercise | u
   return bestScore >= MATCH_THRESHOLD ? best : undefined
 }
 
-function normalize(name: string): string {
+export function normalizeExerciseName(name: string): string {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, '')
