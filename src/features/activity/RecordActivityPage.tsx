@@ -470,25 +470,25 @@ export function RecordActivityPage() {
       )}
 
       {screenLocked && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-[#0b0b0f] px-6 py-12 text-white">
-          <div className="flex w-full max-w-xs flex-col items-center gap-1 pt-8 text-center">
+        <div className="fixed inset-0 z-[2000] flex flex-col items-center justify-between bg-[#0b0b0f] px-6 py-12 text-white">
+          <div className="flex w-full max-w-xs flex-col items-center gap-1 pt-4 text-center">
             <IconLock width={22} height={22} className="mb-3 opacity-70" />
             <p className="text-sm font-medium tracking-wide opacity-70">Screen locked</p>
             <p className="text-xs opacity-50">Recording continues — hold the button below to unlock</p>
           </div>
 
-          <div className="grid w-full max-w-xs grid-cols-3 gap-2 text-center">
+          <div className="flex w-full max-w-xs flex-1 flex-col items-center justify-center gap-10 text-center">
             <div>
-              <p className="text-2xl font-bold">{formatDuration(elapsedSeconds)}</p>
-              <p className="text-xs opacity-60">Time</p>
+              <p className="text-4xl font-bold tabular-nums">{formatDuration(elapsedSeconds)}</p>
+              <p className="mt-1 text-sm opacity-60">Time</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{(distanceMeters / 1000).toFixed(2)}</p>
-              <p className="text-xs opacity-60">Distance (km)</p>
+              <p className="text-4xl font-bold tabular-nums">{(distanceMeters / 1000).toFixed(2)}</p>
+              <p className="mt-1 text-sm opacity-60">Distance (km)</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{pace ?? '–'}</p>
-              <p className="text-xs opacity-60">Avg pace</p>
+              <p className="text-4xl font-bold tabular-nums">{pace ?? '–'}</p>
+              <p className="mt-1 text-sm opacity-60">Avg pace</p>
             </div>
           </div>
 
