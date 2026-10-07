@@ -9,6 +9,7 @@ import { countRoutinesUsingExercise, deleteCustomExercise, renameExercise, reset
 import { normalizeExerciseName } from '../../lib/exerciseMatching'
 import { EXERCISE_CATEGORY_LABELS, type Exercise } from '../../models/exercise'
 import { AiExerciseForm } from '../exercises/AiExerciseForm'
+import { ExerciseDetails } from '../exercises/ExerciseDetailSheet'
 
 interface Row {
   exercise: Exercise
@@ -207,8 +208,12 @@ function ManageExerciseSheet({ row, allRows, onClose }: { row: Row; allRows: Row
             </p>
           )}
 
+          <div className="border-t border-primary-border pt-4">
+            <ExerciseDetails exercise={exercise} />
+          </div>
+
           {exercise.source === 'custom' ? (
-            <Button variant="danger" fullWidth onClick={() => setConfirmingDelete(true)}>
+            <Button variant="danger" fullWidth className="mt-2" onClick={() => setConfirmingDelete(true)}>
               Delete exercise
             </Button>
           ) : (
