@@ -19,10 +19,16 @@ interface ExerciseConfigRowProps {
   allowRounds?: boolean
 }
 
-/** Left, right, left, right, ... — the simplest even split across however many sets
- *  are configured, so turning on "split left/right" never needs per-set tapping. */
-function alternatingSides(count: number): ('left' | 'right')[] {
-  return Array.from({ length: count }, (_, i) => (i % 2 === 0 ? 'left' : 'right'))
+/** Builds `perSide` left/right pairs (left, right, left, right, ...) from `template`'s
+ *  reps/weight/duration/distance — so "1 set" + split means one set each side (2 total),
+ *  "3 sets" + split means 3 each side (6 total), and so on. */
+function buildAlternatingSets(perSide: number, template: SetTarget): SetTarget[] {
+  const sets: SetTarget[] = []
+  for (let i = 0; i < perSide; i++) {
+    sets.push({ ...template, id: crypto.randomUUID(), setNumber: sets.length + 1, side: 'left' })
+    sets.push({ ...template, id: crypto.randomUUID(), setNumber: sets.length + 1, side: 'right' })
+  }
+  return sets
 }
 
 function summarize(config: ExerciseConfig, isCardio: boolean, isStretch: boolean, exerciseName: string): string {
@@ -80,11 +86,19 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
     onChange({ ...config, sets: config.sets.map((s) => ({ ...s, ...patch })) })
   }
 
+  // While split, the "Sets" field shows/edits the per-side count (so "1" reads as
+  // "1 set each side") rather than the doubled total actually stored in config.sets.
+  const displayedSetCount = isSplit ? config.sets.length / 2 : config.sets.length
+
   function setSetCount(count: number) {
     const clamped = Math.max(1, Math.min(20, count))
+    if (isSplit) {
+      if (clamped === displayedSetCount) return
+      onChange({ ...config, sets: buildAlternatingSets(clamped, config.sets[config.sets.length - 1]) })
+      return
+    }
     const current = config.sets
     if (clamped === current.length) return
-    let sets: SetTarget[]
     if (clamped > current.length) {
       const template = current[current.length - 1]
       const added: SetTarget[] = Array.from({ length: clamped - current.length }, (_, i) => ({
@@ -92,23 +106,22 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
         id: crypto.randomUUID(),
         setNumber: current.length + i + 1,
       }))
-      sets = [...current, ...added]
+      onChange({ ...config, sets: [...current, ...added] })
     } else {
-      sets = current.slice(0, clamped)
+      onChange({ ...config, sets: current.slice(0, clamped) })
     }
-    // Re-spread left/right across the new count so a resize never leaves a run of
-    // duplicate sides at the end (e.g. growing from 3 sets ending on "right" would
-    // otherwise just repeat "right" for every set added).
-    if (isSplit) {
-      const sides = alternatingSides(sets.length)
-      sets = sets.map((s, i) => ({ ...s, side: sides[i] }))
-    }
-    onChange({ ...config, sets })
   }
 
   function setSplitMode(split: boolean) {
-    const sides = split ? alternatingSides(config.sets.length) : undefined
-    onChange({ ...config, sets: config.sets.map((s, i) => ({ ...s, side: sides?.[i] })) })
+    if (split) {
+      // Whatever the set count already was becomes the new per-side count — "3 sets"
+      // becomes "3 sets each side" (6 total), not "3 sets split across both sides".
+      onChange({ ...config, sets: buildAlternatingSets(config.sets.length, config.sets[config.sets.length - 1]) })
+      return
+    }
+    const perSide = displayedSetCount
+    const template = { ...config.sets[config.sets.length - 1], side: undefined }
+    onChange({ ...config, sets: Array.from({ length: perSide }, (_, i) => ({ ...template, id: crypto.randomUUID(), setNumber: i + 1 })) })
   }
 
   return (
@@ -172,13 +185,13 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
               Same target for every set
             </label>
             <label className="ml-auto flex items-center gap-2 text-sm">
-              Sets
+              {isSplit ? 'Sets per side' : 'Sets'}
               <input
                 type="number"
                 min={1}
                 max={20}
                 className="w-16 rounded-[var(--radius-control)] border border-primary-border px-2 py-1 text-sm"
-                value={config.sets.length}
+                value={displayedSetCount}
                 onChange={(e) => setSetCount(Number(e.target.value))}
               />
             </label>
@@ -219,7 +232,7 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
             </div>
             {isSplit && (
               <p className="text-xs text-primary-muted">
-                Sets alternate sides — {config.sets.map((s) => (s.side === 'left' ? 'L' : 'R')).join(', ')}.
+                {displayedSetCount} set{displayedSetCount === 1 ? '' : 's'} each side — {config.sets.length} total, alternating left/right.
               </p>
             )}
           </div>
@@ -248,7 +261,10 @@ export function ExerciseConfigRow({ config, exercise, onChange, onRemove, onMove
             <div className="flex flex-col gap-2">
               {config.sets.map((set, i) => (
                 <div key={set.id} className={isCardio ? 'grid grid-cols-4 items-center gap-2' : isStretch ? 'grid grid-cols-3 items-center gap-2' : 'grid grid-cols-5 items-center gap-2'}>
-                  <span className="text-xs font-medium text-primary-muted">Set {i + 1}</span>
+                  <span className="text-xs font-medium text-primary-muted">
+                    Set {i + 1}
+                    {set.side && ` · ${set.side === 'left' ? 'L' : 'R'}`}
+                  </span>
                   {isCardio ? (
                     <>
                       <NumberField compact label="Dur (s)" value={set.targetDurationSeconds} onChange={(v) => updateSet(i, { targetDurationSeconds: v })} />
