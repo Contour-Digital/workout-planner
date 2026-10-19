@@ -117,6 +117,12 @@ export const IconPlay = (p: SVGProps<SVGSVGElement>) => (
     <path d="M6 4l14 8-14 8V4Z" />
   </Svg>
 )
+export const IconEye = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </Svg>
+)
 export const IconPause = (p: SVGProps<SVGSVGElement>) => (
   <Svg {...p}>
     <path d="M7 4h3v16H7zM14 4h3v16h-3z" />
