@@ -8,7 +8,7 @@ import { Badge } from '../../components/ui/Badge'
 import { CategoryBadge } from '../../components/ui/CategoryBadge'
 import { ProgressBar, ProgressRing } from '../../components/ui/ProgressBar'
 import { EmptyState } from '../../components/ui/EmptyState'
-import { IconDumbbell, IconFlame, IconMoon, IconPlay, IconPlus, IconWalking } from '../../components/ui/icons'
+import { IconDumbbell, IconEye, IconFlame, IconMoon, IconPlay, IconPlus, IconWalking } from '../../components/ui/icons'
 import { db } from '../../db/db'
 import { normalizeRoutine } from '../../models/routine'
 import { getOccurrencesInRange } from '../../db/scheduleRepo'
@@ -20,6 +20,7 @@ import { workoutSetsCompleted } from '../../models/session'
 import type { ResolvedOccurrence } from '../../models/schedule'
 import { assignmentColor, assignmentStyle, dropRedundantOffOccurrences, makeRoutineNameResolver, startOccurrence } from '../schedule/occurrenceDisplay'
 import { OccurrenceActionsSheet } from '../schedule/OccurrenceActionsSheet'
+import { WorkoutPreviewSheet } from '../schedule/WorkoutPreviewSheet'
 import { ImpromptuStartSheet } from '../session/ImpromptuStartSheet'
 import { AssistantChat } from '../assistant/AssistantChat'
 import type { AssistantContext } from '../../lib/assistantChat'
@@ -35,6 +36,7 @@ export function DashboardPage() {
   const navigate = useNavigate()
   const [menuOccurrence, setMenuOccurrence] = useState<ResolvedOccurrence | null>(null)
   const [impromptuOpen, setImpromptuOpen] = useState(false)
+  const [previewOccurrence, setPreviewOccurrence] = useState<ResolvedOccurrence | null>(null)
   const settings = useSettingsStore((s) => s.settings)
 
   const today = toDateKey(new Date())
@@ -123,6 +125,11 @@ export function DashboardPage() {
                   {occ.assignment.kind !== 'rest' && occ.assignment.kind !== 'off' && occ.status === 'planned' && (
                     <Button icon={<IconPlay width={18} height={18} />} onClick={() => startOccurrence(navigate, occ)}>
                       {alreadyStarted ? 'Continue' : 'Start'}
+                    </Button>
+                  )}
+                  {(occ.assignment.kind === 'workout' || occ.assignment.kind === 'recovery') && (
+                    <Button variant="ghost" icon={<IconEye width={18} height={18} />} onClick={() => setPreviewOccurrence(occ)}>
+                      View
                     </Button>
                   )}
                   {occ.assignment.kind !== 'off' && (
@@ -239,6 +246,14 @@ export function DashboardPage() {
       </div>
 
       <OccurrenceActionsSheet occurrence={menuOccurrence} onClose={() => setMenuOccurrence(null)} />
+      <WorkoutPreviewSheet
+        occurrence={previewOccurrence}
+        routines={routines}
+        recoveryRoutines={recoveryRoutines}
+        startLabel={previewOccurrence?.sessionId ? 'Continue' : 'Start'}
+        onStart={previewOccurrence?.status === 'planned' ? () => startOccurrence(navigate, previewOccurrence) : undefined}
+        onClose={() => setPreviewOccurrence(null)}
+      />
       <ImpromptuStartSheet open={impromptuOpen} onClose={() => setImpromptuOpen(false)} />
 
       <AssistantChat
